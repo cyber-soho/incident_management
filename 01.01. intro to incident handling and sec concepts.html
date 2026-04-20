@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Management Hub | Cyber.SoHo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals & Slate with Semantic Accents -->
+    <!-- Application Structure Plan: A dashboard-style layout with a fixed sidebar (bottom nav on mobile) and a dynamic main content area. This allows non-linear exploration of the 5 key lessons while keeping the overarching context accessible. The structure breaks down the dense lecture material into interactive, bite-sized modules (calculators, interactive grids, charts) to maximize engagement and retention of key concepts like Risk Scoring and Regulatory Clocks. -->
+    <!-- Visualization & Content Choices: 
+        1. NIST Lifecycle -> HTML/CSS interactive flow (Goal: Process understanding -> HTML/CSS -> Click to reveal phases -> Avoids complex graphics). 
+        2. Risk Formula -> JS Interactive Calculator (Goal: Apply concept -> Range sliders -> Immediate feedback reinforces the L x I formula). 
+        3. Incident Decision Map -> Interactive CSS Grid (Goal: Compare severity/scope -> Clickable matrix -> Shows escalation paths clearly).
+        4. Regulatory Deadlines -> Chart.js Horizontal Bar (Goal: Compare timeframes -> Bar chart -> Visualizes the extreme difference between 24h and 60 days). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        .nav-active {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            border-left: 4px solid #3b82f6;
+            font-weight: 600;
+        }
+        .nav-item {
+            transition: all 0.2s ease-in-out;
+            border-left: 4px solid transparent;
+        }
+        .nav-item:hover:not(.nav-active) {
+            background-color: #f1f5f9;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <nav class="bg-white border-r border-slate-200 w-full md:w-64 flex-shrink-0 flex flex-col md:h-full z-10 shadow-sm">
+        <div class="p-6 border-b border-slate-200">
+            <h1 class="text-xl font-bold text-slate-900 leading-tight">Cyber.SoHo</h1>
+            <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">Educational Hub</p>
+        </div>
+        <div class="flex md:flex-col overflow-x-auto md:overflow-y-auto hide-scroll flex-grow p-2 md:p-4 gap-1">
+            <button onclick="navigate('intro')" id="nav-intro" class="nav-item nav-active text-left px-4 py-3 rounded-md text-sm text-slate-600 whitespace-nowrap md:whitespace-normal flex items-center gap-2">
+                <span>👋</span> Introduction
+            </button>
+            <button onclick="navigate('lesson1')" id="nav-lesson1" class="nav-item text-left px-4 py-3 rounded-md text-sm text-slate-600 whitespace-nowrap md:whitespace-normal flex items-center gap-2">
+                <span>🔄</span> 1. Incident Handling
+            </button>
+            <button onclick="navigate('lesson2')" id="nav-lesson2" class="nav-item text-left px-4 py-3 rounded-md text-sm text-slate-600 whitespace-nowrap md:whitespace-normal flex items-center gap-2">
+                <span>🛡️</span> 2. Core Concepts & Risk
+            </button>
+            <button onclick="navigate('lesson3')" id="nav-lesson3" class="nav-item text-left px-4 py-3 rounded-md text-sm text-slate-600 whitespace-nowrap md:whitespace-normal flex items-center gap-2">
+                <span>🚨</span> 3. Incident Types
+            </button>
+            <button onclick="navigate('lesson4')" id="nav-lesson4" class="nav-item text-left px-4 py-3 rounded-md text-sm text-slate-600 whitespace-nowrap md:whitespace-normal flex items-center gap-2">
+                <span>👥</span> 4. Response Teams
+            </button>
+            <button onclick="navigate('lesson5')" id="nav-lesson5" class="nav-item text-left px-4 py-3 rounded-md text-sm text-slate-600 whitespace-nowrap md:whitespace-normal flex items-center gap-2">
+                <span>⚖️</span> 5. Legal Frameworks
+            </button>
+        </div>
+        <div class="p-4 border-t border-slate-200 text-xs text-slate-400 hidden md:block">
+            Incident Management | Week 1
+        </div>
+    </nav>
+
+    <main class="flex-grow overflow-y-auto p-4 md:p-8 lg:p-12 relative bg-slate-50">
+        <div class="max-w-5xl mx-auto">
+
+            <section id="intro" class="fade-in block">
+                <div class="mb-8">
+                    <h2 class="text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Day 01</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Introduction to Incident Handling & Security Concepts</h3>
+                    <p class="text-lg text-slate-600 leading-relaxed">Welcome to Week 1. This interactive module translates the core principles of incident management from the industry directly into actionable classroom knowledge.</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8">
+                    <div class="flex items-start gap-4">
+                        <div class="text-4xl">🌙</div>
+                        <div>
+                            <h4 class="text-xl font-bold text-slate-900 mb-2">The 3 a.m. Sunday Problem</h4>
+                            <p class="text-slate-600 mb-4">Real incidents never happen at 10 a.m. on a Tuesday. Panic is not a process. We use the hospital ER model: triage, not improvisation.</p>
+                            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                                <p class="text-amber-800 font-medium"><strong>Key Takeaway:</strong> A boring incident is a well-handled incident. Process is the product. Every minute of delay equals money, trust, and regulatory risk.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2"><span>🎯</span> What you will learn today</h4>
+                        <ul class="space-y-3 text-slate-600">
+                            <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">▸</span> Definition and business drivers of IR</li>
+                            <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">▸</span> CIA triad, threats, and risk management</li>
+                            <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">▸</span> Incident types and severity classification</li>
+                            <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">▸</span> SOC, CSIRT, and stakeholder structures</li>
+                            <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">▸</span> GDPR, HIPAA, and regulatory clocks</li>
+                        </ul>
+                    </div>
+                    <div class="bg-blue-600 p-6 rounded-xl shadow-sm text-white flex flex-col justify-center">
+                        <h4 class="font-bold text-xl mb-2">Ready to begin?</h4>
+                        <p class="text-blue-100 mb-6">Explore the interactive lessons using the navigation menu. Each lesson builds on the previous one. Skip none.</p>
+                        <button onclick="navigate('lesson1')" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors self-start shadow-sm">
+                            Start Lesson 1 →
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson1" class="fade-in hidden">
+                <div class="mb-8">
+                    <h2 class="text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Lesson 1</h2>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Define Incident Handling</h3>
+                    <p class="text-lg text-slate-600">Understand the strategic role of incident handling, differentiate fundamental terminology, and explore the standard response lifecycle.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50">
+                            <h4 class="font-bold text-slate-900">Event vs. Alert vs. Incident</h4>
+                            <p class="text-sm text-slate-500">Only an incident starts the legal stopwatch.</p>
+                        </div>
+                        <div class="p-0">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 text-sm">
+                                        <th class="p-4 font-semibold border-b border-slate-200">Term</th>
+                                        <th class="p-4 font-semibold border-b border-slate-200">Definition</th>
+                                        <th class="p-4 font-semibold border-b border-slate-200">Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm">
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                        <td class="p-4 font-medium text-slate-900">Event</td>
+                                        <td class="p-4 text-slate-600">Anything that happens on a system</td>
+                                        <td class="p-4 text-slate-500 bg-slate-50">A login, a file write</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                        <td class="p-4 font-medium text-amber-600">Alert</td>
+                                        <td class="p-4 text-slate-600">An event worth a human's attention</td>
+                                        <td class="p-4 text-slate-500 bg-slate-50">"Impossible travel" login</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-4 font-bold text-red-600">Incident</td>
+                                        <td class="p-4 text-slate-600">A confirmed policy violation</td>
+                                        <td class="p-4 text-slate-500 bg-slate-50">Confirmed credential theft</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800 text-white rounded-xl shadow-sm p-6 flex flex-col justify-center">
+                        <h4 class="font-bold text-lg mb-4 text-blue-400">Why Employers Pay for This</h4>
+                        <ul class="space-y-4 text-sm">
+                            <li><strong class="text-white block text-base">💰 Money</strong> Mature IR saves $1–2M per incident.</li>
+                            <li><strong class="text-white block text-base">⚖️ Regulation</strong> Missed deadlines = fines on top of breach costs.</li>
+                            <li><strong class="text-white block text-base">🤝 Trust</strong> Transparent handling protects brand; coverups destroy it.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                    <div class="mb-6">
+                        <h4 class="text-xl font-bold text-slate-900">The NIST SP 800-61 Lifecycle</h4>
+                        <p class="text-slate-500">Incident handling is a loop, not a sprint. Click each phase to reveal the disciplined response process.</p>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row gap-2 justify-between items-stretch mb-8">
+                        <button onclick="showNistPhase(1)" id="btn-nist-1" class="flex-1 py-3 px-2 bg-blue-600 text-white font-bold rounded-lg transition-all text-sm shadow-md ring-2 ring-blue-300 ring-offset-2">1. Prepare</button>
+                        <div class="hidden md:flex items-center justify-center text-slate-300">→</div>
+                        <button onclick="showNistPhase(2)" id="btn-nist-2" class="flex-1 py-3 px-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-lg transition-all text-sm">2. Identify</button>
+                        <div class="hidden md:flex items-center justify-center text-slate-300">→</div>
+                        <button onclick="showNistPhase(3)" id="btn-nist-3" class="flex-1 py-3 px-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-lg transition-all text-sm">3. Contain</button>
+                        <div class="hidden md:flex items-center justify-center text-slate-300">→</div>
+                        <button onclick="showNistPhase(4)" id="btn-nist-4" class="flex-1 py-3 px-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-lg transition-all text-sm">4. Eradicate</button>
+                        <div class="hidden md:flex items-center justify-center text-slate-300">→</div>
+                        <button onclick="showNistPhase(5)" id="btn-nist-5" class="flex-1 py-3 px-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-lg transition-all text-sm">5. Recover</button>
+                        <div class="hidden md:flex items-center justify-center text-slate-300">→</div>
+                        <button onclick="showNistPhase(6)" id="btn-nist-6" class="flex-1 py-3 px-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-lg transition-all text-sm">6. Learn</button>
+                    </div>
+
+                    <div id="nist-content" class="bg-blue-50 border border-blue-100 p-6 rounded-lg min-h-[120px] flex flex-col justify-center">
+                        <h5 class="font-bold text-blue-900 text-lg mb-2">Preparation</h5>
+                        <p class="text-blue-800">Policies, tooling, and training. Getting ready before the 3 a.m. call happens.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson2" class="fade-in hidden">
+                <div class="mb-8">
+                    <h2 class="text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Lesson 2</h2>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Core Security Concepts & Risk</h3>
+                    <p class="text-lg text-slate-600">Explore the foundational properties of security (CIA), understand the terminology executives use, and actively calculate risk.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
+                        <div class="text-3xl mb-3">🤫</div>
+                        <h4 class="font-bold text-slate-900 text-lg mb-2">Confidentiality</h4>
+                        <p class="text-sm text-slate-600 mb-4">"Only authorised parties can read this." Preventing disclosure.</p>
+                        <div class="text-xs bg-slate-100 p-2 rounded text-slate-600"><strong>Failure:</strong> Netflix password leak, public S3 bucket.</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
+                        <div class="text-3xl mb-3">🔒</div>
+                        <h4 class="font-bold text-slate-900 text-lg mb-2">Integrity</h4>
+                        <p class="text-sm text-slate-600 mb-4">"Nobody has altered this without authorisation." Invisible until consequences arrive.</p>
+                        <div class="text-xs bg-slate-100 p-2 rounded text-slate-600"><strong>Failure:</strong> Stuxnet centrifuges displaying fake values.</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
+                        <div class="text-3xl mb-3">⚡</div>
+                        <h4 class="font-bold text-slate-900 text-lg mb-2">Availability</h4>
+                        <p class="text-sm text-slate-600 mb-4">"Authorised users can get in when they need to." Operations continuity.</p>
+                        <div class="text-xs bg-slate-100 p-2 rounded text-slate-600"><strong>Failure:</strong> Ransomware locking files, DDoS attacks.</div>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 text-white rounded-xl shadow-sm p-6 md:p-8">
+                        <h4 class="font-bold text-xl mb-6 border-b border-slate-700 pb-2">The Executive Vocabulary</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <strong class="text-amber-400">Threat</strong>
+                                <p class="text-slate-300 text-sm">Anything that <em>can</em> cause harm (adversary, storm, insider). Threats are potential.</p>
+                            </div>
+                            <div>
+                                <strong class="text-amber-400">Vulnerability</strong>
+                                <p class="text-slate-300 text-sm">A weakness the threat can use (unpatched server). Vulnerabilities are present.</p>
+                            </div>
+                            <div>
+                                <strong class="text-amber-400">Exploit</strong>
+                                <p class="text-slate-300 text-sm">The specific method or tool used (Metasploit, phishing).</p>
+                            </div>
+                            <div>
+                                <strong class="text-blue-400">Risk</strong>
+                                <p class="text-slate-300 text-sm">The business consequence. Risk is measured.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+                        <h4 class="font-bold text-slate-900 text-xl mb-2">Interactive Risk Calculator</h4>
+                        <p class="text-sm text-slate-500 mb-6">Risk = Likelihood × Impact. A score on a slide beats a feeling in a meeting.</p>
+                        
+                        <div class="space-y-6 flex-grow">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="font-semibold text-slate-700 text-sm">Likelihood (1-5)</label>
+                                    <span id="lik-val" class="font-bold text-blue-600">3</span>
+                                </div>
+                                <input type="range" id="lik-slider" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="calculateRisk()">
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="font-semibold text-slate-700 text-sm">Impact (1-5) [Worst-case CIA]</label>
+                                    <span id="imp-val" class="font-bold text-blue-600">3</span>
+                                </div>
+                                <input type="range" id="imp-slider" min="1" max="5" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="calculateRisk()">
+                            </div>
+                        </div>
+
+                        <div class="mt-8 p-4 rounded-lg text-center transition-colors duration-300" id="risk-result-box" style="background-color: #fef3c7;">
+                            <div class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-1">Calculated Risk Score</div>
+                            <div class="text-4xl font-black mb-2" id="risk-score">9</div>
+                            <div class="font-semibold" id="risk-action" style="color: #b45309;">Action: Mitigate with standard controls</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson3" class="fade-in hidden">
+                <div class="mb-8">
+                    <h2 class="text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Lesson 3</h2>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Types of Security Incidents</h3>
+                    <p class="text-lg text-slate-600">Learn how to classify an incident using a multi-dimensional approach to determine immediate escalation paths.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-12 gap-6 mb-8">
+                    <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h4 class="font-bold text-slate-900 text-lg mb-4">The Seven Incident Families</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <h5 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">High Volume</h5>
+                                <ul class="text-sm text-slate-700 space-y-2">
+                                    <li><span class="font-semibold">1. Malicious code</span> (viruses, ransomware)</li>
+                                    <li><span class="font-semibold">2. Social engineering</span> (phishing, BEC)</li>
+                                    <li><span class="font-semibold">3. Denial of Service</span> (DoS/DDoS)</li>
+                                    <li><span class="font-semibold">4. Unauthorised access</span> (stolen creds)</li>
+                                </ul>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100">
+                                <h5 class="text-sm font-bold text-amber-600 uppercase tracking-wider mb-2">High Impact (Career makers/breakers)</h5>
+                                <ul class="text-sm text-slate-700 space-y-2">
+                                    <li><span class="font-semibold">5. Data exposure</span> (exfiltration)</li>
+                                    <li><span class="font-semibold">6. Insider threats</span> (malicious/accidental)</li>
+                                    <li><span class="font-semibold">7. Supply-chain</span> (vendor backdoor)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                        <h4 class="font-bold text-slate-900 text-lg mb-2">The Decision Map (Severity × Scope)</h4>
+                        <p class="text-sm text-slate-500 mb-6">Click a cell in the grid to see the escalation path. Patterns across many users are almost always an attacker.</p>
+
+                        <div class="flex-grow flex flex-col items-center justify-center">
+                            <div class="w-full max-w-md">
+                                <div class="grid grid-cols-3 gap-1 mb-1">
+                                    <div></div>
+                                    <div class="text-center text-xs font-bold text-slate-500 uppercase">Narrow Scope</div>
+                                    <div class="text-center text-xs font-bold text-slate-500 uppercase">Broad Scope</div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="flex items-center justify-end pr-4 text-xs font-bold text-slate-500 uppercase text-right">Low</div>
+                                    <button onclick="showDecision('low-narrow')" class="p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded text-green-800 text-sm font-semibold transition-colors">Monitor</button>
+                                    <button onclick="showDecision('low-broad')" class="p-3 bg-green-100 hover:bg-green-200 border border-green-300 rounded text-green-900 text-sm font-semibold transition-colors">Monitor+</button>
+
+                                    <div class="flex items-center justify-end pr-4 text-xs font-bold text-slate-500 uppercase text-right">Medium</div>
+                                    <button onclick="showDecision('med-narrow')" class="p-3 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded text-yellow-800 text-sm font-semibold transition-colors">SOC Lead</button>
+                                    <button onclick="showDecision('med-broad')" class="p-3 bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded text-yellow-900 text-sm font-semibold transition-colors">SOC + CSIRT</button>
+
+                                    <div class="flex items-center justify-end pr-4 text-xs font-bold text-slate-500 uppercase text-right">High</div>
+                                    <button onclick="showDecision('high-narrow')" class="p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded text-orange-800 text-sm font-semibold transition-colors">CSIRT</button>
+                                    <button onclick="showDecision('high-broad')" class="p-3 bg-orange-100 hover:bg-orange-200 border border-orange-300 rounded text-orange-900 text-sm font-semibold transition-colors">CSIRT + Legal</button>
+
+                                    <div class="flex items-center justify-end pr-4 text-xs font-bold text-slate-500 uppercase text-right">Critical</div>
+                                    <button onclick="showDecision('crit-narrow')" class="p-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-red-800 text-sm font-semibold transition-colors text-center leading-tight">CSIRT + Legal<br>+ Comms</button>
+                                    <button onclick="showDecision('crit-broad')" class="p-3 bg-red-100 hover:bg-red-200 border border-red-300 rounded text-red-900 text-sm font-semibold transition-colors text-center leading-tight">Full IR Bridge<br>+ CEO brief</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="decision-output" class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-sm text-slate-700 min-h-[80px] flex items-center justify-center">
+                            Select a scenario above to view the required response team escalation.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson4" class="fade-in hidden">
+                <div class="mb-8">
+                    <h2 class="text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Lesson 4</h2>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Response Team Structures</h3>
+                    <p class="text-lg text-slate-600">Identify the key players in an incident, from the front-line SOC to the executive stakeholders, and how to test coordination.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-800 p-4 text-white">
+                            <h4 class="font-bold text-lg flex items-center gap-2"><span>🎧</span> The SOC (Front Line)</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm text-slate-600 mb-4">The emergency call centre of cybersecurity. Operates 24x7. Main tool: SIEM.</p>
+                            <ul class="space-y-3 text-sm">
+                                <li class="flex gap-2"><span class="font-bold text-blue-600 w-12 shrink-0">Tier 1</span> <span class="text-slate-700">First-pass alert triage.</span></li>
+                                <li class="flex gap-2"><span class="font-bold text-blue-600 w-12 shrink-0">Tier 2</span> <span class="text-slate-700">Deeper analysis, threat hunting.</span></li>
+                                <li class="flex gap-2"><span class="font-bold text-blue-600 w-12 shrink-0">Tier 3</span> <span class="text-slate-700">Forensics, malware reverse-engineering.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-blue-600 p-4 text-white">
+                            <h4 class="font-bold text-lg flex items-center gap-2"><span>🥼</span> The CSIRT (Surgery Dept)</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm text-slate-600 mb-4">Takes over when an alert becomes a confirmed incident. May sit inside or outside the SOC.</p>
+                            <ul class="space-y-2 text-sm text-slate-700">
+                                <li>▸ Uses memory forensics & disk imaging</li>
+                                <li>▸ Analyzes malware and packet captures</li>
+                                <li>▸ Coordinates with external law enforcement</li>
+                            </ul>
+                            <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+                                <strong>Note:</strong> CERT is a trademark (Carnegie Mellon). PSIRT handles bugs in a vendor's *own* products.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 rounded-xl border border-amber-200 p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center">
+                    <div class="text-amber-500 text-6xl">💬</div>
+                    <div>
+                        <h4 class="font-bold text-amber-900 text-xl mb-2">The Tabletop Exercise</h4>
+                        <p class="text-amber-800 text-sm mb-4">The cheapest, highest-impact investment in IR. A 2-hour meeting, no keyboards. A facilitator reads a scenario, and everyone answers: <em>"what do you do next?"</em></p>
+                        <p class="text-amber-900 font-bold text-sm bg-amber-100 inline-block px-3 py-1 rounded">If you remember one thing from Lesson 4: run tabletops.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lesson5" class="fade-in hidden">
+                <div class="mb-8">
+                    <h2 class="text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Lesson 5</h2>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Legal & Regulatory Clocks</h3>
+                    <p class="text-lg text-slate-600">The clock starts before you fully understand what happened. Missing deadlines means fines on top of breach costs.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-lg border-b border-slate-100 pb-3 mb-4 flex justify-between items-center">
+                            <span>🇪🇺 GDPR</span>
+                            <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">72 HOURS</span>
+                        </h4>
+                        <p class="text-sm text-slate-600 mb-4">General Data Protection Regulation. Applies globally to anyone processing EU residents' data.</p>
+                        <ul class="text-sm text-slate-700 space-y-2 mb-4">
+                            <li>▸ <strong>Clock starts:</strong> At awareness.</li>
+                            <li>▸ <strong>Penalties:</strong> Up to €20M or 4% global turnover.</li>
+                            <li>▸ <strong>Action:</strong> Notify lead supervisory authority.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h4 class="font-bold text-slate-900 text-lg border-b border-slate-100 pb-3 mb-4 flex justify-between items-center">
+                            <span>🇺🇸 HIPAA</span>
+                            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded font-bold">60 DAYS</span>
+                        </h4>
+                        <p class="text-sm text-slate-600 mb-4">Health Insurance Portability & Accountability Act. Governs Protected Health Information (PHI).</p>
+                        <ul class="text-sm text-slate-700 space-y-2 mb-4">
+                            <li>▸ <strong>Clock starts:</strong> At discovery.</li>
+                            <li>▸ <strong>Penalties:</strong> Up to $1.5M per violation category/year.</li>
+                            <li>▸ <strong>Action:</strong> Notify individuals and HHS.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                    <h4 class="font-bold text-slate-900 text-xl mb-2">Visualizing the Regulatory Urgency</h4>
+                    <p class="text-sm text-slate-500 mb-6">Internal clocks must always be tighter than external clocks. Calendar the deadlines the moment the incident is confirmed.</p>
+                    
+                    <div class="chart-container">
+                        <canvas id="deadlineChart"></canvas>
+                    </div>
+                    
+                    <div class="mt-6 text-center text-sm text-slate-500 border-t border-slate-100 pt-4">
+                        NIST SP 800-61 is the global <em>de facto</em> standard (voluntary), but legal frameworks are mandatory.
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // Data and State
+        const nistPhases = [
+            { title: "Preparation", desc: "Policies, tooling, and training. Getting ready before the 3 a.m. call happens.", color: "blue" },
+            { title: "Identification", desc: "Detection and confirmation. Filtering thousands of alerts into confirmed incidents.", color: "indigo" },
+            { title: "Containment", desc: "Short-term and long-term isolation. Stopping the bleeding and preventing spread.", color: "amber" },
+            { title: "Eradication", desc: "Root-cause removal. Cleaning the environment of the threat and vulnerabilities.", color: "orange" },
+            { title: "Recovery", desc: "Return to business-as-usual. Restoring systems safely back into production.", color: "emerald" },
+            { title: "Lessons Learned", desc: "Post-mortem and improvement. Every closed case should make the next one easier.", color: "purple" }
+        ];
+
+        const decisionText = {
+            'low-narrow': '<strong>Action: Monitor.</strong> Incident is isolated to a single user with no sensitive data. Keep an eye on logs.',
+            'low-broad': '<strong>Action: Monitor+.</strong> Broad reach but low severity. Heightened automated monitoring required.',
+            'med-narrow': '<strong>Action: SOC Lead.</strong> Team-level impact. The SOC shift lead takes charge of remediation.',
+            'med-broad': '<strong>Action: SOC + CSIRT.</strong> Broad scope promotes automatically. CSIRT is engaged for deeper analysis.',
+            'high-narrow': '<strong>Action: CSIRT.</strong> Production systems involved. Dedicated response team takes full control.',
+            'high-broad': '<strong>Action: CSIRT + Legal.</strong> High severity and widespread. Legal must prepare for potential disclosures.',
+            'crit-narrow': '<strong>Action: CSIRT + Legal + Comms.</strong> Critical data (customer/legal) hit. Comms drafts statements.',
+            'crit-broad': '<strong>Action: Full IR Bridge + CEO Brief.</strong> Worst case scenario. Entire organization mobilized, executive board briefed immediately.'
+        };
+
+        let chartInstance = null;
+
+        function navigate(targetId) {
+            const sections = ['intro', 'lesson1', 'lesson2', 'lesson3', 'lesson4', 'lesson5'];
+            sections.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('block');
+                document.getElementById('nav-' + id).classList.remove('nav-active');
+            });
+            
+            document.getElementById(targetId).classList.remove('hidden');
+            document.getElementById(targetId).classList.add('block');
+            document.getElementById('nav-' + targetId).classList.add('nav-active');
+
+            if (targetId === 'lesson5' && !chartInstance) {
+                initChart();
+            }
+        }
+
+        function showNistPhase(index) {
+            for(let i=1; i<=6; i++) {
+                const btn = document.getElementById('btn-nist-' + i);
+                btn.className = "flex-1 py-3 px-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold rounded-lg transition-all text-sm";
+            }
+            
+            const activeBtn = document.getElementById('btn-nist-' + index);
+            const phase = nistPhases[index-1];
+            
+            let colorClass = 'blue';
+            if(index === 2) colorClass = 'indigo';
+            if(index === 3) colorClass = 'amber';
+            if(index === 4) colorClass = 'orange';
+            if(index === 5) colorClass = 'emerald';
+            if(index === 6) colorClass = 'purple';
+
+            activeBtn.className = `flex-1 py-3 px-2 bg-${colorClass}-600 text-white font-bold rounded-lg transition-all text-sm shadow-md ring-2 ring-${colorClass}-300 ring-offset-2`;
+
+            const content = document.getElementById('nist-content');
+            content.className = `bg-${colorClass}-50 border border-${colorClass}-100 p-6 rounded-lg min-h-[120px] flex flex-col justify-center fade-in`;
+            content.innerHTML = `
+                <h5 class="font-bold text-${colorClass}-900 text-lg mb-2">${index}. ${phase.title}</h5>
+                <p class="text-${colorClass}-800">${phase.desc}</p>
+            `;
+        }
+
+        function calculateRisk() {
+            const lik = parseInt(document.getElementById('lik-slider').value);
+            const imp = parseInt(document.getElementById('imp-slider').value);
+            const score = lik * imp;
+            
+            document.getElementById('lik-val').innerText = lik;
+            document.getElementById('imp-val').innerText = imp;
+            document.getElementById('risk-score').innerText = score;
+
+            const box = document.getElementById('risk-result-box');
+            const actionText = document.getElementById('risk-action');
+
+            if (score <= 5) {
+                box.style.backgroundColor = '#ecfdf5'; 
+                actionText.style.color = '#065f46';
+                actionText.innerText = 'Action: Accept or Monitor';
+            } else if (score <= 12) {
+                box.style.backgroundColor = '#fef3c7'; 
+                actionText.style.color = '#b45309';
+                actionText.innerText = 'Action: Mitigate with standard controls';
+            } else if (score <= 19) {
+                box.style.backgroundColor = '#fff7ed'; 
+                actionText.style.color = '#c2410c';
+                actionText.innerText = 'Action: Prioritise this quarter';
+            } else {
+                box.style.backgroundColor = '#fef2f2'; 
+                actionText.style.color = '#991b1b';
+                actionText.innerText = 'Action: Escalate to senior management immediately';
+            }
+        }
+
+        function showDecision(key) {
+            const output = document.getElementById('decision-output');
+            output.innerHTML = decisionText[key];
+            
+            output.classList.remove('fade-in');
+            void output.offsetWidth; 
+            output.classList.add('fade-in');
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('deadlineChart').getContext('2d');
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['NIS2 (Early Warning)', 'GDPR (EU)', 'SOX (US SEC)', 'HIPAA (US Health)'],
+                    datasets: [{
+                        label: 'Maximum Permitted Notification Time (Hours)',
+                        data: [24, 72, 96, 1440], 
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',   
+                            'rgba(249, 115, 22, 0.8)',  
+                            'rgba(234, 179, 8, 0.8)',   
+                            'rgba(59, 130, 246, 0.8)'   
+                        ],
+                        borderColor: [
+                            'rgb(220, 38, 38)',
+                            'rgb(234, 88, 12)',
+                            'rgb(202, 138, 4)',
+                            'rgb(37, 99, 235)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', 
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let hours = context.raw;
+                                    if (hours === 1440) return "60 Days (1440 hours)";
+                                    if (hours === 96) return "4 Business Days (96 hours)";
+                                    return hours + " Hours";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Hours until deadline (Logarithmic Scale)'
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if (value === 24 || value === 72 || value === 100 || value === 1000) {
+                                        return value + 'h';
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+

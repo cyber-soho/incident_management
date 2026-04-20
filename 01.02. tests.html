@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Management: Study Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Tab Styles */
+        .tab-btn.active {
+            border-bottom: 3px solid #2563eb; /* blue-600 */
+            color: #1e40af; /* blue-800 */
+            font-weight: 600;
+        }
+        
+        /* Flashcard 3D Flip Styles */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flip-transition { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        
+        /* Custom Scrollbar for Quiz */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 shadow-sm z-10 flex-shrink-0">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="py-6">
+                <h1 class="text-2xl font-bold text-slate-900">Incident Management Study Center</h1>
+                <p class="text-sm text-slate-500 mt-1">Review core concepts and test your practical knowledge.</p>
+            </div>
+            <nav class="flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('flashcards')" id="tab-flashcards" class="tab-btn active pb-4 px-1 border-b-3 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition-colors">
+                    Flashcards (25)
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn pb-4 px-1 border-b-3 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition-colors">
+                    Practice Quiz (10)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-hidden relative">
+        
+        <section id="content-flashcards" class="h-full overflow-y-auto p-4 sm:p-8 flex flex-col items-center justify-center bg-slate-50 custom-scroll">
+            <div class="max-w-2xl w-full">
+                
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-700">Concept Review</h2>
+                    <span id="fc-counter" class="text-sm font-semibold bg-blue-100 text-blue-800 py-1 px-3 rounded-full">1 / 25</span>
+                </div>
+
+                <div class="perspective-1000 w-full h-80 sm:h-96 cursor-pointer group" onclick="flipCard()">
+                    <div id="flashcard-inner" class="relative w-full h-full transform-style-3d flip-transition shadow-lg rounded-2xl">
+                        
+                        <div class="absolute w-full h-full backface-hidden bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 text-center">
+                            <span class="absolute top-4 left-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Front</span>
+                            <div id="fc-front-text" class="text-xl sm:text-2xl font-semibold text-slate-800 leading-snug">
+                                </div>
+                            <span class="absolute bottom-4 text-sm text-blue-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">Click to flip</span>
+                        </div>
+
+                        <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-blue-50 border border-blue-200 rounded-2xl flex flex-col items-center justify-center p-8 text-center">
+                            <span class="absolute top-4 left-4 text-xs font-bold text-blue-400 uppercase tracking-wider">Back</span>
+                            <div id="fc-back-text" class="text-lg sm:text-xl text-slate-700 leading-relaxed">
+                                </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-8 gap-4">
+                    <button onclick="prevCard()" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+                        <span>←</span> Previous
+                    </button>
+                    <button onclick="flipCard()" class="px-6 py-3 bg-slate-100 text-slate-600 font-semibold rounded-lg hover:bg-slate-200 transition-colors">
+                        Flip Card
+                    </button>
+                    <button onclick="nextCard()" class="px-6 py-3 bg-blue-600 border border-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
+                        Next <span>→</span>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+
+        <section id="content-quiz" class="hidden h-full overflow-y-auto p-4 sm:p-8 custom-scroll bg-slate-50">
+            <div class="max-w-3xl mx-auto pb-16">
+                
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-900">Applied Incident Management Quiz</h2>
+                    <p class="text-slate-600 mt-2">Test your practical application of incident response concepts. Select an answer to see the rationale.</p>
+                </div>
+
+                <div id="quiz-container" class="space-y-8">
+                    </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const flashcardsData = [
+            { front: "Difference between an Event, an Alert, and an Incident", back: "Event: anything on a system. Alert: worth human attention. Incident: a confirmed policy violation." },
+            { front: "The specific occurrence that starts the legal stopwatch", back: "Only a confirmed incident (not an event or alert)." },
+            { front: "Six phases of the NIST SP 800-61 Incident Handling Lifecycle", back: "Preparation, Identification, Containment, Eradication, Recovery, and Lessons Learned." },
+            { front: "Three primary business drivers for Incident Response", back: "Money (saving costs), Regulation (avoiding fines), and Trust (protecting brand reputation)." },
+            { front: "Three essential skills of a senior incident handler", back: "Technical expertise, Process discipline, and Communication skills." },
+            { front: "CIA Triad", back: "Confidentiality, Integrity, and Availability—the three fundamental properties of security." },
+            { front: "Confidentiality", back: "The principle that only authorised parties can read or access data, preventing unauthorized disclosure." },
+            { front: "Integrity", back: "The principle that data is accurate and nobody has altered it without authorisation." },
+            { front: "Availability", back: "The principle that authorised users can get in and access systems when they need to." },
+            { front: "Threat", back: "Anything that has the potential to cause harm, such as an adversary, a storm, or a malicious insider." },
+            { front: "Vulnerability", back: "A present weakness in a system that a threat can use, like an unpatched server or a weak password." },
+            { front: "Risk Formula", back: "Risk = Likelihood × Impact (where impact is based on the worst-case scenario across Confidentiality, Integrity, or Availability)." },
+            { front: "Three families of security controls", back: "Preventive (stop it), Detective (notice it), and Corrective (clean it up)." },
+            { front: "Four highest-volume families of security incidents", back: "Malicious code, social engineering, denial of service (DoS), and unauthorised access." },
+            { front: "Four axes of incident classification", back: "Severity (how loud the alarm is), Scope (reach), Category (runbook to use), and Sensitivity (regulated data)." },
+            { front: "Standard 4-tier Severity Scale", back: "Low, Medium, High, and Critical." },
+            { front: "Implication of broad scope patterns across many users", back: "It is almost always an attacker and promotes the incident severity automatically." },
+            { front: "SOC (Security Operations Center)", back: "The front line or emergency call centre of cybersecurity that handles alert triage." },
+            { front: "CSIRT (Computer Security Incident Response Team)", back: "The 'surgery department' that takes over when an alert becomes a confirmed incident." },
+            { front: "PSIRT (Product Security Incident Response Team)", back: "A specialized team that handles bugs and vulnerabilities in a vendor's own products." },
+            { front: "The Tabletop Exercise", back: "A 2-hour discussion-based scenario to test response plans without keyboards; the cheapest, highest-impact IR investment." },
+            { front: "GDPR notification deadline", back: "Within 72 hours of awareness to the lead supervisory authority." },
+            { front: "GDPR maximum penalty", back: "Up to EUR 20 million or 4% of global annual turnover, whichever is higher." },
+            { front: "HIPAA notification deadline", back: "Within 60 days of discovery for affected individuals and the HHS." },
+            { front: "Internal SLA clock vs. External Legal clock", back: "The internal clock must always be tighter than the external clock to guarantee deadlines are met." }
+        ];
+
+        const quizData = [
+            {
+                question: "An automated system flags an \"impossible travel\" login attempt for a CEO. A SOC analyst investigates and confirms the CEO is simply using a VPN while traveling abroad. How should this scenario be classified according to standard incident handling terminology?",
+                hint: "Consider what happens when a raw system log is flagged as suspicious but ultimately turns out to be authorized behavior.",
+                options: [
+                    { text: "An Alert", rationale: "Events that cross a threshold to require human attention and triage fall into this category, bridging the gap between raw system logs and confirmed violations.", isCorrect: true },
+                    { text: "An Event", rationale: "While the login itself is an action on a system, the scenario progressed beyond a raw, unflagged log entry by triggering a specific notification requiring review.", isCorrect: false },
+                    { text: "An Incident", rationale: "Classifying a situation at this tier requires a confirmed policy violation or security breach, whereas the investigation proved the activity was authorized.", isCorrect: false },
+                    { text: "A Vulnerability", rationale: "This terminology describes a structural weakness in a system or process rather than a specific operational occurrence being investigated.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Your organization processes EU citizen data. At 10:00 AM on a Tuesday, the CSIRT confirms a severe data breach. The CISO asks you to set the internal Service Level Agreement (SLA) deadline for submitting the initial notification draft to Legal. Based on standard practices for handling legal frameworks, which timeframe should you establish?",
+                hint: "Think about the relationship between an organization's internal processes and the strict 72-hour mandate imposed by European regulators.",
+                options: [
+                    { text: "By 10:00 AM on Thursday (48 hours)", rationale: "Internal operational clocks must be deliberately set tighter than the external regulatory deadlines to guarantee compliance and allow time for executive review.", isCorrect: true },
+                    { text: "By 10:00 AM on Friday (72 hours)", rationale: "Aligning internal operational deadlines exactly with external regulatory maximums eliminates any buffer for legal review and vastly increases the risk of missing the compliance window.", isCorrect: false },
+                    { text: "Within 60 days", rationale: "This timeframe aligns with US healthcare regulations rather than the much stricter European data protection requirements applicable to EU citizen data.", isCorrect: false },
+                    { text: "By 10:00 AM on Wednesday of the following week", rationale: "European data protection regulations enforce a strict 72-hour notification window, making any timeline extending beyond three days non-compliant.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A hospital's patient database is struck by a ransomware attack. The attackers do not exfiltrate or view any patient data, but they encrypt the database files, preventing doctors from looking up patient histories during emergency operations. Which fundamental security property has primarily failed?",
+                hint: "Focus on the practical consequence for the doctors trying to do their jobs, rather than the technical mechanism the attackers used.",
+                options: [
+                    { text: "Availability", rationale: "The core disruption in this scenario is the inability of authorized users to access critical systems and information when they are actively needed for operations.", isCorrect: true },
+                    { text: "Confidentiality", rationale: "Because the attackers specifically did not view or steal the data, the protection against unauthorized disclosure remained intact.", isCorrect: false },
+                    { text: "Integrity", rationale: "While the data's format was altered via encryption, the primary operational impact and goal of the attack was denying access rather than secretly manipulating health records to cause medical errors.", isCorrect: false },
+                    { text: "Non-repudiation", rationale: "This property ensures a party cannot deny the authenticity of their signature on a document or a message they sent, which does not apply to a system lock-out.", isCorrect: false }
+                ]
+            },
+            {
+                question: "The SOC detects that five employees across three entirely different departments have simultaneously clicked on a malicious link in a targeted email, potentially exposing their credentials. Using standard severity and scope classification principles, how should the team immediately interpret this situation?",
+                hint: "Consider what a scattered pattern of compromise implies about the nature of the threat actor compared to an isolated incident.",
+                options: [
+                    { text: "As a broad scope incident requiring automatic severity promotion.", rationale: "Patterns of compromise affecting multiple dispersed users heavily indicate an active, coordinated attacker, demanding immediate escalation and broader response team involvement.", isCorrect: true },
+                    { text: "As a low severity incident because no sensitive data is confirmed stolen yet.", rationale: "Relying solely on confirmed data loss to dictate severity ignores the systemic risk and operational footprint of an attack spreading across multiple organizational silos.", isCorrect: false },
+                    { text: "As a narrow scope incident since only five total users are involved.", rationale: "Scope is determined by organizational reach and dispersion across different operational areas, not just the raw integer count of affected individual accounts.", isCorrect: false },
+                    { text: "As an event requiring only standard Tier 1 monitoring.", rationale: "Multiple users actively engaging with malicious payloads constitutes a confirmed policy violation and immediate threat, extending far beyond routine observation.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Following a major incident where a junior developer accidentally deleted a critical production database, the IT Infrastructure team implements automated, immutable hourly backups stored in a secure, off-site location. Which specific family of security controls does this implementation represent?",
+                hint: "Analyze whether the new system is designed to stop the mistake from happening, notify someone of the mistake, or fix the damage after the mistake.",
+                options: [
+                    { text: "Corrective", rationale: "Backups and disaster recovery plans are designed specifically to restore operations and clean up the environment after a disruptive event has already occurred.", isCorrect: true },
+                    { text: "Preventive", rationale: "Tools in this category, such as strict access control lists or firewalls, are built to stop the harmful action from executing in the first place, rather than fixing it afterward.", isCorrect: false },
+                    { text: "Detective", rationale: "Monitoring solutions and logging systems serve to notify teams that an anomaly is happening, but they do not actively restore systems to a known good state.", isCorrect: false },
+                    { text: "Deterrent", rationale: "Warning banners or visible security cameras aim to discourage malicious actors from attempting an attack, which does not address accidental internal deletions or system restoration.", isCorrect: false }
+                ]
+            },
+            {
+                question: "During a briefing, an analyst states: \"Our legacy web server is missing the Apache Struts patch, which could allow a remote attacker to gain access using a customized Python script, potentially resulting in a $500,000 regulatory fine.\" In this scenario, what does the \"customized Python script\" represent?",
+                hint: "Separate the weakness in the server, the person conducting the attack, the financial damage, and the specific weapon being used to break in.",
+                options: [
+                    { text: "An Exploit", rationale: "This term specifically describes the practical tool, method, or code utilized by an adversary to take advantage of an existing flaw to achieve their goals.", isCorrect: true },
+                    { text: "A Vulnerability", rationale: "The missing Apache Struts patch constitutes the underlying weakness or flaw in the environment, not the tool used to attack it.", isCorrect: false },
+                    { text: "A Threat", rationale: "The remote attacker themselves, or the potential for harm they represent, embodies this concept, distinct from the specific software weapon they wield.", isCorrect: false },
+                    { text: "A Risk", rationale: "The potential $500,000 regulatory fine represents the measured business consequence and financial danger, rather than the technical method of intrusion.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A team is evaluating the risk of a legacy application. They determine the likelihood of a successful attack is a 4 out of 5. The application holds public marketing data (Confidentiality impact: 1), but an outage would halt the entire corporate supply chain (Availability impact: 4). Using the standard risk formula, what is the risk score and resulting action?",
+                hint: "Remember the rule about how to handle the different C, I, and A impact variables when plugging them into the Risk = Likelihood x Impact equation.",
+                options: [
+                    { text: "Score of 16; prioritize mitigation this quarter.", rationale: "Standard calculation multiplies the likelihood by the highest, worst-case impact across any single dimension (4 x 4 = 16), which falls into the third-tier escalation threshold.", isCorrect: true },
+                    { text: "Score of 10; mitigate with standard controls.", rationale: "Averaging the impact scores (2.5) before multiplying by likelihood violates the principle of planning for the worst-case consequence across the security triad.", isCorrect: false },
+                    { text: "Score of 4; accept or monitor the risk.", rationale: "Calculating risk based solely on the lowest impact factor (Confidentiality) completely ignores the catastrophic business damage of a supply chain disruption.", isCorrect: false },
+                    { text: "Score of 20; escalate to senior management immediately.", rationale: "Achieving this severe threshold requires either a maximum likelihood or a maximum impact rating (e.g., 4 x 5 or 5 x 4), which exceeds the stated parameters.", isCorrect: false }
+                ]
+            },
+            {
+                question: "At 2:00 AM, an automated alarm sounds indicating anomalous outbound network traffic. A Tier 1 analyst reviews the logs, confirms the traffic is unauthorized, and determines it requires deep disk imaging and malware reverse-engineering. To which team should this task be immediately escalated?",
+                hint: "Consider the distinction between the 'emergency call center' that answers the initial alarm and the 'surgery department' that handles complex interventions.",
+                options: [
+                    { text: "The CSIRT", rationale: "Once an event is confirmed as a true incident requiring advanced technical intervention like forensics and deep analysis, it moves from the triage front lines to the specialized response team.", isCorrect: true },
+                    { text: "Legal Counsel", rationale: "While this team must be notified of confirmed incidents to manage regulatory clocks and liability, they do not perform technical tasks like malware reverse-engineering.", isCorrect: false },
+                    { text: "IT Operations", rationale: "Though highly knowledgeable about the infrastructure, this team's primary focus is maintaining general system health and uptime, not conducting specialized cyber forensics.", isCorrect: false },
+                    { text: "The PSIRT", rationale: "This specific designation is reserved for teams that investigate and patch vulnerabilities within a software vendor's own commercial products, not internal corporate network intrusions.", isCorrect: false }
+                ]
+            },
+            {
+                question: "During a suspected network intrusion, responders physically unplug an affected database server from the main corporate switch to prevent malware from spreading, while leaving the server powered on for memory analysis. Which phase of the NIST SP 800-61 lifecycle are they executing?",
+                hint: "Identify the stage of the response loop focused entirely on 'stopping the bleeding' before trying to permanently cure the patient.",
+                options: [
+                    { text: "Containment", rationale: "Isolating a compromised asset to stop the bleeding and halt lateral movement across the network is the primary objective of this specific operational phase.", isCorrect: true },
+                    { text: "Identification", rationale: "The team has already moved past detecting and confirming the presence of an anomaly, as evidenced by taking physical action against a specific server.", isCorrect: false },
+                    { text: "Eradication", rationale: "Simply unplugging the server stops the spread, but it does not actively remove the root cause or delete the malicious code dwelling inside the isolated machine.", isCorrect: false },
+                    { text: "Recovery", rationale: "This phase involves safely restoring systems to business-as-usual operations, which is the exact opposite of intentionally severing a server's network connection.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A global company discovers a severe data breach today that actually occurred three months ago, compromising both EU citizen data and US healthcare data. Based on standard regulatory frameworks, when do the reporting clocks for GDPR and HIPAA officially begin ticking?",
+                hint: "Consider whether lawmakers penalize companies based on when a stealthy hacker broke in, or based on how quickly the company acts once they realize they've been hacked.",
+                options: [
+                    { text: "Both clocks start today.", rationale: "Regulatory timers for major frameworks generally activate at the moment of organizational awareness or discovery, not retroactively to the unseen moment of technical compromise.", isCorrect: true },
+                    { text: "Both clocks started three months ago.", rationale: "Starting legal timers based on the moment of initial compromise would mathematically guarantee severe fines for almost all advanced persistent threats, which dwell undetected for months.", isCorrect: false },
+                    { text: "The GDPR clock started three months ago, but the HIPAA clock starts today.", rationale: "European regulations explicitly state the 72-hour window begins upon 'awareness' of the incident, aligning the start time with the moment of discovery.", isCorrect: false },
+                    { text: "The HIPAA clock started three months ago, but the GDPR clock starts today.", rationale: "US healthcare regulations explicitly trigger the 60-day notification window upon the date of 'discovery', meaning the timer activates when the organization finds out.", isCorrect: false }
+                ]
+            }
+        ];
+
+        // --- APP STATE & LOGIC ---
+        
+        // Tab Logic
+        function switchTab(tabId) {
+            // Update Buttons
+            document.getElementById('tab-flashcards').classList.remove('active');
+            document.getElementById('tab-quiz').classList.remove('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Update Content Visibility
+            document.getElementById('content-flashcards').classList.add('hidden');
+            document.getElementById('content-quiz').classList.add('hidden');
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+        }
+
+        // Flashcard Logic
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        function renderCard() {
+            const card = flashcardsData[currentCardIndex];
+            document.getElementById('fc-front-text').innerText = card.front;
+            document.getElementById('fc-back-text').innerText = card.back;
+            document.getElementById('fc-counter').innerText = `${currentCardIndex + 1} / ${flashcardsData.length}`;
+            
+            // Reset flip state silently if needed
+            if (isFlipped) {
+                isFlipped = false;
+                document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+            }
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            const inner = document.getElementById('flashcard-inner');
+            if (isFlipped) {
+                inner.classList.add('rotate-y-180');
+            } else {
+                inner.classList.remove('rotate-y-180');
+            }
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                renderCard();
+            } else {
+                // Loop to end
+                currentCardIndex = flashcardsData.length - 1;
+                renderCard();
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcardsData.length - 1) {
+                currentCardIndex++;
+                renderCard();
+            } else {
+                // Loop to start
+                currentCardIndex = 0;
+                renderCard();
+            }
+        }
+
+        // Quiz Logic
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = ''; // Clear
+
+            quizData.forEach((qData, qIndex) => {
+                // Shuffle options for this instance
+                const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
+
+                const qBlock = document.createElement('div');
+                qBlock.className = 'bg-white p-6 rounded-xl shadow-sm border border-slate-200';
+                
+                // Question Header & Text
+                let html = `
+                    <div class="mb-4">
+                        <span class="text-xs font-bold text-blue-600 tracking-wider uppercase mb-1 block">Question ${qIndex + 1}</span>
+                        <h3 class="text-lg font-semibold text-slate-900">${qData.question}</h3>
+                    </div>
+                    
+                    <div class="mb-5">
+                        <button onclick="toggleHint(${qIndex})" class="text-sm text-slate-500 hover:text-blue-600 flex items-center gap-1 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            Show Hint
+                        </button>
+                        <div id="hint-${qIndex}" class="hidden mt-2 p-3 bg-amber-50 text-amber-800 text-sm rounded-lg border border-amber-200">
+                            <strong>Hint:</strong> ${qData.hint}
+                        </div>
+                    </div>
+
+                    <div class="space-y-3" id="options-${qIndex}">
+                `;
+
+                // Options
+                shuffledOptions.forEach((opt, optIndex) => {
+                    const isCorrectFlag = opt.isCorrect ? 'true' : 'false';
+                    const safeRationale = opt.rationale.replace(/'/g, "\\'");
+                    
+                    html += `
+                        <button id="btn-${qIndex}-${optIndex}" 
+                                onclick="selectAnswer(${qIndex}, ${optIndex}, ${isCorrectFlag}, '${safeRationale}')" 
+                                class="w-full text-left p-4 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-all focus:outline-none">
+                            <span class="text-slate-700">${opt.text}</span>
+                        </button>
+                    `;
+                });
+
+                html += `
+                    </div>
+                    <div id="feedback-${qIndex}" class="hidden mt-4 p-4 rounded-lg text-sm"></div>
+                `;
+
+                qBlock.innerHTML = html;
+                container.appendChild(qBlock);
+            });
+        }
+
+        function toggleHint(qIndex) {
+            const hintDiv = document.getElementById(`hint-${qIndex}`);
+            if (hintDiv.classList.contains('hidden')) {
+                hintDiv.classList.remove('hidden');
+            } else {
+                hintDiv.classList.add('hidden');
+            }
+        }
+
+        function selectAnswer(qIndex, optIndex, isCorrect, rationale) {
+            const optionsContainer = document.getElementById(`options-${qIndex}`);
+            const buttons = optionsContainer.querySelectorAll('button');
+            const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+            const clickedBtn = document.getElementById(`btn-${qIndex}-${optIndex}`);
+
+            // Lock all buttons in this question
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-blue-400', 'hover:bg-blue-50', 'cursor-pointer');
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            });
+
+            // Highlight clicked button
+            clickedBtn.classList.remove('opacity-60', 'border-slate-200');
+            if (isCorrect) {
+                clickedBtn.classList.add('border-green-500', 'bg-green-50', 'ring-1', 'ring-green-500');
+                feedbackDiv.className = 'mt-4 p-4 rounded-lg text-sm bg-green-50 text-green-900 border border-green-200 block transition-all';
+                feedbackDiv.innerHTML = `<strong class="text-green-700 block mb-1">Correct!</strong> ${rationale}`;
+            } else {
+                clickedBtn.classList.add('border-red-500', 'bg-red-50', 'ring-1', 'ring-red-500');
+                feedbackDiv.className = 'mt-4 p-4 rounded-lg text-sm bg-slate-100 text-slate-700 border border-slate-300 block transition-all';
+                feedbackDiv.innerHTML = `<strong class="text-slate-800 block mb-1">Not quite.</strong> ${rationale}`;
+            }
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCard();
+            renderQuiz();
+        });
+
+    </script>
+</body>
+</html>
+
+
+
