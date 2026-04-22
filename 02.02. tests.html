@@ -1,4 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IH&R Process Study Guide</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --secondary: #f8f9fa;
+            --text-dark: #333;
+            --text-light: #fff;
+            --correct: #28a745;
+            --incorrect: #dc3545;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        /* Tab Styles */
+        .tabs {
+            display: flex;
+            background-color: var(--primary);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .tab-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .tab-btn.active {
+            background-color: #004494;
+            font-weight: bold;
+            border-bottom: 4px solid #ffc107;
+        }
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        .tab-content.active {
+            display: block;
+        }
 
+        /* Flashcard Styles */
+        .flashcard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .flashcard {
+            background-color: transparent;
+            height: 200px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .flashcard-front {
+            background-color: var(--secondary);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 2px solid #dee2e6;
+        }
+        .flashcard-back {
+            background-color: var(--primary);
+            color: var(--text-light);
+            transform: rotateY(180deg);
+            font-size: 1rem;
+        }
+
+        /* Quiz Styles */
+        .question-card {
+            background: var(--secondary);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+        .question-text {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 0;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .option-btn {
+            text-align: left;
+            padding: 12px;
+            background: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+        .option-btn:hover {
+            background: #e9ecef;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+        .hint-btn {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .hint-text {
+            display: none;
+            margin-top: 10px;
+            font-style: italic;
+            color: #495057;
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
+        }
+        .feedback {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .feedback.correct {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 5px solid var(--correct);
+        }
+        .feedback.incorrect {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid var(--incorrect);
+        }
+        .correct-btn {
+            background-color: #d4edda !important;
+            border-color: var(--correct) !important;
+        }
+        .incorrect-btn {
+            background-color: #f8d7da !important;
+            border-color: var(--incorrect) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('flashcards-tab', this)">Flashcards (25)</button>
+        <button class="tab-btn" onclick="openTab('quiz-tab', this)">Practical Quiz (10)</button>
+    </div>
+
+    <div id="flashcards-tab" class="tab-content active">
+        <h2>IH&R Process Flashcards</h2>
+        <p>Click on a card to flip it and reveal the answer.</p>
+        <div class="flashcard-grid" id="flashcard-container"></div>
+    </div>
+
+    <div id="quiz-tab" class="tab-content">
+        <h2>IH&R Process Practical Quiz</h2>
+        <p>Test your ability to apply these concepts in real-world scenarios.</p>
+        <div id="quiz-container"></div>
+    </div>
+</div>
+
+<script>
+    // Tab switching logic
+    function openTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btnElement.classList.add('active');
+    }
+
+    // Flashcard Data
+    const flashcards = [
+        { front: "6 phases of the IH&R lifecycle", back: "Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned" },
+        { front: "Event (Cybersecurity Definition)", back: "Anything observable on a system, such as a login, a packet, or a file change." },
+        { front: "Incident (Cybersecurity Definition)", back: "An event or chain of events that violates or threatens a security policy." },
+        { front: "Breach (Cybersecurity Definition)", back: "An incident where the loss of confidentiality of data is proven." },
+        { front: "Main goals of the Preparation phase", back: "To build the IRP, stand up the CSIRT, prepare tools, run drills, and align legal and PR before an incident occurs." },
+        { front: "Main deliverables of the Identification phase", back: "A confirmed incident, an initial severity rating, an assigned handler, and documented Indicators of Compromise (IoCs)." },
+        { front: "Main goals of the Containment phase", back: "To stop the bleeding via network and credential isolation while planning proper eradication." },
+        { front: "Crucial step before rebooting a compromised host", back: "Snapshot the affected VMs to preserve volatile RAM evidence, such as decryption keys." },
+        { front: "Main goals of the Eradication phase", back: "To remove malware, patch vulnerabilities, kill persistence mechanisms, and rebuild systems." },
+        { front: "Prerequisite for Eradication", back: "Fully understanding the root cause so the attacker cannot return through the same vulnerability." },
+        { front: "Main goals of the Recovery phase", back: "To restore from known-good backups, bring services back in staged waves, and validate business functions." },
+        { front: "Main deliverables of the Lessons Learned phase", back: "A blameless post-incident review (PIR), performance metrics (MTTD/MTTR), and explicit updates to the IRP and Preparation phase." },
+        { front: "IRP (Incident Response Plan)", back: "A living document and set of playbooks detailing who does what, when, and how during a security incident." },
+        { front: "Minimum frequency for drilling the IRP", back: "At least twice per year." },
+        { front: "First steps of IRP Activation (First 15 minutes)", back: "Declare Incident Commander, open war-room bridge, start the clock, define scope, and rate severity." },
+        { front: "Three communication axes during an incident", back: "Internal axis, External axis, and Regulatory axis." },
+        { front: "SEV-1 (Critical) notification SLA", back: "Within 15 minutes to key leadership and the full CSIRT." },
+        { front: "Out-of-band communication", back: "Fallback channels (e.g., personal phones, Signal) used when primary corporate channels like email or Teams are compromised." },
+        { front: "Chain of Custody", back: "A signed, timestamped record documenting who collected, held, transferred, and received a piece of evidence." },
+        { front: "GDPR notification deadline for personal-data breaches", back: "72 hours to the Data Protection Authority (DPA)." },
+        { front: "PCI-DSS notification deadline for suspected cardholder data compromise", back: "Immediately to the acquirer and card brands." },
+        { front: "5 Whys Technique", back: "A root-cause analysis technique that involves asking 'why' sequentially to uncover the underlying system or process failure." },
+        { front: "Ishikawa Diagram", back: "A fishbone root-cause analysis technique used for multi-cause incidents, categorizing issues by people, process, tech, environment, data, and policy." },
+        { front: "MTTD (Mean Time to Detect)", back: "The time from the attacker's first action to your first alert." },
+        { front: "MTTR (Mean Time to Respond/Recover)", back: "The time from alert acknowledgement to the service being restored." }
+    ];
+
+    // Render Flashcards
+    const flashcardContainer = document.getElementById('flashcard-container');
+    flashcards.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'flashcard';
+        div.onclick = function() { this.classList.toggle('flipped'); };
+        div.innerHTML = `
+            <div class="flashcard-inner">
+                <div class="flashcard-front">${card.front}</div>
+                <div class="flashcard-back">${card.back}</div>
+            </div>
+        `;
+        flashcardContainer.appendChild(div);
+    });
+
+    // Quiz Data
+    const quiz = [
+        {
+            q: "A security analyst sees an alert for a single failed login attempt on a non-critical server. No security policy was violated, and no data was accessed. How should this occurrence be classified?",
+            hint: "Think about whether a security policy has actually been violated or if data confidentiality was compromised.",
+            opts: [
+                { t: "Event", r: "A failed login is simply an observable occurrence on a system; without a policy violation or threat, it hasn't escalated.", c: true },
+                { t: "Incident", r: "This classification requires an actual violation or threat to a security policy.", c: false },
+                { t: "Breach", r: "This label is reserved strictly for situations where the loss of data confidentiality is definitively proven.", c: false },
+                { t: "Vulnerability", r: "A failed login is an observation of activity, not a systemic weakness or flaw in the code.", c: false }
+            ]
+        },
+        {
+            q: "You just confirmed a critical ransomware infection in the main billing database at 2:00 AM. What is the most critical procedural action to perform within the first 15 minutes of activating the Incident Response Plan (IRP)?",
+            hint: "The first moments set the tone and structure for the entire response process, prioritizing coordination and scoping over immediate technical fixes.",
+            opts: [
+                { t: "Declare an Incident Commander, open the war-room bridge, and start the clock.", r: "Establishing leadership, communication channels, and a formal timeline ensures the response is disciplined and coordinated.", c: true },
+                { t: "Begin removing the malware files from the infected billing servers.", r: "Jumping straight to eradication without containment allows the attacker to maintain persistence.", c: false },
+                { t: "Draft and release a holding statement to the public media.", r: "Pushing a public statement within minutes usually precedes having accurate facts, leading to retractions later.", c: false },
+                { t: "Restore the billing database from yesterday's known-good backup.", r: "Restoring systems before the threat is contained means the restored systems will likely just be encrypted again immediately.", c: false }
+            ]
+        },
+        {
+            q: "A tier-2 analyst detects an active attacker moving laterally across several virtual machines. The analyst wants to immediately reboot the compromised VMs to terminate the attacker's active sessions. What is the fatal flaw in this containment strategy?",
+            hint: "Consider what type of data exists only while a machine is powered on and how that data might be crucial later for investigations.",
+            opts: [
+                { t: "Rebooting destroys volatile RAM evidence, such as in-memory decryption keys or active malware processes.", r: "Capturing a snapshot of the machine's memory before power cycling preserves critical forensic artifacts.", c: true },
+                { t: "Rebooting will automatically alert the attacker via the network gateway.", r: "While an attacker might notice a reboot, the primary danger is the destruction of local evidence.", c: false },
+                { t: "Rebooting violates the regulatory chain of custody required for audits.", r: "Chain of custody relates to how evidence is documented and transferred, not the decision to restart a server.", c: false },
+                { t: "Rebooting will permanently corrupt the master boot record of the VMs.", r: "Standard restarts do not typically destroy boot records; the danger lies in the loss of volatile memory.", c: false }
+            ]
+        },
+        {
+            q: "An attacker has compromised the corporate Active Directory environment, meaning they likely have access to the company's internal email and Teams chats. How must the CSIRT coordinate their response efforts?",
+            hint: "If the attacker owns the house, you shouldn't use the house's intercom to plan their eviction.",
+            opts: [
+                { t: "Transition immediately to pre-established out-of-band fallback channels like Signal or personal phones.", r: "Using separate infrastructure ensures the response team can coordinate without the attacker monitoring them.", c: true },
+                { t: "Create a new, hidden channel within the corporate Microsoft Teams workspace.", r: "If the underlying identity provider is compromised, a 'hidden' channel offers no real security.", c: false },
+                { t: "Communicate exclusively via encrypted corporate emails.", r: "Encryption only protects the message in transit; if the attacker compromised the accounts, they can read the messages.", c: false },
+                { t: "Pause all communications until the Active Directory is fully sanitized and rebuilt.", r: "Halting coordination entirely paralyzes the incident response process.", c: false }
+            ]
+        },
+        {
+            q: "Your team has found a malicious web shell on a public-facing server. An eager junior analyst deletes the web shell file immediately and declares the threat eradicated. Why is this a dangerous operational approach?",
+            hint: "Putting out a fire is only temporary if you leave the gas leak open.",
+            opts: [
+                { t: "Deleting the shell without understanding the root cause means the attacker can likely re-enter through the same unpatched vulnerability.", r: "Effective eradication requires fixing the underlying weakness that allowed the compromise in the first place.", c: true },
+                { t: "The analyst should have waited for the legal team to draft a holding statement.", r: "Legal statements do not dictate the technical timing of file remediation.", c: false },
+                { t: "Deleting the file triggers a mandatory 72-hour regulatory notification clock.", r: "Regulatory clocks start at the discovery of the incident or breach, not at remediation.", c: false },
+                { t: "The file should have been renamed rather than deleted to confuse the attacker's scripts.", r: "Renaming a malicious file leaves the code on the server and does nothing to close the vulnerability.", c: false }
+            ]
+        },
+        {
+            q: "An alert comes in as a SEV-3 (Medium) regarding unusual privileged activity. Over the next hour, you discover the activity has spread and affects multiple business units. What is the correct protocol?",
+            hint: "Incident classifications must match the current reality of the threat, and communication channels should reflect the growing risk.",
+            opts: [
+                { t: "Promote the severity to SEV-2 or SEV-1 immediately and notify the corresponding higher-level audiences.", r: "As scope grows, severity must be dynamically escalated to bring in executive support.", c: true },
+                { t: "Wait for the next shift change to hand over the incident to a new team.", r: "Delaying escalation allows the attacker more uncontested dwell time.", c: false },
+                { t: "Quietly resolve the extended scope to avoid unnecessarily alarming the board.", r: "Failing to escalate hides the true risk from leadership, often interpreted as a cover-up.", c: false },
+                { t: "Maintain the SEV-3 rating but assign more Tier-1 analysts to the ticket.", r: "Adding junior analysts does not solve the need for executive decision-making or legal involvement.", c: false }
+            ]
+        },
+        {
+            q: "Your company suspects that cardholder data has been compromised in a breach discovered at 2:00 AM on a Saturday. According to PCI-DSS requirements, when must you notify the acquirer and card brands?",
+            hint: "Payment card data has the strictest and most unforgiving reporting timeline of all the major regulatory frameworks.",
+            opts: [
+                { t: "Immediately.", r: "PCI-DSS requires instantaneous notification upon suspicion of cardholder data compromise, 24/7.", c: true },
+                { t: "Within 72 hours.", r: "This is the timeline associated with GDPR for personal-data breaches.", c: false },
+                { t: "By the close of the next business day.", r: "Waiting allows fraudulent transactions to process unabated for days.", c: false },
+                { t: "Within 4 business days.", r: "This timeline applies to SEC material cybersecurity incident disclosures.", c: false }
+            ]
+        },
+        {
+            q: "You are conducting forensics on a compromised laptop. To ensure the evidence is admissible in court, you document who collected it, the time and place, and who currently holds it. What critical technical step is missing from this chain of custody?",
+            hint: "You need a mathematical way to prove that the file analyzed months later is exactly the same file collected on the day of the incident.",
+            opts: [
+                { t: "Generating a cryptographic hash value (like SHA-256) of the evidence.", r: "A hash proves the integrity of the data, demonstrating definitively that the files have not been altered.", c: true },
+                { t: "Obtaining a countersignature from a local law enforcement officer.", r: "A police signature is not a prerequisite for a company's internal digital chain of custody.", c: false },
+                { t: "Uploading the raw evidence files to a public cloud storage bucket.", r: "Uploading sensitive forensic images to public storage constitutes a severe data leak.", c: false },
+                { t: "Printing a hard copy of all the executable files on the hard drive.", r: "Printing binary code is practically useless for forensic analysis.", c: false }
+            ]
+        },
+        {
+            q: "During a Post-Incident Review (PIR) for a phishing attack, the team concludes the root cause is 'Dave in Accounting clicked a bad link.' Why does this fail the standard of a proper 5 Whys analysis?",
+            hint: "A good investigation asks what circumstances, lack of training, or missing technical safeguards put the employee in a position to fail.",
+            opts: [
+                { t: "It stops at a human action rather than uncovering the underlying system, training, or process failure.", r: "A thorough root cause analysis pushes past human error to find why the system permitted the error to cause harm.", c: true },
+                { t: "It blames the accounting department instead of the IT department.", r: "The issue isn't which department is blamed, but that the investigation stopped before finding a structural fix.", c: false },
+                { t: "It doesn't use the Ishikawa fishbone diagram, which is mandatory.", r: "Ishikawa is useful, but not strictly mandatory if 5 Whys effectively uncovers the systemic root cause.", c: false },
+                { t: "It fails to calculate the Mean Time to Respond (MTTR) for Dave's specific click.", r: "MTTR is a performance metric, not a root-cause analysis technique.", c: false }
+            ]
+        },
+        {
+            q: "A company successfully recovers from an attack, holds a PIR, and calculates their metrics. However, six months later, they are hit by the exact same attack vector. Which phase of the IH&R lifecycle did they most likely fail to execute properly?",
+            hint: "An engine of continuous improvement requires the outputs of the final step to become the inputs of the very first step.",
+            opts: [
+                { t: "They failed to feed the action items from the Lessons Learned phase back into the Preparation phase.", r: "Identifying weaknesses is useless if the team does not actively update their defenses and playbooks to prevent recurrence.", c: true },
+                { t: "They failed to correctly identify the malware during the Identification phase.", r: "If they recovered successfully the first time, they likely identified it, but failed to patch the hole permanently.", c: false },
+                { t: "They restored from backups too quickly during the Recovery phase.", r: "The speed of recovery does not cause a secondary incident months later; a lack of systemic hardening does.", c: false },
+                { t: "They did not properly classify the event during the Containment phase.", r: "Misclassification wouldn't directly cause a repeat vulnerability months later.", c: false }
+            ]
+        }
+    ];
+
+    // Render Quiz
+    const quizContainer = document.getElementById('quiz-container');
+    quiz.forEach((qData, qIndex) => {
+        // Shuffle options
+        const shuffledOpts = [...qData.opts].sort(() => Math.random() - 0.5);
+
+        let optionsHTML = '';
+        shuffledOpts.forEach((opt, oIndex) => {
+            // Encode strings to prevent quotes from breaking HTML attributes
+            const safeRationale = opt.r.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            optionsHTML += `<button class="option-btn" onclick="checkAnswer(this, ${opt.c}, '${safeRationale}', 'feedback-${qIndex}')">${opt.t}</button>`;
+        });
+
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question-card';
+        qDiv.innerHTML = `
+            <p class="question-text">${qIndex + 1}. ${qData.q}</p>
+            <div class="options" id="options-${qIndex}">
+                ${optionsHTML}
+            </div>
+            <button class="hint-btn" onclick="toggleHint('hint-${qIndex}')">Toggle Hint</button>
+            <div id="hint-${qIndex}" class="hint-text"><strong>Hint:</strong> ${qData.hint}</div>
+            <div id="feedback-${qIndex}" class="feedback"></div>
+        `;
+        quizContainer.appendChild(qDiv);
+    });
+
+    // Quiz Logic
+    function toggleHint(hintId) {
+        const hintEl = document.getElementById(hintId);
+        hintEl.style.display = hintEl.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function checkAnswer(button, isCorrect, rationale, feedbackId) {
+        const feedbackEl = document.getElementById(feedbackId);
+        const optionsContainer = button.parentElement;
+        
+        // Disable all buttons for this question
+        Array.from(optionsContainer.children).forEach(btn => {
+            btn.disabled = true;
+            btn.style.cursor = 'not-allowed';
+        });
+
+        // Style the clicked button
+        if (isCorrect) {
+            button.classList.add('correct-btn');
+            feedbackEl.className = 'feedback correct';
+            feedbackEl.innerHTML = `<strong>Correct!</strong> ${rationale}`;
+        } else {
+            button.classList.add('incorrect-btn');
+            feedbackEl.className = 'feedback incorrect';
+            feedbackEl.innerHTML = `<strong>Incorrect.</strong> ${rationale}`;
+            
+            // Optional: Highlight the actual correct answer
+            Array.from(optionsContainer.children).forEach(btn => {
+                // We hackily check the onclick string to find the correct one to show user the right answer
+                if(btn.getAttribute('onclick').includes('true,')) {
+                     btn.style.border = "2px solid #28a745";
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>
 
 
 
