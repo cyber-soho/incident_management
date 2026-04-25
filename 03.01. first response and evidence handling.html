@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Response & Evidence Handling - Interactive Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals (Pearl/Stone) with Muted Teal/Terracotta Accents -->
+    <!-- Application Structure Plan: The SPA uses a dashboard-like sidebar layout to divide the 45-slide lecture into 6 digestible, thematic modules (Intro + 5 Lessons + Reference). This structure was chosen because incident response is procedural; a lateral navigation allows students to jump directly to specific phases (e.g., Triage vs. Documentation) during a simulated crisis, reinforcing the "playbook" nature of the source material. Each section contains interactive elements to translate static bullet points into active learning (e.g., live hashing, clickable flowcharts). -->
+    <!-- Visualization & Content Choices: 
+         1. Triage Flow -> Goal: Organize/Inform -> Viz: Interactive stepped HTML layout -> Justification: Breaks down the 6-step linear process into clickable details.
+         2. Hash Demo -> Goal: Inform/Change -> Viz: Live JS Cryptography tool -> Justification: Visually proves "if one bit changes, the hash changes", cementing the core concept of Chain of Custody.
+         3. Volatility Pyramid -> Goal: Compare/Inform -> Viz: Chart.js Horizontal Bar -> Justification: Quantifies "half-life" of data conceptually. NO SVG used.
+         4. Regulatory Clocks -> Goal: Compare -> Viz: Chart.js Bar Chart -> Justification: Shows the drastic differences in reporting windows. NO SVG used.
+         5. RACI Matrix -> Goal: Organize -> Viz: HTML Grid/Table -> Justification: Best way to show intersection of roles and responsibilities. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        .nav-active { background-color: #2b6777; color: #ffffff; border-radius: 0.5rem; font-weight: 600; }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item:hover:not(.nav-active) { background-color: #e2e8f0; border-radius: 0.5rem; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .hide { display: none; }
+        .btn-primary { background-color: #2b6777; color: white; transition: background-color 0.2s; }
+        .btn-primary:hover { background-color: #1e4a56; }
+        .accent-text { color: #e07a5f; }
+        @media (max-width: 768px) {
+            .chart-container { height: 250px; }
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <nav class="w-full md:w-72 bg-white border-r border-slate-200 shadow-sm p-4 flex flex-col md:h-screen md:sticky md:top-0 z-50">
+        <div class="mb-8 mt-2 px-2">
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Cyber.SoHo Hub</h1>
+            <p class="text-sm text-slate-500 mt-1 font-medium">Incident Management: Day 02</p>
+        </div>
+        <ul class="space-y-2 flex-1 overflow-y-auto">
+            <li><button onclick="nav('intro')" id="btn-intro" class="nav-item nav-active w-full text-left px-4 py-3">📡 0. The First Hour</button></li>
+            <li><button onclick="nav('triage')" id="btn-triage" class="nav-item w-full text-left px-4 py-3 text-slate-700">🔍 1. Triage Model</button></li>
+            <li><button onclick="nav('custody')" id="btn-custody" class="nav-item w-full text-left px-4 py-3 text-slate-700">🔗 2. Chain of Custody</button></li>
+            <li><button onclick="nav('volatility')" id="btn-volatility" class="nav-item w-full text-left px-4 py-3 text-slate-700">⏳ 3. Volatility Order</button></li>
+            <li><button onclick="nav('docs')" id="btn-docs" class="nav-item w-full text-left px-4 py-3 text-slate-700">📝 4. Documentation</button></li>
+            <li><button onclick="nav('roles')" id="btn-roles" class="nav-item w-full text-left px-4 py-3 text-slate-700">👥 5. Roles & RACI</button></li>
+            <li><button onclick="nav('reference')" id="btn-reference" class="nav-item w-full text-left px-4 py-3 text-slate-700">🚨 Reference & Laws</button></li>
+        </ul>
+        <div class="mt-4 pt-4 border-t border-slate-200 px-2 text-xs text-slate-400">
+            From the Industry to the Classroom.
+        </div>
+    </nav>
+
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto w-full max-w-6xl mx-auto">
+        
+        <section id="sec-intro" class="fade-in block">
+            <div class="mb-8">
+                <h2 class="text-4xl font-extrabold text-slate-800 mb-4">First Response & Evidence Handling</h2>
+                <p class="text-lg text-slate-600 leading-relaxed bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    Welcome to Day 02 of the Incident Management series. This interactive playbook translates the critical theories of cybersecurity first response into actionable steps. The overarching principle of this module is simple but unforgiving: <strong class="text-slate-800">The first hour decides everything.</strong> Explore the sections to understand how to preserve evidence, establish legal defensibility, and avoid catastrophic contamination.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div class="glass-panel p-8 rounded-xl border-l-4 border-l-[#e07a5f]">
+                    <h3 class="text-xl font-bold mb-3">The Core Philosophy</h3>
+                    <ul class="space-y-3 text-slate-700">
+                        <li class="flex items-start"><span class="mr-2">❌</span> <span><strong>Bad Response:</strong> No clean evidence, ruined timeline, no regulatory defence.</span></li>
+                        <li class="flex items-start"><span class="mr-2">✅</span> <span><strong>Good Response:</strong> Chain of custody, reproducible analysis, court-admissible record.</span></li>
+                    </ul>
+                    <div class="mt-6 p-4 bg-red-50 text-red-800 rounded-lg text-sm font-semibold">
+                        Goal: Preserve, do not investigate. Tools change every two years; first-hour discipline does not.
+                    </div>
+                </div>
+
+                <div class="glass-panel p-8 rounded-xl border-l-4 border-l-[#2b6777]">
+                    <h3 class="text-xl font-bold mb-3">Five Pillars of Defensibility</h3>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-slate-50 rounded border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100" onclick="nav('triage')"><span>1. Triage</span> <span>➔</span></div>
+                        <div class="p-3 bg-slate-50 rounded border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100" onclick="nav('custody')"><span>2. Chain of Custody</span> <span>➔</span></div>
+                        <div class="p-3 bg-slate-50 rounded border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100" onclick="nav('volatility')"><span>3. Order of Volatility</span> <span>➔</span></div>
+                        <div class="p-3 bg-slate-50 rounded border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100" onclick="nav('docs')"><span>4. Documentation</span> <span>➔</span></div>
+                        <div class="p-3 bg-slate-50 rounded border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100" onclick="nav('roles')"><span>5. Roles & Responsibilities</span> <span>➔</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-triage" class="fade-in hide">
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Lesson 1: The Triage Model</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                This section covers the immediate steps required upon detecting an incident signal. The goal is to decide within minutes if a signal is real and determine its scope. Interact with the 6-step flow below to understand the distinct actions required at each stage. Remember: the first ten minutes are about observing and preserving, not fixing.
+            </p>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-wrap gap-2 mb-6 justify-center">
+                    <button onclick="showTriageStep(1)" id="tbtn-1" class="px-4 py-2 rounded-full text-sm font-bold bg-[#2b6777] text-white">1. Verify</button>
+                    <span class="text-slate-300 self-center">▶</span>
+                    <button onclick="showTriageStep(2)" id="tbtn-2" class="px-4 py-2 rounded-full text-sm font-bold bg-slate-200 text-slate-600 hover:bg-slate-300">2. Scope</button>
+                    <span class="text-slate-300 self-center">▶</span>
+                    <button onclick="showTriageStep(3)" id="tbtn-3" class="px-4 py-2 rounded-full text-sm font-bold bg-slate-200 text-slate-600 hover:bg-slate-300">3. Contain</button>
+                    <span class="text-slate-300 self-center">▶</span>
+                    <button onclick="showTriageStep(4)" id="tbtn-4" class="px-4 py-2 rounded-full text-sm font-bold bg-slate-200 text-slate-600 hover:bg-slate-300">4. Notify</button>
+                    <span class="text-slate-300 self-center">▶</span>
+                    <button onclick="showTriageStep(5)" id="tbtn-5" class="px-4 py-2 rounded-full text-sm font-bold bg-slate-200 text-slate-600 hover:bg-slate-300">5. Capture</button>
+                    <span class="text-slate-300 self-center">▶</span>
+                    <button onclick="showTriageStep(6)" id="tbtn-6" class="px-4 py-2 rounded-full text-sm font-bold bg-slate-200 text-slate-600 hover:bg-slate-300">6. Hand off</button>
+                </div>
+
+                <div id="triage-content-area" class="p-6 bg-slate-50 rounded-lg border border-slate-200 min-h-[250px]">
+                    <h3 id="t-title" class="text-2xl font-bold text-slate-800 mb-3">Step 1: Verify the signal</h3>
+                    <p id="t-subtitle" class="text-[#e07a5f] font-semibold mb-4">Is it real?</p>
+                    <ul id="t-list" class="list-disc pl-5 space-y-2 text-slate-700">
+                        <li>An alert is a hypothesis, not a fact.</li>
+                        <li>Cross-check at least <strong>two independent sources</strong> (e.g., SIEM + EDR, or direct observation).</li>
+                        <li>False-positive triage saves the rest of the response from being wasted.</li>
+                        <li><strong>Never</strong> ignore a verified second source.</li>
+                    </ul>
+                    <div id="t-takeaway" class="mt-6 p-3 bg-[#2b6777] text-white rounded text-sm font-medium">
+                        Key Takeaway: No incident is declared on a single signal alone.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-custody" class="fade-in hide">
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Lesson 2: Chain of Custody</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                This section explores why technical evidence is legally useless without an unbroken, documented trail. You will learn the five non-negotiable principles of evidence handling. Use the interactive hashing tool to see firsthand why SHA-256 is the legal hinge of digital forensics.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold mb-4">The Five Principles</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start"><span class="bg-slate-200 text-slate-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span><p class="text-sm"><strong>Identify:</strong> who collected what, where, when.</p></div>
+                            <div class="flex items-start"><span class="bg-[#2b6777] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span><p class="text-sm"><strong>Hash:</strong> SHA-256 on collection, re-checked on transfer.</p></div>
+                            <div class="flex items-start"><span class="bg-slate-200 text-slate-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">3</span><p class="text-sm"><strong>Seal:</strong> Tamper-evident bag with sequential number.</p></div>
+                            <div class="flex items-start"><span class="bg-slate-200 text-slate-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">4</span><p class="text-sm"><strong>Log:</strong> Every transfer with timestamp, name, signature.</p></div>
+                            <div class="flex items-start"><span class="bg-slate-200 text-slate-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">5</span><p class="text-sm"><strong>Preserve:</strong> Original is never analysed; use a copy.</p></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                        <h3 class="text-lg font-bold text-red-800 mb-2">What breaks the chain?</h3>
+                        <ul class="list-disc pl-5 text-sm text-red-700 space-y-1">
+                            <li>Gap in timeline (unaccounted time).</li>
+                            <li>Unsigned transfers.</li>
+                            <li>Hash mismatch on re-check.</li>
+                            <li>Original used for analysis.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-2">Interactive: The Legal Hinge</h3>
+                    <p class="text-sm text-slate-600 mb-6">Type in the box below to represent collecting evidence. Notice how changing a single character completely alters the SHA-256 hash footprint. This hash is your seal.</p>
+                    
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Evidence Data (Simulated):</label>
+                    <textarea id="hash-input" class="w-full p-3 border border-slate-300 rounded focus:ring-2 focus:ring-[#2b6777] focus:outline-none font-mono text-sm" rows="3">malware_payload.exe</textarea>
+                    
+                    <div class="mt-6 p-4 bg-slate-800 rounded-lg text-white">
+                        <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">SHA-256 Digital Fingerprint</div>
+                        <div id="hash-output" class="font-mono text-sm break-all text-[#52ab98]">calculating...</div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 text-center">If the hash on the form doesn't match the hash of the file in court, the evidence is discarded.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-volatility" class="fade-in hide">
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Lesson 3: Order of Volatility</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                This section explains RFC 3227 guidelines. You will learn to differentiate between volatile and non-volatile evidence. The interactive chart below visualizes the "half-life" concept of data. Most attacker activity never touches the disk; if you pull the power plug before capturing memory, you destroy the truth.
+            </p>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                <h3 class="text-xl font-bold mb-4 text-center">Data Half-Life (RFC 3227 Spectrum)</h3>
+                <div class="chart-container">
+                    <canvas id="volatilityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">Why Memory Matters More</h4>
+                    <ul class="space-y-2 text-sm text-slate-700">
+                        <li>✦ Stolen credentials live in RAM.</li>
+                        <li>✦ Decrypted payloads live in RAM.</li>
+                        <li>✦ Open network sockets live in RAM.</li>
+                        <li>✦ Injected shellcode lives in RAM.</li>
+                    </ul>
+                    <p class="mt-4 text-sm font-semibold text-[#e07a5f]">Disk imaging tells you *something* is wrong. Memory tells you *what*.</p>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">Memory Acquisition Tools</h4>
+                    <ul class="space-y-2 text-sm text-slate-700">
+                        <li><strong>WinPmem:</strong> Open source (Velocidex), Windows.</li>
+                        <li><strong>Magnet RAM Capture:</strong> Free, Windows.</li>
+                        <li><strong>LiME:</strong> Linux Memory Extractor.</li>
+                        <li><strong>Volatility 3:</strong> Post-acquisition analysis.</li>
+                    </ul>
+                    <div class="mt-4 p-2 bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs rounded font-bold">
+                        RULE: Always write captures to external/removable media. Never the suspect host.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-docs" class="fade-in hide">
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Lesson 4: Documentation</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                "If it isn't written down, it didn't happen." This section breaks down the contemporaneous documentation required during a response. The interactive cards below detail the 5W+H rule and tamper-evident concepts. A pristine record is the responder's alibi and the regulator's evidence.
+            </p>
+
+            <div class="bg-[#2b6777] text-white p-6 rounded-xl shadow-md mb-8 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold">The Golden Rules</h3>
+                    <p class="text-sm opacity-90 mt-1">UTC always. Quote literally. Name assumptions. Never delete (append only).</p>
+                </div>
+                <div class="text-4xl">📝</div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 text-slate-800">The 5W+H Requirement</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="glass-panel p-4 rounded-lg cursor-pointer hover:shadow-md transition" onclick="toggleDocDetail('who')">
+                    <div class="text-[#e07a5f] font-black text-lg">WHO</div>
+                    <p class="text-xs text-slate-500 mt-1">Person or tool</p>
+                    <div id="doc-who" class="hide mt-3 text-sm border-t pt-2 border-slate-200">e.g., "Analyst J.Doe" or "WinPmem v3.0"</div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg cursor-pointer hover:shadow-md transition" onclick="toggleDocDetail('what')">
+                    <div class="text-[#e07a5f] font-black text-lg">WHAT</div>
+                    <p class="text-xs text-slate-500 mt-1">Action taken</p>
+                    <div id="doc-what" class="hide mt-3 text-sm border-t pt-2 border-slate-200">e.g., "Isolated host from network"</div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg cursor-pointer hover:shadow-md transition" onclick="toggleDocDetail('where')">
+                    <div class="text-[#e07a5f] font-black text-lg">WHERE</div>
+                    <p class="text-xs text-slate-500 mt-1">Host/Path</p>
+                    <div id="doc-where" class="hide mt-3 text-sm border-t pt-2 border-slate-200">e.g., "SRV-DB-01 / port 22"</div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg cursor-pointer hover:shadow-md transition" onclick="toggleDocDetail('when')">
+                    <div class="text-[#e07a5f] font-black text-lg">WHEN</div>
+                    <p class="text-xs text-slate-500 mt-1">UTC Timestamp</p>
+                    <div id="doc-when" class="hide mt-3 text-sm border-t pt-2 border-slate-200">e.g., "2026-04-25T14:32:01Z"</div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg cursor-pointer hover:shadow-md transition" onclick="toggleDocDetail('why')">
+                    <div class="text-[#e07a5f] font-black text-lg">WHY</div>
+                    <p class="text-xs text-slate-500 mt-1">Reason/Auth</p>
+                    <div id="doc-why" class="hide mt-3 text-sm border-t pt-2 border-slate-200">e.g., "Authorized by IC per Playbook A"</div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg cursor-pointer hover:shadow-md transition" onclick="toggleDocDetail('how')">
+                    <div class="text-[#e07a5f] font-black text-lg">HOW</div>
+                    <p class="text-xs text-slate-500 mt-1">Command used</p>
+                    <div id="doc-how" class="hide mt-3 text-sm border-t pt-2 border-slate-200">e.g., "ifdown eth0"</div>
+                </div>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-4">Click cards to see examples</p>
+        </section>
+
+        <section id="sec-roles" class="fade-in hide">
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Lesson 5: Roles & Responsibilities</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                Enthusiasm without coordination destroys evidence. This section defines clear boundaries using a RACI matrix to prevent multiple responders from colliding. Hover over the matrix rows to see how responsibilities are strictly divided.
+            </p>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                <h3 class="text-lg font-bold mb-4">Interactive RACI Matrix</h3>
+                <div class="text-xs flex gap-4 mb-4">
+                    <span class="font-bold text-[#e07a5f]">R = Responsible (Does it)</span>
+                    <span class="font-bold text-[#2b6777]">A = Accountable (Signs off)</span>
+                    <span class="font-bold text-slate-500">C = Consulted</span>
+                    <span class="font-bold text-slate-400">I = Informed</span>
+                </div>
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-slate-100 text-slate-700">
+                        <tr>
+                            <th class="p-3 border">Task / Decision</th>
+                            <th class="p-3 border text-center">Inc. Cmdr (IC)</th>
+                            <th class="p-3 border text-center">Responder</th>
+                            <th class="p-3 border text-center">Legal</th>
+                            <th class="p-3 border text-center">Comms</th>
+                            <th class="p-3 border text-center">Scribe</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-600 font-medium">
+                        <tr class="hover:bg-slate-50 transition border-b">
+                            <td class="p-3 border">Declare Incident</td>
+                            <td class="p-3 border text-center text-xl text-[#2b6777] font-bold">A/R</td>
+                            <td class="p-3 border text-center">I</td>
+                            <td class="p-3 border text-center">I</td>
+                            <td class="p-3 border text-center">I</td>
+                            <td class="p-3 border text-center">R</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition border-b">
+                            <td class="p-3 border">Isolate Host Network</td>
+                            <td class="p-3 border text-center text-xl text-[#2b6777] font-bold">A</td>
+                            <td class="p-3 border text-center text-xl text-[#e07a5f] font-bold">R</td>
+                            <td class="p-3 border text-center">C</td>
+                            <td class="p-3 border text-center">I</td>
+                            <td class="p-3 border text-center">I</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition border-b">
+                            <td class="p-3 border">Capture Memory</td>
+                            <td class="p-3 border text-center">A</td>
+                            <td class="p-3 border text-center text-xl text-[#e07a5f] font-bold">R</td>
+                            <td class="p-3 border text-center">-</td>
+                            <td class="p-3 border text-center">-</td>
+                            <td class="p-3 border text-center">I</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition border-b">
+                            <td class="p-3 border">Trigger 72h Regulatory Clock</td>
+                            <td class="p-3 border text-center">C</td>
+                            <td class="p-3 border text-center">-</td>
+                            <td class="p-3 border text-center text-xl text-[#2b6777] font-bold">A/R</td>
+                            <td class="p-3 border text-center">C</td>
+                            <td class="p-3 border text-center">I</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition border-b">
+                            <td class="p-3 border">Maintain 5W+H Log</td>
+                            <td class="p-3 border text-center">A</td>
+                            <td class="p-3 border text-center">I</td>
+                            <td class="p-3 border text-center">-</td>
+                            <td class="p-3 border text-center">-</td>
+                            <td class="p-3 border text-center text-xl text-[#e07a5f] font-bold">R</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-red-50 p-4 border border-red-200 rounded">
+                    <strong>Contamination Mode 1:</strong> Desktop tech opens malicious mailbox (overwrites timestamps).
+                </div>
+                <div class="bg-red-50 p-4 border border-red-200 rounded">
+                    <strong>Contamination Mode 2:</strong> Sysadmin restarts server (destroys memory).
+                </div>
+                <div class="bg-red-50 p-4 border border-red-200 rounded">
+                    <strong>Contamination Mode 3:</strong> Analyst browses C2 domain from corp IP (tips off attacker).
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-reference" class="fade-in hide">
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Reference & Regulations</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                Quick reference for standards, regulatory clocks, and critical anti-patterns. The chart visualizes the severe pressure of compliance notification windows.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold mb-4">Regulatory Notification Windows</h3>
+                    <div class="chart-container">
+                        <canvas id="regChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-500 mt-2">The clock starts at awareness, not at understanding.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-slate-800 text-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-lg font-bold mb-3 flex items-center"><span class="mr-2">🚫</span> The Five Forbidden Moves</h3>
+                        <ul class="space-y-3 text-sm opacity-90">
+                            <li class="flex items-start"><span>1.</span> <span class="ml-2">Pulling power on a suspect host before memory capture.</span></li>
+                            <li class="flex items-start"><span>2.</span> <span class="ml-2">Running antivirus "cleanup" on the active machine.</span></li>
+                            <li class="flex items-start"><span>3.</span> <span class="ml-2">Browsing the attacker's C2 domain from a corporate IP.</span></li>
+                            <li class="flex items-start"><span>4.</span> <span class="ml-2">Logging into suspect host's mailbox to "see what came in".</span></li>
+                            <li class="flex items-start"><span>5.</span> <span class="ml-2">Documenting the response a week later from memory.</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 text-sm">
+                        <h3 class="font-bold text-slate-800 mb-2">Foundational Habit</h3>
+                        <p class="text-slate-600">Submit every URL to <strong>VirusTotal</strong> before clicking. Treat any forwarded link as untrusted. This 10-second check prevents weeks of incident response.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-100 p-4 rounded text-xs text-slate-500 flex justify-between">
+                <span>Standards: NIST SP 800-61 Rev. 2 | IETF RFC 3227 | ISO/IEC 27037:2012</span>
+                <span>Requires strict written authorisation.</span>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        
+        const triageData = {
+            1: { title: "Step 1: Verify the signal", sub: "Is it real?", text: "An alert is a hypothesis, not a fact. Cross-check at least two independent sources (e.g., SIEM + EDR). False-positive triage saves resources. Never ignore a verified second source.", take: "No incident is declared on a single signal alone." },
+            2: { title: "Step 2: Scope and severity", sub: "How big is this?", text: "Map the blast radius before reacting. How many hosts/users? Is data flowing out right now? Severity scale drives who gets paged and which playbook opens.", take: "Severity is not how scared you feel — it is what is actually affected." },
+            3: { title: "Step 3: Contain (without erasing)", sub: "Isolate, do not exterminate", text: "Isolate host from network (disable port, EDR quarantine). DO NOT reboot, run AV, or tidy up. Pulling power destroys volatile evidence.", take: "Containment preserves the patient; it does not autopsy the patient." },
+            4: { title: "Step 4: Notify the chain", sub: "One declared incident commander", text: "Responder is not the decision maker. Notify: IC -> Legal -> Comms -> Exec. Use out-of-band channels (Signal) as corp email may be compromised.", take: "Decisions belong to the IC. Action belongs to the responder." },
+            5: { title: "Step 5: Capture evidence", sub: "Volatile first, persistent later", text: "Capture in RFC 3227 order. Write to removable media. Hash everything (SHA-256) immediately. Record hash on custody form.", take: "If it isn't hashed, it isn't evidence." },
+            6: { title: "Step 6: Hand off", sub: "Stop being the responder", text: "Sealed evidence + signed form + transcript log go to DFIR team. First responder job is collect, hash, hand off. Resist the urge to look.", take: "Disciplined ignorance protects evidence. Curiosity destroys it." }
+        };
+
+        
+        const chartsState = {
+            volatilityInit: false,
+            regInit: false
+        };
+
+        
+        function nav(sectionId) {
+            
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hide'));
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('nav-active');
+                btn.classList.add('text-slate-700');
+            });
+            
+            
+            document.getElementById('sec-' + sectionId).classList.remove('hide');
+            const activeBtn = document.getElementById('btn-' + sectionId);
+            activeBtn.classList.add('nav-active');
+            activeBtn.classList.remove('text-slate-700');
+
+            
+            if (sectionId === 'volatility' && !chartsState.volatilityInit) {
+                initVolatilityChart();
+                chartsState.volatilityInit = true;
+            }
+            if (sectionId === 'reference' && !chartsState.regInit) {
+                initRegChart();
+                chartsState.regInit = true;
+            }
+        }
+
+        
+        function showTriageStep(step) {
+            
+            for(let i=1; i<=6; i++) {
+                const btn = document.getElementById('tbtn-' + i);
+                if(i === step) {
+                    btn.classList.replace('bg-slate-200', 'bg-[#2b6777]');
+                    btn.classList.replace('text-slate-600', 'text-white');
+                } else {
+                    btn.classList.replace('bg-[#2b6777]', 'bg-slate-200');
+                    btn.classList.replace('text-white', 'text-slate-600');
+                }
+            }
+            
+            
+            document.getElementById('t-title').innerText = triageData[step].title;
+            document.getElementById('t-subtitle').innerText = triageData[step].sub;
+            
+            const list = document.getElementById('t-list');
+            list.innerHTML = '';
+            triageData[step].text.split('. ').forEach(sentence => {
+                if(sentence.trim().length > 0) {
+                    let li = document.createElement('li');
+                    li.innerText = sentence + (sentence.endsWith('.') ? '' : '.');
+                    list.appendChild(li);
+                }
+            });
+            
+            document.getElementById('t-takeaway').innerText = "Key Takeaway: " + triageData[step].take;
+            
+            
+            const area = document.getElementById('triage-content-area');
+            area.classList.remove('fade-in');
+            void area.offsetWidth; 
+            area.classList.add('fade-in');
+        }
+
+        
+        async function generateSHA256(message) {
+            const msgBuffer = new TextEncoder().encode(message);                    
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        document.getElementById('hash-input').addEventListener('input', async function(e) {
+            const val = e.target.value;
+            const output = document.getElementById('hash-output');
+            if(val.length === 0) {
+                output.innerText = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; 
+                return;
+            }
+            output.innerText = await generateSHA256(val);
+        });
+        
+        generateSHA256(document.getElementById('hash-input').value).then(h => document.getElementById('hash-output').innerText = h);
+
+        
+        function toggleDocDetail(id) {
+            const el = document.getElementById('doc-' + id);
+            if(el.classList.contains('hide')) {
+                el.classList.remove('hide');
+            } else {
+                el.classList.add('hide');
+            }
+        }
+
+        
+        function initVolatilityChart() {
+            const ctx = document.getElementById('volatilityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Registers/Cache', 'RAM/ARP/Processes', 'OS Temp Files', 'Disk/Logs', 'Cold Archives'],
+                    datasets: [{
+                        label: 'Volatility Level (Priority)',
+                        data: [100, 85, 40, 15, 2],
+                        backgroundColor: [
+                            '#e07a5f', 
+                            '#f2a65a', 
+                            '#f6c77b', 
+                            '#2b6777', 
+                            '#c8d8e4'  
+                        ],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const labels = [
+                                        'Half-life: Nanoseconds. Capture FIRST.',
+                                        'Half-life: Seconds to Hours. Crucial evidence.',
+                                        'Half-life: Minutes to Days.',
+                                        'Half-life: Days to Years. Persistent.',
+                                        'Half-life: Effectively unlimited.'
+                                    ];
+                                    return labels[context.dataIndex];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { display: false, max: 110 },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { weight: 'bold', family: 'Segoe UI' }, color: '#1e293b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initRegChart() {
+            const ctx = document.getElementById('regChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['NIS 2 (EU) Early', 'GDPR', 'NIS 2 Full', 'HIPAA'],
+                    datasets: [{
+                        label: 'Max Reporting Window (Hours)',
+                        data: [24, 72, 72, 1440],
+                        backgroundColor: '#2b6777',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    if(val > 72) return `60 Days (${val} hours) max`;
+                                    return `${val} hours max`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Hours (Log Scale)' },
+                            ticks: {
+                                callback: function(value) {
+                                    if(value === 24 || value === 72 || value === 1440) return value;
+                                    return null;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+

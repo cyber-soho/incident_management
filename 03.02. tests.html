@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Response Mastery: Flashcards & Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        /* Chart Container Guidelines */
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        
+        /* Flip Card CSS */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-transition { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        
+        /* Hide element utility */
+        .hidden-tab { display: none; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <header class="w-full max-w-4xl mb-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight mb-2">First Response & Evidence Handling</h1>
+        <p class="text-slate-500">Interactive Study Environment</p>
+    </header>
+
+    <div class="flex space-x-2 bg-slate-200 p-1 rounded-lg mb-8 shadow-inner">
+        <button id="tabBtn-flashcards" onclick="switchTab('flashcards')" class="px-6 py-2 rounded-md font-semibold text-sm transition-colors bg-white text-[#2b6777] shadow-sm">Flashcards</button>
+        <button id="tabBtn-quiz" onclick="switchTab('quiz')" class="px-6 py-2 rounded-md font-semibold text-sm transition-colors text-slate-600 hover:text-slate-800 hover:bg-slate-300">Practice Quiz</button>
+    </div>
+
+    <main class="w-full max-w-4xl flex-1 relative">
+
+        <section id="tab-flashcards" class="w-full animate-[fadeIn_0.3s_ease-in]">
+            
+            <div class="flex justify-between items-center mb-4 px-2">
+                <span id="fc-counter" class="text-sm font-bold text-slate-500 uppercase tracking-wide">Card 1 / 25</span>
+                <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">Click card to flip 🔄</span>
+            </div>
+
+            <div class="relative w-full h-[350px] md:h-[400px] perspective-1000 mb-6 cursor-pointer group" onclick="flipCard()">
+                <div id="fc-inner" class="w-full h-full relative transform-style-3d card-transition shadow-lg rounded-2xl">
+                    <div class="absolute w-full h-full backface-hidden bg-white border border-slate-200 rounded-2xl p-8 flex flex-col justify-center items-center text-center group-hover:shadow-xl transition-shadow">
+                        <span class="absolute top-4 left-4 text-3xl opacity-20">❓</span>
+                        <h2 id="fc-front-text" class="text-xl md:text-2xl font-semibold text-slate-800 leading-relaxed">Loading...</h2>
+                    </div>
+                    <div class="absolute w-full h-full backface-hidden bg-[#2b6777] text-white rounded-2xl p-8 flex flex-col justify-center items-center text-center rotate-y-180">
+                        <span class="absolute top-4 left-4 text-3xl opacity-20">💡</span>
+                        <p id="fc-back-text" class="text-lg md:text-xl font-medium leading-relaxed">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center space-x-6">
+                <button onclick="prevCard()" class="p-3 rounded-full bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400">
+                    <span class="text-xl leading-none block">⬅️</span>
+                </button>
+                <div class="flex space-x-1" id="fc-dots">
+                    </div>
+                <button onclick="nextCard()" class="p-3 rounded-full bg-[#e07a5f] text-white hover:bg-[#c96a50] transition-colors focus:outline-none focus:ring-2 focus:ring-[#e07a5f]">
+                    <span class="text-xl leading-none block">➡️</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-quiz" class="w-full hidden-tab animate-[fadeIn_0.3s_ease-in]">
+            
+            <div id="quiz-active-area">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Scenario Assessment</div>
+                        <div id="q-counter" class="text-lg font-extrabold text-[#2b6777]">Question 1 of 10</div>
+                    </div>
+                    <div class="w-1/3 bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div id="q-progress" class="bg-[#e07a5f] h-full transition-all duration-300" style="width: 10%;"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6 relative">
+                    <button onclick="toggleHint()" class="absolute top-4 right-4 text-xl opacity-60 hover:opacity-100 transition-opacity" title="Show Hint">💡</button>
+                    
+                    <h3 id="q-text" class="text-xl font-bold text-slate-800 mb-6 pr-8 leading-snug">Loading question...</h3>
+                    
+                    <div id="q-hint-area" class="hidden mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm font-medium rounded-r-md animate-[fadeIn_0.2s_ease-in]">
+                        </div>
+
+                    <div id="q-options" class="space-y-3">
+                        </div>
+                </div>
+
+                <div id="q-feedback-area" class="hidden rounded-xl p-6 mb-6 animate-[fadeIn_0.3s_ease-in]">
+                    <h4 id="q-feedback-title" class="font-bold text-lg mb-2"></h4>
+                    <p id="q-feedback-text" class="text-sm font-medium"></p>
+                </div>
+
+                <div class="flex justify-end">
+                    <button id="q-next-btn" onclick="nextQuestion()" class="hidden px-8 py-3 bg-[#2b6777] text-white rounded-lg font-bold hover:bg-[#1e4a56] transition-colors focus:outline-none focus:ring-4 focus:ring-[#2b6777]/30 shadow-md">Next Scenario ➡️</button>
+                </div>
+            </div>
+
+            <div id="quiz-results-area" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center animate-[fadeIn_0.4s_ease-in]">
+                <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Assessment Complete</h2>
+                <p class="text-slate-500 mb-8">Review your performance on the First Response principles.</p>
+                
+                <div class="chart-container mb-8">
+                    <canvas id="scoreCanvas"></canvas>
+                </div>
+
+                <p id="results-message" class="text-xl font-bold text-slate-700 mb-8"></p>
+                
+                <button onclick="resetQuiz()" class="px-8 py-3 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition-colors focus:outline-none focus:ring-4 shadow-md">🔄 Retry Assessment</button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA INJECTION ---
+
+        const flashcardsData = [
+            { front: "Primary outcome determined by the first hour of an incident response", back: "Whether the response is legally defensible and admissible in court." },
+            { front: "Minimum number of independent sources required to verify a security incident", back: "At least two independent sources (e.g., SIEM and EDR telemetry)." },
+            { front: "Primary objective of the containment phase", back: "To isolate the affected host from the network without erasing volatile data." },
+            { front: "Actions strictly forbidden during host containment", back: "Rebooting the host, reformatting the drive, or running antivirus cleanups." },
+            { front: "The first responder's primary mantra during the hand-off phase", back: "Collect, hash, and hand off." },
+            { front: "Definition of Chain of Custody", back: "The unbroken, documented trail showing who held the evidence, when, and what they did with it." },
+            { front: "The five non-negotiable principles of Chain of Custody", back: "Identify, Hash, Seal, Log, and Preserve." },
+            { front: "Standard cryptographic hash algorithm recommended for sealing digital evidence", back: "SHA-256." },
+            { front: "Proper handling procedure for original digital evidence during analysis", back: "The original is never analyzed; all analysis must run on a forensic copy." },
+            { front: "Definition of volatile evidence", back: "Data that vanishes upon power loss or state change, such as RAM or network connections." },
+            { front: "Most volatile artifact according to the RFC 3227 order of volatility", back: "CPU registers and cache." },
+            { front: "Primary reason memory acquisition takes precedence over disk imaging", back: "Most critical attacker activity, such as decrypted payloads and stolen credentials, exists only in RAM." },
+            { front: "Target destination for saving captured digital evidence on a suspect host", back: "Removable media, never the suspect host's local disk." },
+            { front: "Required time zone standard for all incident response documentation", back: "UTC (Coordinated Universal Time)." },
+            { front: "The six 5W+H fields required for every documentation entry", back: "Who, What, Where, When, Why, and How." },
+            { front: "Approved method for correcting an error in the contemporaneous notebook", back: "Never delete the error; correct it by appending a new entry." },
+            { front: "Role responsible for authorizing actions and serving as the single decision-maker", back: "The Incident Commander (IC)." },
+            { front: "Meaning of the RACI acronym used for coordinating team roles", back: "Responsible, Accountable, Consulted, Informed." },
+            { front: "Team member tasked with owning and maintaining the contemporaneous incident notebook", back: "The Scribe." },
+            { front: "Maximum breach notification window under GDPR Article 33", back: "72 hours." },
+            { front: "The starting trigger for regulatory notification clocks", back: "The moment of awareness, not the moment of complete understanding." },
+            { front: "Consequence of pulling the power plug on a suspect host", back: "Complete destruction of volatile evidence like RAM, process states, and network connections." },
+            { front: "Consequence of browsing an attacker's C2 domain from a corporate IP address", back: "It alerts the attacker to the investigation and tips them off." },
+            { front: "Recommended action before clicking or investigating an untrusted URL", back: "Submit the URL to VirusTotal for analysis." },
+            { front: "Purpose of utilizing a hash chain in incident documentation", back: "Each entry contains the cryptographic hash of the previous entry to mathematically prove the record is tamper-evident." }
+        ];
+
+        const quizData = [
+            {
+                question: "A SIEM alert triggers for unusual outbound traffic from a database server. What is the responder's immediate next practical step?",
+                hint: "Consider the rule regarding the number of sources needed before declaring an incident.",
+                options: [
+                    { text: "Physically unplug the server's network cable to stop potential data exfiltration.", rationale: "Acting on a single unverified alert risks causing unnecessary business disruption before the true scope or validity of the threat is known.", isCorrect: false },
+                    { text: "Check the Endpoint Detection and Response (EDR) logs for processes communicating with the destination IP.", rationale: "Seeking a second, independent source of telemetry fulfills the requirement to verify a signal before declaring an incident.", isCorrect: true },
+                    { text: "Initiate an emergency antivirus scan on the database server to identify the malware.", rationale: "Running intensive cleanup or scanning tools alters the system state and overwrites volatile evidence before it can be preserved.", isCorrect: false },
+                    { text: "Declare a high-severity incident and page the Incident Commander.", rationale: "An alert is only a hypothesis; escalating to a high-severity incident requires confirmation that the signal is real.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A workstation is actively exhibiting signs of a ransomware infection. The Incident Commander orders containment. Which action effectively isolates the host while preserving critical evidence?",
+                hint: "Think about how to stop the spread without turning off the machine itself.",
+                options: [
+                    { text: "Pull the power plug from the wall immediately to halt the encryption process.", rationale: "Removing power instantly destroys all volatile data, such as decrypted payloads and active network connections residing in memory.", isCorrect: false },
+                    { text: "Log into the workstation as an administrator and perform a clean shutdown via the start menu.", rationale: "A clean shutdown writes temporary files to the disk and flushes memory, permanently destroying the exact state the attacker created.", isCorrect: false },
+                    { text: "Deploy an automated script to kill all unrecognized processes running in the background.", rationale: "Targeting specific processes modifies the live environment and might trigger anti-forensic mechanisms built into the malware.", isCorrect: false },
+                    { text: "Disable the network switch port the workstation is connected to.", rationale: "Cutting off network access at the infrastructure level traps the malware in its current state without altering the host's memory or disk.", isCorrect: true }
+                ]
+            },
+            {
+                question: "You have just finished capturing a volatile memory image from a compromised server onto a removable USB drive. What is the mandatory final step before handing the drive to the DFIR team?",
+                hint: "What mathematical proof links the digital bytes to the physical paperwork?",
+                options: [
+                    { text: "Generate an MD5 hash of the memory image and email it to the Incident Commander.", rationale: "MD5 is vulnerable to collisions and corporate email may be compromised during an incident.", isCorrect: false },
+                    { text: "Open the image file in an analysis tool to quickly verify that the capture was successful.", rationale: "Interacting with the newly created evidence file risks altering its metadata, violating the principle of preserving the original.", isCorrect: false },
+                    { text: "Generate a SHA-256 hash of the capture file and record it on the physical chain-of-custody form.", rationale: "Creating a mathematically unique fingerprint using a secure algorithm and logging it creates the tamper-evident seal required for legal admissibility.", isCorrect: true },
+                    { text: "Copy the memory image to the suspect server's local disk as a backup before unplugging the USB.", rationale: "Writing data to the suspect host overwrites unallocated space and destroys potential persistent evidence.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You are dispatched to a compromised laptop that is powered on and unlocked. Based on the RFC 3227 order of volatility, in what sequence must you acquire evidence?",
+                hint: "Consider the half-life of different data types; which one disappears the fastest if the machine's state changes?",
+                options: [
+                    { text: "Remove the hard drive for immediate write-blocked imaging, then reconstruct the memory state from the pagefile.", rationale: "Powering down to remove the drive irrevocably destroys the live memory state, which holds the most critical current attacker activity.", isCorrect: false },
+                    { text: "Image the local hard drive first to secure the persistent files, then capture the RAM.", rationale: "Disk imaging is a time-consuming process that alters the system state and allows highly volatile memory contents to degrade or disappear.", isCorrect: false },
+                    { text: "Copy any suspicious scripts found on the desktop to a USB drive, then pull the network cable.", rationale: "Manually copying files alters access timestamps and prioritizes persistent data over the rapidly degrading contents of the system memory.", isCorrect: false },
+                    { text: "Run a tool like WinPmem to capture the RAM contents, followed by acquiring the local disk image.", rationale: "Acquiring data based on its half-life ensures that the most fragile information is secured before longer-lasting artefacts are collected.", isCorrect: true }
+                ]
+            },
+            {
+                question: "During an investigation, you realize that an hour ago you wrote down an incorrect malicious IP address in your physical, hash-chained notebook. How do you properly handle this error?",
+                hint: "Think about the principles of a tamper-evident, auditable record.",
+                options: [
+                    { text: "Use a heavy marker to cross out the incorrect IP address so it cannot be read, and write the correct one above it.", rationale: "Obscuring or destroying previous entries damages the audibility and trustworthiness of the entire contemporaneous record.", isCorrect: false },
+                    { text: "Tear out the page containing the error and cleanly rewrite the timeline of events on a new page.", rationale: "Removing physical pages breaks the sequential numbering and the chronological integrity of the document.", isCorrect: false },
+                    { text: "Add a new entry with the current UTC timestamp noting the previous error and providing the correct IP address.", rationale: "Maintaining an append-only log ensures that the history of the investigation, including human errors and their corrections, remains transparent and legally defensible.", isCorrect: true },
+                    { text: "Leave the incorrect IP in the notebook but verbally inform the Incident Commander of the mistake.", rationale: "Verbal corrections disappear instantly; if a fact or correction is not written down in the official log, it effectively did not happen.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A user reports receiving a highly suspicious email. A well-intentioned desktop support technician immediately uses their admin credentials to log into the user's mailbox to view the email. Why is this action detrimental to the investigation?",
+                hint: "Consider what happens to file metadata the moment a file or folder is viewed.",
+                options: [
+                    { text: "The technician operates outside the RACI matrix without explicit authorization from the Incident Commander.", rationale: "While true regarding protocol, it misses the direct technical damage caused to the evidence itself.", isCorrect: false },
+                    { text: "Logging into the mailbox modifies last-access timestamps and read-status indicators on the server.", rationale: "Interacting with the suspect environment inadvertently alters the metadata, destroying the timeline of when the attacker or user actually accessed the file.", isCorrect: true },
+                    { text: "The attacker will receive an automated read receipt, tipping them off that the security team is investigating.", rationale: "While possible depending on client settings, the guaranteed destruction of metadata timestamps is the primary and immediate forensic concern.", isCorrect: false },
+                    { text: "The technician's local machine will automatically download the malicious payload from the email server.", rationale: "Simply viewing a mailbox does not guarantee payload execution, whereas the alteration of server-side timestamps is a certainty.", isCorrect: false }
+                ]
+            },
+            {
+                question: "On Monday at 09:00, an analyst notices strange database queries. By Wednesday at 14:00, the forensics team confirms it is a data breach involving European citizen data. Under GDPR Article 33, when did the 72-hour notification clock begin?",
+                hint: "Regulators prioritize early warning over waiting for a perfect forensic report.",
+                options: [
+                    { text: "Whenever the Incident Commander officially formally declares the incident in the system.", rationale: "Regulatory clocks are tied to factual discovery, not administrative declarations or internal bureaucracy.", isCorrect: false },
+                    { text: "Wednesday at 14:00, when the breach was definitively confirmed and understood.", rationale: "Waiting for complete forensic confirmation delays notification and violates the principle of early warning required by regulators.", isCorrect: false },
+                    { text: "Monday at 09:00, when the analyst first became aware of the unusual activity.", rationale: "Legal and regulatory countdowns initiate at the moment of initial awareness of a potential compromise, not when the full scope is understood.", isCorrect: true },
+                    { text: "Thursday at 09:00, allowing a 24-hour grace period after confirmation for the legal team to prepare.", rationale: "Regulatory frameworks generally do not offer grace periods for preparation once awareness has been established.", isCorrect: false }
+                ]
+            },
+            {
+                question: "The DFIR lab receives a sealed tamper-evident bag containing a USB drive with a memory capture. What is the forensic analyst's strict first technical step before analyzing the malware?",
+                hint: "Think about the rule regarding original evidence versus working copies.",
+                options: [
+                    { text: "Mount the USB drive in a read-only state and run a string extraction tool against the image.", rationale: "Running tools directly against the provided drive, even if mounted read-only, introduces unnecessary risk to the sole piece of original evidence.", isCorrect: false },
+                    { text: "Boot a sandbox environment directly from the USB drive to safely observe the malware's behavior.", rationale: "Booting from the evidence drive executes code and fundamentally alters the original bytes, destroying its forensic value.", isCorrect: false },
+                    { text: "Verify the SHA-256 hash of the file matches the custody form, then create a working copy for analysis.", rationale: "Checking the cryptographic signature proves the evidence survived transit unaltered, and creating a duplicate ensures the original remains pristine for court.", isCorrect: true },
+                    { text: "Copy the memory image to the high-speed DFIR SAN and wipe the USB drive so it can be returned to the field.", rationale: "Destroying the original collection media eliminates the foundational physical evidence tied to the custody paperwork.", isCorrect: false }
+                ]
+            },
+            {
+                question: "While reviewing firewall logs, you spot an internal server communicating with an unfamiliar, suspicious domain name. You need to investigate what this domain is associated with. What is the safest approach?",
+                hint: "Consider how to gather information without the target knowing you are looking at them.",
+                options: [
+                    { text: "Ping the domain from the compromised server's command line to verify if it resolves to a live IP address.", rationale: "Generating active network traffic from the victim machine alters its state and signals to the attacker that the host is being monitored.", isCorrect: false },
+                    { text: "Open a web browser on your corporate laptop and navigate to the domain to inspect the webpage contents.", rationale: "Connecting directly from a corporate IP address tips off the threat actor that the organization's security team is investigating their infrastructure.", isCorrect: false },
+                    { text: "Immediately add the domain to the corporate firewall blocklist to prevent further communication.", rationale: "Taking unilateral containment actions without scoping the blast radius or gaining IC approval can break critical business processes or alert the attacker prematurely.", isCorrect: false },
+                    { text: "Enter the domain name into an external threat intelligence platform like VirusTotal.", rationale: "Utilizing third-party aggregation tools allows you to gather intelligence on the indicator of compromise without interacting directly with the attacker's infrastructure.", isCorrect: true }
+                ]
+            },
+            {
+                question: "A playbook mandates the capture of volatile data from a compromised Linux web server. Which sequence of actions properly balances isolation and evidence preservation?",
+                hint: "Identify the option that isolates the machine without relying on the machine's own operating system, followed by the correct order of data collection.",
+                options: [
+                    { text: "Use the hypervisor console to cleanly shut down the virtual machine, then export the VM disk image for analysis.", rationale: "A clean shutdown destroys the running processes, active network connections, and RAM contents where the attacker's live activity resides.", isCorrect: false },
+                    { text: "Log in via SSH, run a malware scanner to find the payload, quarantine it, and then run LiME to capture memory.", rationale: "Executing intensive scanning tools overwrites massive amounts of volatile memory and alters the system state before the memory can be preserved.", isCorrect: false },
+                    { text: "Disconnect the server's network interface via the hypervisor, insert a forensic USB, run LiME to capture RAM, and calculate the SHA-256 hash.", rationale: "This isolates the threat out-of-band without powering down the OS, captures the most volatile data first, and immediately seals it mathematically.", isCorrect: true },
+                    { text: "Pull the physical power cables from the server rack, document the time in UTC, and hand the server chassis to the DFIR team.", rationale: "Removing power entirely is an anti-pattern that instantly destroys all evidence residing in volatile memory.", isCorrect: false }
+                ]
+            }
+        ];
+
+
+        // --- TAB LOGIC ---
+        function switchTab(tabName) {
+            document.getElementById('tab-flashcards').classList.add('hidden-tab');
+            document.getElementById('tab-quiz').classList.add('hidden-tab');
+            
+            document.getElementById('tabBtn-flashcards').className = "px-6 py-2 rounded-md font-semibold text-sm transition-colors text-slate-600 hover:text-slate-800 hover:bg-slate-300";
+            document.getElementById('tabBtn-quiz').className = "px-6 py-2 rounded-md font-semibold text-sm transition-colors text-slate-600 hover:text-slate-800 hover:bg-slate-300";
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden-tab');
+            
+            const activeBtnClass = "px-6 py-2 rounded-md font-semibold text-sm transition-colors bg-white text-[#2b6777] shadow-sm";
+            document.getElementById(`tabBtn-${tabName}`).className = activeBtnClass;
+        }
+
+        // --- FLASHCARD LOGIC ---
+        let currentFC = 0;
+        let isFlipped = false;
+
+        function renderFlashcard() {
+            document.getElementById('fc-front-text').innerText = flashcardsData[currentFC].front;
+            document.getElementById('fc-back-text').innerText = flashcardsData[currentFC].back;
+            document.getElementById('fc-counter').innerText = `Card ${currentFC + 1} / ${flashcardsData.length}`;
+            
+            if (isFlipped) {
+                document.getElementById('fc-inner').classList.remove('rotate-y-180');
+                isFlipped = false;
+            }
+
+            // Update dots
+            const dotsContainer = document.getElementById('fc-dots');
+            dotsContainer.innerHTML = '';
+            // Only show max 5 dots centered around current to avoid overflow
+            let start = Math.max(0, currentFC - 2);
+            let end = Math.min(flashcardsData.length - 1, currentFC + 2);
+            if (currentFC < 2) end = Math.min(4, flashcardsData.length - 1);
+            if (currentFC > flashcardsData.length - 3) start = Math.max(0, flashcardsData.length - 5);
+
+            for(let i = start; i <= end; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-2 h-2 rounded-full ${i === currentFC ? 'bg-[#2b6777]' : 'bg-slate-300'}`;
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function flipCard() {
+            const inner = document.getElementById('fc-inner');
+            if(isFlipped) {
+                inner.classList.remove('rotate-y-180');
+            } else {
+                inner.classList.add('rotate-y-180');
+            }
+            isFlipped = !isFlipped;
+        }
+
+        function nextCard() {
+            currentFC = (currentFC + 1) % flashcardsData.length;
+            renderFlashcard();
+        }
+
+        function prevCard() {
+            currentFC = (currentFC - 1 + flashcardsData.length) % flashcardsData.length;
+            renderFlashcard();
+        }
+
+        // --- QUIZ LOGIC ---
+        let currentQ = 0;
+        let score = 0;
+        let answeredCurrent = false;
+        let chartInstance = null;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function initQuiz() {
+            // Shuffle options for each question
+            quizData.forEach(q => shuffleArray(q.options));
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            answeredCurrent = false;
+            const q = quizData[currentQ];
+            
+            document.getElementById('q-counter').innerText = `Scenario ${currentQ + 1} of ${quizData.length}`;
+            document.getElementById('q-progress').style.width = `${((currentQ + 1) / quizData.length) * 100}%`;
+            document.getElementById('q-text').innerText = q.question;
+            
+            document.getElementById('q-hint-area').classList.add('hidden');
+            document.getElementById('q-hint-area').innerText = "💡 " + q.hint;
+            
+            document.getElementById('q-feedback-area').classList.add('hidden');
+            document.getElementById('q-next-btn').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('q-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-[#2b6777] hover:bg-slate-50 transition-all font-medium text-slate-700 bg-white shadow-sm focus:outline-none";
+                btn.innerText = opt.text;
+                btn.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function toggleHint() {
+            const hintArea = document.getElementById('q-hint-area');
+            hintArea.classList.toggle('hidden');
+        }
+
+        function selectAnswer(optIndex) {
+            if(answeredCurrent) return;
+            answeredCurrent = true;
+
+            const q = quizData[currentQ];
+            const selectedOpt = q.options[optIndex];
+            const isCorrect = selectedOpt.isCorrect;
+
+            if(isCorrect) score++;
+
+            // Style buttons
+            const btns = document.getElementById('q-options').children;
+            for(let i=0; i<btns.length; i++) {
+                btns[i].disabled = true;
+                btns[i].classList.remove('hover:border-[#2b6777]', 'hover:bg-slate-50', 'cursor-pointer');
+                
+                if(q.options[i].isCorrect) {
+                    btns[i].classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                    btns[i].innerHTML = `✔️ ${btns[i].innerText}`;
+                } else if(i === optIndex && !isCorrect) {
+                    btns[i].classList.add('border-red-400', 'bg-red-50', 'text-red-800');
+                    btns[i].innerHTML = `❌ ${btns[i].innerText}`;
+                } else {
+                    btns[i].classList.add('opacity-50');
+                }
+            }
+
+            // Show feedback
+            const feedbackArea = document.getElementById('q-feedback-area');
+            const feedbackTitle = document.getElementById('q-feedback-title');
+            const feedbackText = document.getElementById('q-feedback-text');
+
+            feedbackArea.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-900', 'text-red-900');
+            
+            if(isCorrect) {
+                feedbackArea.classList.add('bg-green-100', 'text-green-900');
+                feedbackTitle.innerText = "Correct Protocol";
+            } else {
+                feedbackArea.classList.add('bg-red-100', 'text-red-900');
+                feedbackTitle.innerText = "Protocol Violation";
+            }
+            
+            feedbackText.innerText = selectedOpt.rationale;
+            
+            // Show Next Button
+            document.getElementById('q-next-btn').classList.remove('hidden');
+            if(currentQ === quizData.length - 1) {
+                document.getElementById('q-next-btn').innerText = "View Final Report 📊";
+            }
+        }
+
+        function nextQuestion() {
+            if(currentQ < quizData.length - 1) {
+                currentQ++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-active-area').classList.add('hidden');
+            document.getElementById('quiz-results-area').classList.remove('hidden');
+            
+            const msg = document.getElementById('results-message');
+            const percentage = (score / quizData.length) * 100;
+            
+            if(percentage >= 80) {
+                msg.innerText = `Excellent. You are ready to hold the line. (${score}/${quizData.length})`;
+                msg.className = "text-xl font-bold text-green-600 mb-8";
+            } else if(percentage >= 60) {
+                msg.innerText = `Passable, but review the custody protocols. (${score}/${quizData.length})`;
+                msg.className = "text-xl font-bold text-yellow-600 mb-8";
+            } else {
+                msg.innerText = `Critical Failure. Do not touch the keyboard. Return to the flashcards. (${score}/${quizData.length})`;
+                msg.className = "text-xl font-bold text-red-600 mb-8";
+            }
+
+            renderChart(score, quizData.length - score);
+        }
+
+        function renderChart(correct, incorrect) {
+            const ctx = document.getElementById('scoreCanvas').getContext('2d');
+            
+            if(chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Defensible (Correct)', 'Compromised (Incorrect)'],
+                    datasets: [{
+                        data: [correct, incorrect],
+                        backgroundColor: ['#2b6777', '#e07a5f'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Segoe UI', weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function resetQuiz() {
+            currentQ = 0;
+            score = 0;
+            document.getElementById('quiz-results-area').classList.add('hidden');
+            document.getElementById('quiz-active-area').classList.remove('hidden');
+            document.getElementById('q-next-btn').innerText = "Next Scenario ➡️";
+            initQuiz();
+        }
+
+        // Initialize on load
+        renderFlashcard();
+        initQuiz();
+
+    </script>
+</body>
+</html>
+
+
+
