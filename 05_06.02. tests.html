@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malware Incidents - Study Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f9fafb; color: #1f2937; }
+        
+        /* Tab Styles */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { border-bottom-color: #ea580c; color: #ea580c; font-weight: 600; }
+
+        /* Flashcard Flip Styles */
+        .flip-card { perspective: 1000px; cursor: pointer; height: 200px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); }
+        .flip-card-front { background-color: #ffffff; border: 1px solid #e5e7eb; }
+        .flip-card-back { background-color: #fff7ed; border: 1px solid #fdba74; transform: rotateY(180deg); overflow-y: auto; }
+        
+        /* Custom Scrollbar for back of cards if text is long */
+        .flip-card-back::-webkit-scrollbar { width: 4px; }
+        .flip-card-back::-webkit-scrollbar-thumb { background-color: #fdba74; border-radius: 4px; }
+        
+        /* Quiz Styles */
+        .quiz-option { transition: all 0.2s; cursor: pointer; }
+        .quiz-option:hover { background-color: #f3f4f6; }
+        .quiz-option.selected { border-color: #ea580c; background-color: #fff7ed; }
+        .quiz-option.correct { border-color: #22c55e; background-color: #f0fdf4; }
+        .quiz-option.incorrect { border-color: #ef4444; background-color: #fef2f2; }
+    </style>
+</head>
+<body class="antialiased min-h-screen">
+
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="py-6">
+                <h1 class="text-2xl font-bold text-gray-900">🛡️ Cyber.SoHo Study Guide</h1>
+                <p class="text-sm text-gray-500 mt-1">Handling Malware Incidents - Interactive Practice</p>
+            </div>
+            
+            <nav class="flex space-x-8">
+                <button onclick="switchTab('flashcards')" id="btn-flashcards" class="tab-btn active pb-4 text-sm font-medium text-gray-500 hover:text-gray-700">
+                    Flashcards (25)
+                </button>
+                <button onclick="switchTab('quiz')" id="btn-quiz" class="tab-btn pb-4 text-sm font-medium text-gray-500 hover:text-gray-700">
+                    Practice Quiz (10)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <section id="tab-flashcards" class="tab-content active">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">Concept Review</h2>
+                <p class="text-sm text-gray-500">Click a card to flip it.</p>
+            </div>
+            <div id="flashcards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+        </section>
+
+        <section id="tab-quiz" class="tab-content">
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">Knowledge Check</h2>
+                <p class="text-sm text-gray-500 mt-1">Test your practical application of the concepts. Select an answer to see the rationale.</p>
+            </div>
+            <div id="quiz-container" class="space-y-8">
+                </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const flashcardsData = [
+            { front: "Virus", back: "Malware that needs a host file and requires user interaction to run, with the primary goal of replicating." },
+            { front: "Worm", back: "Malware that self-propagates across networks to replicate and deliver payloads without needing a host file." },
+            { front: "Ransomware", back: "Malware that encrypts files and demands payment, designed primarily to extort money." },
+            { front: "Trojan", back: "Malware that pretends to be useful software to gain stealth access; it does not need a separate host because it IS the host." },
+            { front: "Rootkit", back: "Malware that hides at the OS or kernel level to maintain stealth and persistence on a system." },
+            { front: "Spyware", back: "Malware designed to silently collect and steal information without the user's knowledge." },
+            { front: "Primary rule for malware classification", back: "Classify by the malware's primary behaviour right now, as real-world malware often blurs historical categories." },
+            { front: "Indicator of Compromise (IoC)", back: "A forensic artefact observed on a network or in an OS that indicates a computer intrusion has occurred." },
+            { front: "Five flavors of IoCs", back: "File-based, Network-based, Host-based, Behavioural (TTPs), and Indicator of Attack (IoA)." },
+            { front: "Highest value IoC in the Pyramid of Pain", back: "TTPs (Tactics, Techniques, Procedures), because they represent attacker behavior and are the hardest for them to change." },
+            { front: "Lowest value IoC in the Pyramid of Pain", back: "Hash values, because they are trivial and cheap for attackers to alter." },
+            { front: "Current secure standard for Hash Algorithms (as of 2026)", back: "SHA-256. (MD5 and SHA-1 are considered broken and should be avoided)." },
+            { front: "The \"Three = Rope\" rule for incident escalation", back: "Finding three independent IoCs from different categories confirms a threat and warrants immediate escalation." },
+            { front: "The Golden Rule of malware containment", back: "CONTAIN — DO NOT POWER OFF." },
+            { front: "Risks of powering off a compromised host", back: "It destroys RAM and forensic timelines, can trigger destructive anti-analysis mechanisms, and re-engages persistence upon reboot." },
+            { front: "Three time horizons of containment", back: "Short-term (minutes), System backup (done in parallel), and Long-term (hours-days)." },
+            { front: "Primary benefit of network segmentation during an incident", back: "It does not completely stop an infection, but it effectively limits the blast radius of the attack." },
+            { front: "SBAR Communication Framework", back: "Situation, Background, Assessment, Recommendation / Request." },
+            { front: "Top three highest integrity communication channels", back: "Face-to-face, Personal mobile/voice call, and Encrypted out-of-band messengers like Signal." },
+            { front: "Starting point for regulatory reporting clocks", back: "The clock starts at the moment of awareness of a potential breach, not when the breach is officially confirmed." },
+            { front: "Attack vector for WannaCry (2017)", back: "SMBv1 Remote Code Execution via the EternalBlue exploit." },
+            { front: "Primary goal of NotPetya (2017)", back: "Total system destruction; it was a wiper disguised as ransomware." },
+            { front: "Security failure enabling the Colonial Pipeline breach", back: "A compromised remote VPN account that lacked Multi-Factor Authentication (MFA)." },
+            { front: "Attack vector for SolarWinds Sunburst (2020)", back: "Malicious code was inserted into the software build pipeline, creating a supply chain attack." },
+            { front: "NIST IR Lifecycle (SP 800-61 Rev. 2) phases", back: "Preparation, Detection & Analysis, Containment, Eradication, Recovery, and Post-Incident." }
+        ];
+
+        const quizData = [
+            {
+                question: "A user downloads a seemingly legitimate PDF reader application. Upon execution, the application functions normally but silently opens a backdoor network port, allowing an external attacker stealth access to the system. It makes no attempt to spread to other machines or encrypt files. Based on primary behavior, how should this malware be classified?",
+                hint: "Consider the malware family whose primary goal is stealth access by masquerading as useful software, rather than self-propagation or extortion.",
+                options: [
+                    { text: "Trojan", rationale: "The software tricks the user by pretending to be legitimate while providing stealth access, acting as the host itself without replicating.", isCorrect: true },
+                    { text: "Virus", rationale: "While it requires user interaction to run, its primary goal is not to replicate and attach itself to other host files.", isCorrect: false },
+                    { text: "Worm", rationale: "The scenario explicitly states that the malware makes no attempt to self-propagate across the network.", isCorrect: false },
+                    { text: "Rootkit", rationale: "Although it operates stealthily, there is no indication that it is hiding its presence at the OS or kernel level to maintain deep persistence.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You arrive at an employee's desk and see a ransom note displayed on their monitor. Panicking, the employee reaches for the physical power button to shut down the machine. What is your most appropriate immediate action?",
+                hint: "Think about the 'Golden Rule' of containment and what critical evidence is lost when a machine loses power.",
+                options: [
+                    { text: "Stop them and disable the network adapter while keeping the host powered on.", rationale: "Keeping the machine on preserves volatile memory (RAM) and forensic timelines, while disconnecting the network limits the blast radius.", isCorrect: true },
+                    { text: "Allow them to power it off to halt the encryption process immediately.", rationale: "Shutting down the system destroys decryption keys in memory and may trigger destructive anti-analysis mechanisms built into the malware.", isCorrect: false },
+                    { text: "Immediately start a full disk image capture using FTK Imager.", rationale: "While capturing evidence is crucial, disabling the network is the immediate short-term containment priority before starting time-consuming parallel backups.", isCorrect: false },
+                    { text: "Log in to the machine to assess exactly which shared drives have been encrypted.", rationale: "Interacting with the infected system risks triggering further malware actions or alerting the adversary before the system is properly isolated.", isCorrect: false }
+                ]
+            },
+            {
+                question: "Your threat intelligence team has limited engineering hours to update your defensive posture. According to the Pyramid of Pain, which of the following indicator updates will cause the most disruption and cost to an adversary's current campaign?",
+                hint: "Recall which level of the pyramid sits at the very top and represents the attacker's fundamental behavior.",
+                options: [
+                    { text: "Deploying behavioral detections for scheduled task creation with hidden attributes.", rationale: "Targeting Tactics, Techniques, and Procedures (TTPs) forces the adversary to fundamentally alter their behavior and re-tool, representing the highest cost and effort.", isCorrect: true },
+                    { text: "Updating the EDR solution with 500 newly identified SHA-256 file hashes.", rationale: "Cryptographic hashes are trivial for an attacker to change by simply modifying a single byte of their malicious file.", isCorrect: false },
+                    { text: "Blocking a list of 50 known command-and-control IP addresses at the perimeter firewall.", rationale: "Network addresses are very easy for attackers to rotate using cloud providers, proxies, or VPNs.", isCorrect: false },
+                    { text: "Blacklisting several typo-squatted domain names associated with the threat actor.", rationale: "While useful, registering new domain names is a simple and relatively inexpensive process for modern adversaries.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You suspect a widespread wiper malware infection is currently propagating through the corporate network. You need to urgently update the Chief Information Security Officer (CISO). Which communication method should you prioritize?",
+                hint: "Consider the integrity of internal communication channels during an active, potentially network-wide intrusion.",
+                options: [
+                    { text: "A direct phone call to their personal mobile device.", rationale: "Personal mobile devices operate outside the potentially compromised corporate infrastructure, maintaining high communication integrity.", isCorrect: true },
+                    { text: "A high-priority message on the corporate Slack or Teams channel.", rationale: "During a widespread incident, all corporate messaging platforms must be assumed compromised by the adversary.", isCorrect: false },
+                    { text: "An urgent email marked 'High Importance' to their corporate email address.", rationale: "Corporate email infrastructure relies on the same network that is currently under attack and may be monitored or disabled by the attacker.", isCorrect: false },
+                    { text: "A voice call via the corporate VoIP phone system on your desk.", rationale: "VoIP systems run on the corporate network and are susceptible to the same monitoring or disruption as email and chat.", isCorrect: false }
+                ]
+            },
+            {
+                question: "During the first 10 minutes of a confirmed malware outbreak on a specific workstation, which action falls exclusively under 'short-term containment'?",
+                hint: "Differentiate between immediate triage actions that stop the bleeding and those that involve enterprise-wide changes or deep forensic preservation.",
+                options: [
+                    { text: "Disabling the compromised user's account in the identity directory.", rationale: "Revoking the compromised identity immediately stops the attacker from leveraging those credentials elsewhere on the network.", isCorrect: true },
+                    { text: "Deploying an emergency enterprise-wide patch to all endpoints.", rationale: "Enterprise-wide patching is a long-term containment strategy that requires hours or days to test and deploy safely.", isCorrect: false },
+                    { text: "Initiating a full memory dump using a tool like WinPMEM.", rationale: "Capturing volatile memory is a system backup activity performed in parallel, not the very first short-term containment action.", isCorrect: false },
+                    { text: "Resetting all privileged credentials across the entire domain.", rationale: "A domain-wide credential reset is a complex, long-term containment and eradication step, not a 10-minute short-term action.", isCorrect: false }
+                ]
+            },
+            {
+                question: "An incident responder is providing an update to leadership using the SBAR framework. How should they structure the 'Assessment' portion of their message?",
+                hint: "Review the SBAR structure; 'A' sits between the context of the event and the request for action.",
+                options: [
+                    { text: "By summarizing the analysis of the threat and its potential impact on the business in two sentences.", rationale: "The Assessment section is designed to briefly provide the analyst's expert evaluation of the situation's severity and impact.", isCorrect: true },
+                    { text: "By stating the immediate problem clearly in one single sentence.", rationale: "Providing a one-sentence summary of the problem is the purpose of the 'Situation' phase of the framework.", isCorrect: false },
+                    { text: "By providing two sentences of historical context leading up to the current event.", rationale: "Delivering context and timeline information belongs in the 'Background' section of the message.", isCorrect: false },
+                    { text: "By requesting specific resources or authorization to isolate a subnet.", rationale: "Asking for action, resources, or authorization is the final step, known as the 'Recommendation' or 'Request'.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A company recently transitioned to a fully remote workforce. Employees access the internal network via an older VPN gateway using only active directory usernames and passwords. Based on the Colonial Pipeline case study, what is the most critical vulnerability in this setup?",
+                hint: "Think about the specific control failure that allowed the DarkSide ransomware operators to access Colonial Pipeline's network.",
+                options: [
+                    { text: "The absence of Multi-Factor Authentication on remote access.", rationale: "The Colonial Pipeline breach was facilitated by a compromised VPN account that relied solely on a password found in a public dump.", isCorrect: true },
+                    { text: "The failure to strictly segment the OT and IT networks.", rationale: "While segmentation prevented worse damage at Colonial Pipeline, the initial entry vector was the lack of strong authentication.", isCorrect: false },
+                    { text: "The lack of a verified offline backup strategy.", rationale: "Offline backups are crucial for recovery, as seen in the NotPetya case, but they do not prevent the initial remote access compromise.", isCorrect: false },
+                    { text: "The reliance on signature-based detection instead of behavioral monitoring.", rationale: "Behavioral detection is a lesson primarily derived from supply chain attacks like SolarWinds, not the initial VPN access phase of Colonial.", isCorrect: false }
+                ]
+            },
+            {
+                question: "A Security Operations Center analyst spots anomalous data exfiltration on Friday at 4:00 PM. The incident is investigated over the weekend and officially confirmed as a data breach by the Incident Commander on Monday at 9:00 AM. For GDPR reporting purposes, when did the 72-hour clock likely begin?",
+                hint: "Consider the regulatory trigger point mentioned in the communication lesson regarding confirmation versus discovery.",
+                options: [
+                    { text: "Friday at 4:00 PM, when the organisation first became aware of the potential breach.", rationale: "Regulatory clocks typically start at the moment of awareness of an anomaly or potential breach, requiring immediate legal consultation.", isCorrect: true },
+                    { text: "Monday at 9:00 AM, upon official confirmation by the Incident Commander.", rationale: "Waiting for official confirmation before starting the clock often leads to regulatory fines for late reporting.", isCorrect: false },
+                    { text: "Saturday at 4:00 PM, granting a standard 24-hour grace period for initial triage.", rationale: "Regulations like GDPR do not provide an automatic 24-hour grace period delaying the start of the awareness clock.", isCorrect: false },
+                    { text: "It does not start until the legal team formally drafts the external notification statement.", rationale: "The drafting of the statement is a response action; the legal obligation timeline begins much earlier upon discovery.", isCorrect: false }
+                ]
+            },
+            {
+                question: "An automated alert indicates that a single employee workstation attempted an outbound connection to an IP address previously associated with a botnet. Based on the 'Three = Rope' rule, what is the most appropriate next step for the analyst?",
+                hint: "Evaluate whether a single indicator is enough to confirm an intrusion, or if more context is needed.",
+                options: [
+                    { text: "Investigate the host for additional file-based or behavioral IoCs before escalating.", rationale: "A single IoC might be a false positive; finding corroborating evidence from different categories builds the 'rope' needed to confirm a threat.", isCorrect: true },
+                    { text: "Immediately declare a P1 Critical incident and wake up the Incident Commander.", rationale: "A single network connection attempt without corroborating evidence does not meet the threshold for a business-stopping P1 event.", isCorrect: false },
+                    { text: "Block the IP address at the firewall and close the ticket as an isolated event.", rationale: "Closing the ticket prematurely ignores the possibility that the connection attempt is a symptom of a deeper, undetected compromise.", isCorrect: false },
+                    { text: "Isolate the host and immediately re-image the hard drive to ensure eradication.", rationale: "Re-imaging immediately destroys all forensic evidence before the scope or nature of the potential intrusion is understood.", isCorrect: false }
+                ]
+            },
+            {
+                question: "You analyze a malicious payload that initially encrypts local user files, demanding cryptocurrency for the decryption key. However, it then leverages an unpatched exploit in a network protocol to automatically spread to other vulnerable machines on the LAN without user interaction. How should this be classified based on the playbook?",
+                hint: "Remember the rule about real-world malware blurring historical categories and how WannaCry operated.",
+                options: [
+                    { text: "It exhibits the primary behaviors of both a Worm and Ransomware.", rationale: "Classifying by primary behavior acknowledges that modern malware, like WannaCry, often combines self-propagation (worm) with extortion (ransomware).", isCorrect: true },
+                    { text: "It is strictly a Virus because it modifies and encrypts local host files.", rationale: "A traditional virus requires user interaction to spread via host files, whereas this payload spreads automatically across the network.", isCorrect: false },
+                    { text: "It is classified as a Trojan because it tricked the original user into executing it.", rationale: "While the initial entry may have involved trickery, its defining network-spreading behavior precludes it from being classified solely as a non-propagating Trojan.", isCorrect: false },
+                    { text: "It is a Rootkit because it uses complex network protocols to hide its traffic.", rationale: "Leveraging network exploits for propagation is not the same as actively hiding its presence at the OS kernel level.", isCorrect: false }
+                ]
+            }
+        ];
+
+        // --- LOGIC ---
+
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            // Remove active state from all buttons
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'border-orange-600', 'text-orange-600');
+                el.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Show selected content
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            // Highlight selected button
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('active', 'border-orange-600', 'text-orange-600');
+        }
+
+        function renderFlashcards() {
+            const container = document.getElementById('flashcards-container');
+            flashcardsData.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'flip-card group';
+                cardEl.onclick = function() { this.classList.toggle('flipped'); };
+                
+                cardEl.innerHTML = `
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <h3 class="text-lg font-semibold text-center text-gray-800">${card.front}</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm text-center text-gray-800 leading-relaxed">${card.back}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(cardEl);
+            });
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            quizData.forEach((q, qIndex) => {
+                // Shuffle options
+                const shuffledOptions = q.options
+                    .map(value => ({ value, sort: Math.random() }))
+                    .sort((a, b) => a.sort - b.sort)
+                    .map(({ value }) => value);
+
+                const qEl = document.createElement('div');
+                qEl.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm';
+                
+                let optionsHtml = '';
+                shuffledOptions.forEach((opt, oIndex) => {
+                    optionsHtml += `
+                        <div id="q${qIndex}-opt${oIndex}" class="quiz-option border border-gray-200 rounded-lg p-4 mt-3" onclick="handleAnswer(${qIndex}, ${oIndex}, ${opt.isCorrect}, '${opt.rationale.replace(/'/g, "\\'")}')">
+                            <p class="text-gray-700">${opt.text}</p>
+                        </div>
+                    `;
+                });
+
+                qEl.innerHTML = `
+                    <h3 class="text-lg font-medium text-gray-900 mb-2"><span class="text-orange-600 font-bold mr-2">${qIndex + 1}.</span>${q.question}</h3>
+                    <button onclick="toggleHint(${qIndex})" class="text-xs text-blue-600 hover:underline mb-4 focus:outline-none">Show Hint</button>
+                    <p id="hint-${qIndex}" class="text-sm text-gray-500 bg-blue-50 p-3 rounded mb-4 hidden">${q.hint}</p>
+                    <div id="options-${qIndex}" class="space-y-2">
+                        ${optionsHtml}
+                    </div>
+                    <div id="feedback-${qIndex}" class="mt-4 p-4 rounded-lg hidden"></div>
+                `;
+                container.appendChild(qEl);
+            });
+        }
+
+        function toggleHint(qIndex) {
+            const hintEl = document.getElementById(`hint-${qIndex}`);
+            hintEl.classList.toggle('hidden');
+        }
+
+        function handleAnswer(qIndex, oIndex, isCorrect, rationale) {
+            // Disable further clicks on this question
+            const optionsContainer = document.getElementById(`options-${qIndex}`);
+            optionsContainer.style.pointerEvents = 'none';
+
+            // Highlight selected option
+            const selectedOpt = document.getElementById(`q${qIndex}-opt${oIndex}`);
+            
+            if (isCorrect) {
+                selectedOpt.classList.add('correct');
+            } else {
+                selectedOpt.classList.add('incorrect');
+                // Could also find and highlight the correct one here if desired
+            }
+
+            // Show feedback
+            const feedbackEl = document.getElementById(`feedback-${qIndex}`);
+            feedbackEl.classList.remove('hidden');
+            feedbackEl.classList.add(isCorrect ? 'bg-green-50' : 'bg-red-50');
+            
+            feedbackEl.innerHTML = `
+                <strong class="${isCorrect ? 'text-green-800' : 'text-red-800'} block mb-1">
+                    ${isCorrect ? '✓ Correct!' : '✗ Incorrect.'}
+                </strong>
+                <p class="${isCorrect ? 'text-green-700' : 'text-red-700'} text-sm">${rationale}</p>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFlashcards();
+            renderQuiz();
+        });
+    </script>
+</body>
+</html>
+
+
