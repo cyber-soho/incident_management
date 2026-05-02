@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Security Study Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        /* Tabs CSS */
+        .tab-buttons {
+            display: flex;
+            background-color: #e0e6ed;
+            border-bottom: 2px solid #c0c9d4;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            outline: none;
+            transition: background 0.3s;
+        }
+        .tab-button:hover {
+            background-color: #d1d8e0;
+        }
+        .tab-button.active {
+            background-color: #fff;
+            border-bottom: 3px solid #0056b3;
+            color: #0056b3;
+        }
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Flashcards CSS */
+        .flashcard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .flashcard {
+            background-color: transparent;
+            height: 200px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .flashcard-front {
+            background-color: #0056b3;
+            color: white;
+            font-weight: bold;
+        }
+        .flashcard-back {
+            background-color: #f9f9f9;
+            color: #333;
+            transform: rotateY(180deg);
+            border: 2px solid #0056b3;
+        }
+        .instruction {
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        /* Quiz CSS */
+        .question-block {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .option-label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .quiz-btn {
+            background-color: #0056b3;
+            color: #fff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .quiz-btn:hover {
+            background-color: #004494;
+        }
+        #quiz-result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .feedback {
+            margin-top: 5px;
+            font-size: 14px;
+            display: none;
+        }
+        .correct-text { color: green; font-weight: bold; }
+        .incorrect-text { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tab-buttons">
+        <button class="tab-button active" onclick="openTab(event, 'flashcards-tab')">Flashcards (25)</button>
+        <button class="tab-button" onclick="openTab(event, 'quiz-tab')">Practice Quiz (10)</button>
+    </div>
+
+    <div id="flashcards-tab" class="tab-content active">
+        <p class="instruction">Click on a card to flip it and reveal the answer.</p>
+        <div class="flashcard-grid" id="flashcard-container">
+            </div>
+    </div>
+
+    <div id="quiz-tab" class="tab-content">
+        <p class="instruction">Answer the questions below and click 'Submit Quiz' to see your score.</p>
+        <form id="quiz-form">
+            <div id="quiz-container">
+                </div>
+            <button type="button" class="quiz-btn" onclick="gradeQuiz()">Submit Quiz</button>
+        </form>
+        <div id="quiz-result"></div>
+    </div>
+</div>
+
+<script>
+    // --- Tab Logic ---
+    function openTab(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-button");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // --- Flashcard Data & Logic ---
+    const flashcardsData = [
+        { front: "Definition of Phishing", back: "Mass volume, untargeted emails that rely on generic lures and are usually caught by the gateway." },
+        { front: "Definition of Spear-phishing", back: "Targeted attacks on an individual or small group utilizing gathered reconnaissance to build trust." },
+        { front: "Definition of Whaling", back: "A highly specific subset of spear-phishing aimed directly at executives, often using legal or financial lures." },
+        { front: "Business Email Compromise (BEC)", back: "Attacks using compromised or spoofed legitimate mailboxes to request wire transfers or IBAN changes, frequently containing no malware." },
+        { front: "Highest financial loss category in cybercrime", back: "Business Email Compromise (BEC)" },
+        { front: "Three stages of a phishing attack", back: "Lure construction, Hook delivery, and Payload execution" },
+        { front: "Lure Construction", back: "The content the victim sees, relying heavily on psychological manipulation." },
+        { front: "Six levers of social engineering", back: "Urgency, Authority, Scarcity, Familiarity/liking, Social proof, and Reciprocity." },
+        { front: "Hook Delivery", back: "The method by which the malicious email reaches the inbox, bypassing technical controls." },
+        { front: "Payload Execution", back: "The malicious action the victim is tricked into taking (e.g., entering credentials or opening malware)." },
+        { front: "Most common phishing payload type", back: "Credential harvesting (fake login pages)." },
+        { front: "Sender Policy Framework (SPF)", back: "An authentication protocol that checks if the connecting IP is authorized to send mail for the domain via a DNS TXT record." },
+        { front: "Primary vulnerability of SPF", back: "It breaks when emails are forwarded." },
+        { front: "DomainKeys Identified Mail (DKIM)", back: "An authentication protocol that cryptographically signs message headers and the body to verify the sender and detect tampering." },
+        { front: "Advantage of DKIM over SPF", back: "DKIM survives email forwarding because the cryptographic signature travels with the message." },
+        { front: "DMARC", back: "A protocol that enforces SPF/DKIM alignment and dictates receiver policy (none, quarantine, reject)." },
+        { front: "Under-appreciated superpower of DMARC", back: "Reporting (rua), which provides crucial visibility into domain spoofing attempts." },
+        { front: "Three habits taught in modern awareness programs", back: "Pause, verify, and report." },
+        { front: "Most actionable metric in security awareness training", back: "Report rate (which should be increasing, indicating an active human defense layer)." },
+        { front: "Characteristics of effective awareness training", back: "Continuous, role-tailored, simulation-based, measurable, and operating within a blameless culture." },
+        { front: "Six phases of Incident Response", back: "Preparation, Detection & Analysis, Containment, Eradication, Recovery, and Lessons Learned." },
+        { front: "Critical containment actions if credentials are submitted", back: "Disable the account, revoke sessions, and reset the password (in that strict order)." },
+        { front: "Why session revocation is critical in email IR", back: "To prevent attackers from bypassing MFA via session-cookie theft." },
+        { front: "First action within 0-2 minutes of an email incident report", back: "Acknowledge the user, instruct them not to delete the email, and capture the original .eml file and headers." },
+        { front: "Critical timeframe for email incident response", back: "The first 30 minutes, which dictates whether an event remains a minor incident or escalates to a major breach." }
+    ];
+
+    const flashcardContainer = document.getElementById("flashcard-container");
+    flashcardsData.forEach((card) => {
+        const cardElement = document.createElement("div");
+        cardElement.className = "flashcard";
+        cardElement.onclick = function() { this.classList.toggle("flipped"); };
+        cardElement.innerHTML = `
+            <div class="flashcard-inner">
+                <div class="flashcard-front">${card.front}</div>
+                <div class="flashcard-back">${card.back}</div>
+            </div>
+        `;
+        flashcardContainer.appendChild(cardElement);
+    });
+
+    // --- Quiz Data & Logic ---
+    const quizData = [
+        {
+            q: "The finance team receives an email from the CEO's actual account urgently requesting an IBAN change for a major vendor. The email contains no links or attachments. Which threat category does this represent?",
+            options: [
+                { text: "Business Email Compromise (BEC)", correct: true, rationale: "The attacker is using a legitimate, compromised high-level account to request financial changes without malware." },
+                { text: "Whaling", correct: false, rationale: "While the CEO is an executive, the target of the attack is the finance team, not the executive themselves." },
+                { text: "Spear-phishing", correct: false, rationale: "This involves targeted lures, but typically relies on malware or credential harvesting." },
+                { text: "Mass Phishing", correct: false, rationale: "Mass phishing relies on high volume and generic lures, whereas this is highly targeted." }
+            ]
+        },
+        {
+            q: "An employee receives an email stating: 'Only 2 spots left for the mandatory compliance training.' Which social engineering lever is primarily being used in this lure?",
+            options: [
+                { text: "Urgency", correct: false, rationale: "Urgency relies on strict time limits, whereas this specifically limits the quantity of a resource." },
+                { text: "Authority", correct: false, rationale: "Authority exploits a power dynamic or trusted figure." },
+                { text: "Scarcity", correct: true, rationale: "This leverages the fear of missing out by limiting availability, prompting the victim to act quickly." },
+                { text: "Social Proof", correct: false, rationale: "Social proof relies on demonstrating that peers have already taken the action to build trust." }
+            ]
+        },
+        {
+            q: "A company sets up a rule that strictly checks the incoming IP against the sender's DNS records. Legitimate emails forwarded by an alumni association are getting blocked. Which protocol is causing this?",
+            options: [
+                { text: "DKIM", correct: false, rationale: "This uses cryptographic signatures that travel with the message, allowing it to survive forwarding." },
+                { text: "SPF", correct: true, rationale: "This verifies the connecting IP against a published list, so when an intermediary forwards the email, it fails." },
+                { text: "DMARC", correct: false, rationale: "This relies on the results of underlying authentication checks to enforce policy." },
+                { text: "SMTP", correct: false, rationale: "This is the underlying transport protocol and possesses no built-in sender verification mechanisms." }
+            ]
+        },
+        {
+            q: "A security analyst wants to gain visibility into who is attempting to spoof their company's domain across the internet. Which protocol feature should they rely on?",
+            options: [
+                { text: "SPF hard fail (-all)", correct: false, rationale: "This tells receivers to reject mail from unauthorized IPs, but provides no reporting mechanism." },
+                { text: "DKIM signatures", correct: false, rationale: "Cryptographic signatures verify integrity but do not contain a reporting mechanism." },
+                { text: "DMARC reporting (rua)", correct: true, rationale: "The 'rua' tag instructs receivers to send aggregate reports of authentication failures back to the domain owner." },
+                { text: "SMTP relays", correct: false, rationale: "Relays simply forward mail and do not provide structured authentication feedback." }
+            ]
+        },
+        {
+            q: "After a 90-day security awareness pilot, the CISO asks for the most actionable metric to prove the human defense layer is actively working. Which metric provides this?",
+            options: [
+                { text: "Decreasing click rate", correct: false, rationale: "A low click rate is a passive metric that doesn't prove users know what to do when they spot a threat." },
+                { text: "Time-to-first-report", correct: false, rationale: "Faster reporting is excellent, but aggregate volume is the primary indicator of an active defense layer." },
+                { text: "Repeat-clicker rate", correct: false, rationale: "Tracking repeat offenders focuses on failures rather than overall health." },
+                { text: "Increasing report rate", correct: true, rationale: "A rising report rate demonstrates that employees are actively identifying threats and engaging with the process." }
+            ]
+        },
+        {
+            q: "An employee clicked a fake login link and submitted their credentials. To prevent an attacker from bypassing MFA via stolen cookies, what must the responder do immediately after disabling the account?",
+            options: [
+                { text: "Reset the user's password", correct: false, rationale: "A password reset secures future authentication but won't terminate active sessions." },
+                { text: "Revoke active sessions", correct: true, rationale: "Revoking sessions instantly kills any access the attacker gained via stolen cookies." },
+                { text: "Purge the email from other inboxes", correct: false, rationale: "This contains the blast radius but doesn't address the immediate compromise." },
+                { text: "Re-image the user's laptop", correct: false, rationale: "Re-imaging is part of eradication and is only necessary if malware was executed." }
+            ]
+        },
+        {
+            q: "An attacker registers a typosquatted domain (e.g., micros0ft.com) to bypass technical controls and land an email in an employee's inbox. Which stage of the attack does this represent?",
+            options: [
+                { text: "Lure construction", correct: false, rationale: "The lure is the psychological content of the email itself." },
+                { text: "Payload execution", correct: false, rationale: "The payload is the malicious action taken by the victim." },
+                { text: "Hook delivery", correct: true, rationale: "This describes the method used to bypass controls and deliver the malicious content." },
+                { text: "Reconnaissance", correct: false, rationale: "Typosquatting requires setup, but using the domain to land the email is delivery." }
+            ]
+        },
+        {
+            q: "An attacker sends an email mimicking a legal subpoena specifically to the Chief Financial Officer. What makes this Whaling rather than standard Spear-phishing?",
+            options: [
+                { text: "The email contains a malicious attachment", correct: false, rationale: "Malicious attachments are common across many types of phishing." },
+                { text: "The target is an executive and the lure involves high stakes", correct: true, rationale: "Whaling is specifically defined by targeting C-suite or senior executives with high-value lures." },
+                { text: "The attack relies on a spoofed domain", correct: false, rationale: "Domain spoofing is a delivery tactic used across all phishing types." },
+                { text: "The sender gathered intelligence beforehand", correct: false, rationale: "Gathering intelligence is the definition of standard spear-phishing." }
+            ]
+        },
+        {
+            q: "How does DKIM ensure that the body of an email hasn't been altered in transit?",
+            options: [
+                { text: "It verifies a cryptographic signature against a public key in the sender's DNS", correct: true, rationale: "The receiving server validates the signature using the public key published in DNS." },
+                { text: "It checks if the connecting server's IP is on an approved list", correct: false, rationale: "This describes SPF, not DKIM." },
+                { text: "It requires the recipient to log into a portal", correct: false, rationale: "Portal messaging is a secure delivery mechanism, not an authentication protocol." },
+                { text: "It compares the 'From' address to the return path address", correct: false, rationale: "This alignment check is part of DMARC's enforcement policy." }
+            ]
+        },
+        {
+            q: "A user reports a suspicious email within 2 minutes of receiving it but hasn't clicked anything. What is the very first technical action the analyst should take?",
+            options: [
+                { text: "Purge the email from the entire organization", correct: false, rationale: "Purging requires indicators extracted during the initial analysis phase." },
+                { text: "Capture the original .eml file and headers", correct: true, rationale: "Securing the raw evidence allows the analyst to safely extract indicators without altering the crime scene." },
+                { text: "Block the sender's domain at the gateway", correct: false, rationale: "Blocking requires knowing the exact sender infrastructure first." },
+                { text: "Revoke the user's active sessions", correct: false, rationale: "Since the user didn't submit credentials, this is an unnecessary disruption." }
+            ]
+        }
+    ];
+
+    const quizContainer = document.getElementById("quiz-container");
+    quizData.forEach((qObj, qIndex) => {
+        const qDiv = document.createElement("div");
+        qDiv.className = "question-block";
+        
+        const qTitle = document.createElement("div");
+        qTitle.className = "question-text";
+        qTitle.innerText = `${qIndex + 1}. ${qObj.q}`;
+        qDiv.appendChild(qTitle);
+
+        qObj.options.forEach((opt, oIndex) => {
+            const label = document.createElement("label");
+            label.className = "option-label";
+            label.innerHTML = `
+                <input type="radio" name="q${qIndex}" value="${opt.correct}"> 
+                ${opt.text}
+            `;
+            qDiv.appendChild(label);
+        });
+
+        const feedbackDiv = document.createElement("div");
+        feedbackDiv.id = `feedback-${qIndex}`;
+        feedbackDiv.className = "feedback";
+        qDiv.appendChild(feedbackDiv);
+
+        quizContainer.appendChild(qDiv);
+    });
+
+    function gradeQuiz() {
+        let score = 0;
+        quizData.forEach((qObj, qIndex) => {
+            const selected = document.querySelector(`input[name="q${qIndex}"]:checked`);
+            const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+            
+            if (selected) {
+                const isCorrect = selected.value === "true";
+                // Find the rationale for the selected option
+                const selectedText = selected.nextSibling.nodeValue.trim();
+                const selectedOptionData = qObj.options.find(o => o.text === selectedText);
+                
+                if (isCorrect) {
+                    score++;
+                    feedbackDiv.innerHTML = `<span class="correct-text">Correct!</span> ${selectedOptionData.rationale}`;
+                } else {
+                    feedbackDiv.innerHTML = `<span class="incorrect-text">Incorrect.</span> ${selectedOptionData.rationale}`;
+                }
+            } else {
+                feedbackDiv.innerHTML = `<span class="incorrect-text">Please select an answer.</span>`;
+            }
+            feedbackDiv.style.display = "block";
+        });
+        
+        document.getElementById("quiz-result").innerText = `You scored ${score} out of 10.`;
+    }
+</script>
+
+</body>
+</html>
+
+
+

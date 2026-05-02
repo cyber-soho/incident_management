@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber.SoHo: Email Security Incidents</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals (Stone/Slate) with Indigo and Emerald accents for clarity and professional tone. -->
+    <!-- Application Structure Plan: A dashboard-style layout with a fixed side navigation (top nav on mobile) to allow non-linear exploration of the 5 core lessons. Sections are divided into Threat Taxonomy, Attack Anatomy, Technical Defences, Human Defences, and Incident Response. This structure transforms a linear slide deck into a functional reference tool for incident handlers, prioritising quick access to comparison matrices and playbooks. -->
+    <!-- Visualization & Content Choices: 1. Threat Matrix -> Goal: Compare -> Viz: Interactive Cards & Detail Panel -> Justification: Allows focused reading of specific threat types. 2. Human Defense Metrics -> Goal: Inform/Trend -> Viz: Chart.js Line Chart -> Justification: Visually reinforces the 'healthy direction' of metrics over a 90-day pilot. 3. IR Timeline -> Goal: Organize -> Viz: HTML/CSS Vertical Timeline -> Justification: Clearly maps the 30-minute SLA and 'Sandra' case study. NO SVG or Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f5f5f4; color: #1c1917; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+        
+        .nav-active { background-color: #e7e5e4; border-left: 4px solid #4f46e5; font-weight: 600; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e7e5e4; }
+        .tab-active { border-bottom: 2px solid #4f46e5; color: #4f46e5; }
+        
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen overflow-x-hidden">
+
+    <nav class="w-full md:w-64 bg-stone-100 border-r border-stone-200 md:h-screen md:sticky top-0 z-50 flex flex-col shadow-sm">
+        <div class="p-6 border-b border-stone-200">
+            <h1 class="text-xl font-bold text-indigo-900 tracking-tight">Cyber.SoHo</h1>
+            <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider font-semibold">Incident Management</p>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto hidden md:block" id="nav-menu">
+            <ul class="space-y-1">
+                <li><a href="#intro" class="nav-link block px-4 py-2 rounded-md text-stone-700 hover:bg-stone-200 transition-colors nav-active" data-target="intro">Dashboard Overview</a></li>
+                <li class="pt-4 pb-2 px-4 text-xs font-semibold text-stone-400 uppercase tracking-wider">Modules</li>
+                <li><a href="#taxonomy" class="nav-link block px-4 py-2 rounded-md text-stone-700 hover:bg-stone-200 transition-colors" data-target="taxonomy">1. Threat Taxonomy</a></li>
+                <li><a href="#anatomy" class="nav-link block px-4 py-2 rounded-md text-stone-700 hover:bg-stone-200 transition-colors" data-target="anatomy">2. Attack Anatomy</a></li>
+                <li><a href="#authentication" class="nav-link block px-4 py-2 rounded-md text-stone-700 hover:bg-stone-200 transition-colors" data-target="authentication">3. Authentication Protocols</a></li>
+                <li><a href="#human" class="nav-link block px-4 py-2 rounded-md text-stone-700 hover:bg-stone-200 transition-colors" data-target="human">4. Human Defence Layer</a></li>
+                <li><a href="#response" class="nav-link block px-4 py-2 rounded-md text-stone-700 hover:bg-stone-200 transition-colors" data-target="response">5. Incident Response</a></li>
+            </ul>
+        </div>
+        <div class="md:hidden p-4 flex justify-between overflow-x-auto gap-2 bg-stone-100 border-b border-stone-200">
+            <a href="#intro" class="whitespace-nowrap px-3 py-1 bg-stone-200 rounded text-sm font-medium">Intro</a>
+            <a href="#taxonomy" class="whitespace-nowrap px-3 py-1 bg-stone-200 rounded text-sm font-medium">Taxonomy</a>
+            <a href="#anatomy" class="whitespace-nowrap px-3 py-1 bg-stone-200 rounded text-sm font-medium">Anatomy</a>
+            <a href="#authentication" class="whitespace-nowrap px-3 py-1 bg-stone-200 rounded text-sm font-medium">Auth</a>
+            <a href="#human" class="whitespace-nowrap px-3 py-1 bg-stone-200 rounded text-sm font-medium">Human</a>
+            <a href="#response" class="whitespace-nowrap px-3 py-1 bg-stone-200 rounded text-sm font-medium">IR</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 space-y-16">
+
+        <section id="intro" class="pt-4 scroll-mt-20">
+            <header class="mb-8">
+                <div class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full mb-4">Course: IH&R Process &bull; Week 4</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-stone-900 mb-4 tracking-tight">Email Security Incidents</h2>
+                <p class="text-xl text-stone-600 font-light max-w-3xl">Phishing &amp; Spam analysis, categorisation, and rapid response playbooks. From the Industry to the Classroom.</p>
+            </header>
+
+            <div class="glass-panel rounded-xl p-6 md:p-8 shadow-sm">
+                <h3 class="text-lg font-semibold text-stone-800 mb-3 border-b border-stone-200 pb-2">Module Orientation</h3>
+                <p class="text-stone-600 mb-6 leading-relaxed">
+                    This interactive module translates the Day 07/08 lecture material into an explorable dashboard. Almost every major cyber incident begins with a compromised email. Understanding the nuance between attack types, the technical layers of email protocols, and the crucial 30-minute response window is essential for any incident handler. Explore the sections below to build your analytical muscle memory.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-stone-50 border border-stone-200 rounded-lg p-4 flex items-start space-x-3">
+                        <div class="text-2xl mt-1">&#128200;</div>
+                        <div>
+                            <h4 class="font-medium text-stone-900">High Stakes</h4>
+                            <p class="text-sm text-stone-500">Business Email Compromise (BEC) is the highest single category of cybercrime financial loss.</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 border border-stone-200 rounded-lg p-4 flex items-start space-x-3">
+                        <div class="text-2xl mt-1">&#128269;</div>
+                        <div>
+                            <h4 class="font-medium text-stone-900">Technical Depth</h4>
+                            <p class="text-sm text-stone-500">Learn to deconstruct Lure, Hook, and Payload, bypassing simple "phishing" labels.</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 border border-stone-200 rounded-lg p-4 flex items-start space-x-3">
+                        <div class="text-2xl mt-1">&#9201;&#65039;</div>
+                        <div>
+                            <h4 class="font-medium text-stone-900">Rapid Response</h4>
+                            <p class="text-sm text-stone-500">Master the 30-minute cheat-sheet to contain blast radius and prevent full breaches.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="taxonomy" class="scroll-mt-20">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">1. Threat Taxonomy</h2>
+                <p class="text-stone-600 leading-relaxed max-w-4xl">
+                    Naming is the first analyst skill. Mislabelling a targeted Business Email Compromise (BEC) as generic "phishing" leads to the wrong incident response playbook, leaving the attacker inside the network. Use the interactive matrix below to understand the four primary categories of email threats.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 flex flex-col space-y-3" id="taxonomy-buttons">
+                    <button class="tax-btn w-full text-left px-5 py-4 rounded-lg border-2 border-indigo-500 bg-indigo-50 text-indigo-900 font-semibold shadow-sm transition-all" data-type="phishing">
+                        <div class="flex justify-between items-center">
+                            <span>Phishing</span>
+                            <span>&#128233;</span>
+                        </div>
+                    </button>
+                    <button class="tax-btn w-full text-left px-5 py-4 rounded-lg border-2 border-transparent bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-semibold shadow-sm transition-all" data-type="spear">
+                        <div class="flex justify-between items-center">
+                            <span>Spear-Phishing</span>
+                            <span>&#127919;</span>
+                        </div>
+                    </button>
+                    <button class="tax-btn w-full text-left px-5 py-4 rounded-lg border-2 border-transparent bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-semibold shadow-sm transition-all" data-type="whaling">
+                        <div class="flex justify-between items-center">
+                            <span>Whaling</span>
+                            <span>&#128011;</span>
+                        </div>
+                    </button>
+                    <button class="tax-btn w-full text-left px-5 py-4 rounded-lg border-2 border-transparent bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-semibold shadow-sm transition-all" data-type="bec">
+                        <div class="flex justify-between items-center">
+                            <span>Business Email Compromise</span>
+                            <span>&#128188;</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="lg:col-span-8 glass-panel rounded-xl p-6 md:p-8 flex flex-col justify-between min-h-[400px]">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <span id="tax-icon" class="text-3xl">&#128233;</span>
+                            <h3 id="tax-title" class="text-2xl font-bold text-stone-900">Phishing</h3>
+                        </div>
+                        <p id="tax-desc" class="text-stone-600 mb-6 text-lg">Mass volume, untargeted emails, typically caught by email gateways 95%+ of the time. Lures are generic.</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            <div class="bg-stone-100 p-3 rounded text-center">
+                                <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Targeting</div>
+                                <div id="tax-target" class="font-semibold text-stone-800">Mass</div>
+                            </div>
+                            <div class="bg-stone-100 p-3 rounded text-center">
+                                <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Volume</div>
+                                <div id="tax-vol" class="font-semibold text-stone-800">Millions</div>
+                            </div>
+                            <div class="bg-stone-100 p-3 rounded text-center">
+                                <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Malware?</div>
+                                <div id="tax-malware" class="font-semibold text-stone-800">Often</div>
+                            </div>
+                            <div class="bg-stone-100 p-3 rounded text-center">
+                                <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Financial Impact</div>
+                                <div id="tax-impact" class="font-semibold text-emerald-600">Low / Aggregate</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                        <h4 class="text-sm font-bold text-amber-900 uppercase tracking-wider mb-1">The "María" Example (Mon-Fri)</h4>
+                        <p id="tax-example" class="text-amber-800 font-medium">Monday: Receives a generic "Dear Customer" Santander banking alert. It is ignored and deleted easily.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="anatomy" class="scroll-mt-20">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">2. Attack Anatomy & Social Engineering</h2>
+                <p class="text-stone-600 leading-relaxed max-w-4xl">
+                    Every attack decomposes into three distinct stages, mapping closely to the early phases of the Cyber Kill Chain. Understanding these stages allows defenders to implement specific controls at each point. Click the stages below to reveal the social engineering levers and payload types.
+                </p>
+            </div>
+
+            <div class="glass-panel rounded-xl p-6 md:p-8">
+                <div class="flex flex-col md:flex-row items-center justify-between mb-10 space-y-4 md:space-y-0 relative">
+                    <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-stone-200 -z-10 transform -translate-y-1/2"></div>
+                    
+                    <button class="stage-btn bg-indigo-600 text-white w-full md:w-1/4 py-4 rounded-lg shadow-md font-bold text-lg hover:bg-indigo-700 transition-colors z-10" data-stage="lure">1. Lure</button>
+                    <div class="text-stone-400 text-2xl md:hidden">&#8595;</div>
+                    <button class="stage-btn bg-stone-100 border-2 border-stone-300 text-stone-600 w-full md:w-1/4 py-4 rounded-lg shadow-sm font-bold text-lg hover:bg-stone-200 transition-colors z-10" data-stage="hook">2. Hook</button>
+                    <div class="text-stone-400 text-2xl md:hidden">&#8595;</div>
+                    <button class="stage-btn bg-stone-100 border-2 border-stone-300 text-stone-600 w-full md:w-1/4 py-4 rounded-lg shadow-sm font-bold text-lg hover:bg-stone-200 transition-colors z-10" data-stage="payload">3. Payload</button>
+                </div>
+
+                <div id="stage-content" class="bg-white border border-stone-200 rounded-lg p-6 min-h-[250px]">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Kill Chain: Reconnaissance</span>
+                        <h3 class="text-xl font-bold text-stone-900">Lure Construction</h3>
+                    </div>
+                    <p class="text-stone-600 mb-6">The content the victim sees. It relies on psychological manipulation. Stacking three or more of these levers in a single email is a strong red flag of malicious intent.</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">&#9889;</span><span class="font-medium text-stone-800 text-sm">Urgency ("24h left")</span></div>
+                        <div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">&#128084;</span><span class="font-medium text-stone-800 text-sm">Authority ("CEO")</span></div>
+                        <div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">&#127919;</span><span class="font-medium text-stone-800 text-sm">Scarcity ("3 slots left")</span></div>
+                        <div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">&#128075;</span><span class="font-medium text-stone-800 text-sm">Familiarity (Tone)</span></div>
+                        <div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">&#128101;</span><span class="font-medium text-stone-800 text-sm">Social Proof</span></div>
+                        <div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">&#128257;</span><span class="font-medium text-stone-800 text-sm">Reciprocity</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="authentication" class="scroll-mt-20">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">3. Authentication Protocols</h2>
+                <p class="text-stone-600 leading-relaxed max-w-4xl">
+                    SMTP was designed in the 1970s with no sender verification. SPF, DKIM, and DMARC are retroactive bolt-on authentication mechanisms. Implementing all three correctly makes a domain structurally hard to spoof.
+                </p>
+            </div>
+
+            <div class="glass-panel rounded-xl overflow-hidden shadow-sm">
+                <div class="flex border-b border-stone-200 bg-stone-50">
+                    <button class="auth-tab flex-1 py-4 text-center font-semibold tab-active transition-colors" data-auth="spf">SPF</button>
+                    <button class="auth-tab flex-1 py-4 text-center font-semibold text-stone-500 hover:text-stone-800 transition-colors" data-auth="dkim">DKIM</button>
+                    <button class="auth-tab flex-1 py-4 text-center font-semibold text-stone-500 hover:text-stone-800 transition-colors" data-auth="dmarc">DMARC</button>
+                </div>
+                
+                <div class="p-6 md:p-8" id="auth-content">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-2xl font-bold text-stone-900">Sender Policy Framework (SPF)</h3>
+                        <span class="bg-stone-200 text-stone-700 text-xs font-bold px-2 py-1 rounded uppercase">RFC 7208</span>
+                    </div>
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r">
+                        <p class="text-indigo-900 font-medium"><strong>Core Question:</strong> Is this connecting IP allowed to send mail for this domain?</p>
+                    </div>
+                    <ul class="space-y-3 text-stone-700 mb-6 list-disc list-inside">
+                        <li>Domain owner publishes a DNS TXT record listing authorised IPs.</li>
+                        <li>Receiver looks up the record and compares it to the incoming connection.</li>
+                        <li>Mechanisms: <code>-all</code> (hard fail), <code>~all</code> (soft fail), <code>+all</code> (catastrophic).</li>
+                    </ul>
+                    <div class="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded font-medium text-sm">
+                        <span>&#9888;&#65039;</span>
+                        <span>Vulnerability: SPF breaks on email forwarding.</span>
+                    </div>
+                </div>
+
+                <div class="bg-stone-100 p-6 border-t border-stone-200">
+                    <h4 class="text-sm font-bold text-stone-500 uppercase tracking-wider mb-4">Combined Protection Matrix</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="border-b border-stone-300">
+                                    <th class="py-2 px-4 text-stone-600">Capability</th>
+                                    <th class="py-2 px-4 text-center">SPF</th>
+                                    <th class="py-2 px-4 text-center">DKIM</th>
+                                    <th class="py-2 px-4 text-center">DMARC</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-stone-800">
+                                <tr class="border-b border-stone-200">
+                                    <td class="py-3 px-4 font-medium">Checks IP origin</td>
+                                    <td class="py-3 px-4 text-center text-emerald-600 font-bold">&#10003;</td>
+                                    <td class="py-3 px-4 text-center text-stone-300">&#10007;</td>
+                                    <td class="py-3 px-4 text-center text-stone-300">&#10007;</td>
+                                </tr>
+                                <tr class="border-b border-stone-200">
+                                    <td class="py-3 px-4 font-medium">Checks tampering</td>
+                                    <td class="py-3 px-4 text-center text-stone-300">&#10007;</td>
+                                    <td class="py-3 px-4 text-center text-emerald-600 font-bold">&#10003;</td>
+                                    <td class="py-3 px-4 text-center text-stone-300">&#10007;</td>
+                                </tr>
+                                <tr class="border-b border-stone-200">
+                                    <td class="py-3 px-4 font-medium">Survives forwarding</td>
+                                    <td class="py-3 px-4 text-center text-red-500 font-bold">&#10007;</td>
+                                    <td class="py-3 px-4 text-center text-emerald-600 font-bold">&#10003;</td>
+                                    <td class="py-3 px-4 text-center text-stone-600 text-xs italic">If 1 passes</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-medium">Reporting functionality</td>
+                                    <td class="py-3 px-4 text-center text-stone-300">&#10007;</td>
+                                    <td class="py-3 px-4 text-center text-stone-300">&#10007;</td>
+                                    <td class="py-3 px-4 text-center text-emerald-600 font-bold">&#10003;</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="human" class="scroll-mt-20">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">4. The Human Defence Layer</h2>
+                <p class="text-stone-600 leading-relaxed max-w-4xl">
+                    Technology cannot catch what it has never seen. 91,000 phishing emails reach inboxes annually despite 99.9% gateway blocks. A modern awareness program focuses on role-tailored simulations and tracking the <strong>Report Rate</strong> over the Click Rate.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass-panel rounded-xl p-6 shadow-sm flex flex-col justify-center">
+                    <h3 class="text-lg font-bold text-stone-800 mb-2 text-center">90-Day Training Pilot Metrics</h3>
+                    <p class="text-sm text-stone-500 text-center mb-4">Tracking behavioral shifts during phased simulation rollouts.</p>
+                    <div class="chart-container w-full h-full relative">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                        <h4 class="font-bold text-stone-900 mb-3 flex items-center"><span class="text-emerald-500 mr-2">&#10003;</span> What Good Looks Like</h4>
+                        <ul class="space-y-2 text-sm text-stone-600">
+                            <li><strong class="text-stone-800">Continuous:</strong> Drip-feed micro-lessons.</li>
+                            <li><strong class="text-stone-800">Role-tailored:</strong> Finance lures &#8800; Engineering lures.</li>
+                            <li><strong class="text-stone-800">Blameless:</strong> Heroes report, we do not punish clickers.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                        <h4 class="font-bold text-stone-900 mb-3 flex items-center"><span class="text-red-500 mr-2">&#10007;</span> Bad Signs</h4>
+                        <ul class="space-y-2 text-sm text-stone-600">
+                            <li>25-minute annual videos + generic quiz.</li>
+                            <li>Public shaming or HR action against clickers.</li>
+                            <li>Treated as a substitute for technical controls.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-5 shadow-sm text-center">
+                        <h4 class="font-bold text-indigo-900 mb-1">Golden Rule</h4>
+                        <p class="text-indigo-700 text-xl font-black">PAUSE &bull; VERIFY &bull; REPORT</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="response" class="scroll-mt-20 pb-20">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">5. Incident Response Playbook</h2>
+                <p class="text-stone-600 leading-relaxed max-w-4xl">
+                    Email IR is unique: the blast radius is everyone, and MFA bypass via session-cookie theft is common. Speed in the first 30 minutes determines whether an event remains an "incident" or escalates to a "breach".
+                </p>
+            </div>
+
+            <div class="glass-panel rounded-xl p-6 md:p-8 shadow-sm">
+                <h3 class="text-xl font-bold text-stone-900 mb-6 border-b border-stone-200 pb-2">The "Sandra" Case Study: First 30 Minutes SLA</h3>
+                
+                <div class="relative border-l-2 border-indigo-200 ml-3 md:ml-6 space-y-8 pb-4">
+                    
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute -left-[11px] top-1 h-5 w-5 rounded-full bg-red-500 border-4 border-white shadow"></div>
+                        <div class="pl-8 transition-transform transform group-hover:translate-x-1">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                <h4 class="text-lg font-bold text-stone-900">Minute 00: The Incident Begins</h4>
+                                <span class="text-sm font-mono bg-stone-100 px-2 py-1 rounded text-stone-600">09:42 AM</span>
+                            </div>
+                            <p class="text-stone-600 bg-white p-3 rounded border border-stone-100 shadow-sm">Sandra clicks fake GitHub login &#8594; submits credentials &#8594; immediately reports it via Phish Button.</p>
+                            <div class="mt-2 text-xs text-indigo-600 font-semibold uppercase tracking-wider hidden group-hover:block transition-all">Playbook Action: Acknowledge user. Tell them not to delete email. Capture .eml</div>
+                        </div>
+                    </div>
+
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute -left-[11px] top-1 h-5 w-5 rounded-full bg-amber-400 border-4 border-white shadow"></div>
+                        <div class="pl-8 transition-transform transform group-hover:translate-x-1">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                <h4 class="text-lg font-bold text-stone-900">Minute 08: Detection & Scope</h4>
+                                <span class="text-sm font-mono bg-stone-100 px-2 py-1 rounded text-stone-600">09:50 AM</span>
+                            </div>
+                            <p class="text-stone-600 bg-white p-3 rounded border border-stone-100 shadow-sm">Analyst performs message trace. Confirms Bulgarian IP signed in 4 minutes after Sandra submitted credentials.</p>
+                            <div class="mt-2 text-xs text-indigo-600 font-semibold uppercase tracking-wider hidden group-hover:block transition-all">Playbook Action: Message-trace all internal recipients. Check sign-in logs.</div>
+                        </div>
+                    </div>
+
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute -left-[11px] top-1 h-5 w-5 rounded-full bg-indigo-500 border-4 border-white shadow"></div>
+                        <div class="pl-8 transition-transform transform group-hover:translate-x-1">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                <h4 class="text-lg font-bold text-stone-900">Minute 23: Containment (CRITICAL)</h4>
+                                <span class="text-sm font-mono bg-stone-100 px-2 py-1 rounded text-stone-600">10:05 AM</span>
+                            </div>
+                            <p class="text-stone-600 bg-white p-3 rounded border border-stone-100 shadow-sm border-l-4 border-l-indigo-500">Account disabled &#8594; <strong>Sessions revoked</strong> &#8594; Password reset. Three other recipients' copies purged from mailboxes.</p>
+                            <div class="mt-2 text-xs text-indigo-600 font-semibold uppercase tracking-wider hidden group-hover:block transition-all">Playbook Action: Disable -> Revoke Sessions -> Reset. Purge mail. Block URL.</div>
+                        </div>
+                    </div>
+
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute -left-[11px] top-1 h-5 w-5 rounded-full bg-emerald-500 border-4 border-white shadow"></div>
+                        <div class="pl-8 transition-transform transform group-hover:translate-x-1">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                <h4 class="text-lg font-bold text-stone-900">Eradication & Recovery</h4>
+                                <span class="text-sm font-mono bg-stone-100 px-2 py-1 rounded text-stone-600">11:30 - 13:00</span>
+                            </div>
+                            <p class="text-stone-600 bg-white p-3 rounded border border-stone-100 shadow-sm">Verified no OAuth grants or rogue commits. New FIDO2 hardware key issued to Sandra. Resume normal work.</p>
+                            <div class="mt-2 text-sm text-stone-800 font-semibold mt-2">Outcome: 4 hours, minor incident. <span class="text-emerald-600">Without rapid response and MFA: Weeks of work, major breach.</span></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        function handleScroll() {
+            let current = '';
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('nav-active', 'border-l-4', 'border-indigo-500', 'bg-stone-200');
+                if (link.getAttribute('data-target') === current) {
+                    link.classList.add('nav-active', 'border-l-4', 'border-indigo-500', 'bg-stone-200');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', handleScroll);
+
+        const taxonomyData = {
+            phishing: {
+                title: "Phishing",
+                icon: "&#128233;",
+                desc: "Mass volume, untargeted emails, typically caught by email gateways 95%+ of the time. Lures are generic.",
+                target: "Mass",
+                vol: "Millions",
+                malware: "Often",
+                impact: "Low / Aggregate",
+                impactClass: "text-emerald-600",
+                example: "Monday: Receives a generic 'Dear Customer' Santander banking alert. It is ignored and deleted easily."
+            },
+            spear: {
+                title: "Spear-Phishing",
+                icon: "&#127919;",
+                desc: "Targeted at an individual or small group. Attackers perform reconnaissance and reference real internal information to build trust.",
+                target: "Specific",
+                vol: "1 - 50",
+                malware: "Usually",
+                impact: "Medium - High",
+                impactClass: "text-amber-500",
+                example: "Tuesday: Fake supplier sends an email with a .exe attachment, explicitly referencing a real internal project code."
+            },
+            whaling: {
+                title: "Whaling",
+                icon: "&#128011;",
+                desc: "A highly specific subset of spear-phishing aimed directly at executives. Lures often involve legal notices, board documents, or M&A.",
+                target: "Executive",
+                vol: "1 - 5",
+                malware: "Sometimes",
+                impact: "High",
+                impactClass: "text-orange-500",
+                example: "Wednesday: The CFO is targeted with a highly confidential 'term sheet' lure designed to induce panic and urgency."
+            },
+            bec: {
+                title: "Business Email Compromise (BEC)",
+                icon: "&#128188;",
+                desc: "Often contains NO malware. A compromised or spoofed legitimate mailbox asks for wire transfers, IBAN changes, or gift cards. Highest financial loss category.",
+                target: "Specific Role",
+                vol: "1 - 10",
+                malware: "Frequently None",
+                impact: "Very High",
+                impactClass: "text-red-600",
+                example: "Friday: The REAL CEO's mailbox is compromised (or perfectly spoofed). Email directly requests an urgent IBAN change for a major vendor."
+            }
+        };
+
+        const taxBtns = document.querySelectorAll('.tax-btn');
+        taxBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                taxBtns.forEach(b => {
+                    b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-900');
+                    b.classList.add('border-transparent', 'bg-white', 'text-stone-600');
+                });
+                btn.classList.remove('border-transparent', 'bg-white', 'text-stone-600');
+                btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-900');
+
+                const type = btn.getAttribute('data-type');
+                const data = taxonomyData[type];
+
+                document.getElementById('tax-icon').innerHTML = data.icon;
+                document.getElementById('tax-title').innerText = data.title;
+                document.getElementById('tax-desc').innerText = data.desc;
+                document.getElementById('tax-target').innerText = data.target;
+                document.getElementById('tax-vol').innerText = data.vol;
+                document.getElementById('tax-malware').innerText = data.malware;
+                
+                const impactEl = document.getElementById('tax-impact');
+                impactEl.innerText = data.impact;
+                impactEl.className = `font-semibold ${data.impactClass}`;
+                
+                document.getElementById('tax-example').innerText = data.example;
+            });
+        });
+
+        const anatomyData = {
+            lure: {
+                title: "Lure Construction",
+                chain: "Reconnaissance",
+                desc: "The content the victim sees. It relies on psychological manipulation. Stacking three or more of these levers in a single email is a strong red flag.",
+                items: [
+                    { icon: "&#9889;", text: "Urgency ('24h left')" },
+                    { icon: "&#128084;", text: "Authority ('CEO')" },
+                    { icon: "&#127919;", text: "Scarcity ('3 slots left')" },
+                    { icon: "&#128075;", text: "Familiarity (Tone)" },
+                    { icon: "&#128101;", text: "Social Proof" },
+                    { icon: "&#128257;", text: "Reciprocity" }
+                ]
+            },
+            hook: {
+                title: "Hook Delivery",
+                chain: "Delivery",
+                desc: "How the malicious payload reaches the victim's inbox, bypassing technical controls.",
+                items: [
+                    { icon: "&#128231;", text: "Standard SMTP" },
+                    { icon: "&#128123;", text: "Spoofed Domain (fails DMARC)" },
+                    { icon: "&#128270;", text: "Typosquatting (Look-alike)" },
+                    { icon: "&#128275;", text: "Compromised Mailbox" },
+                    { icon: "&#128241;", text: "Smishing (SMS)" },
+                    { icon: "&#128434;", text: "Slack / Teams phishing" }
+                ]
+            },
+            payload: {
+                title: "Payload Execution",
+                chain: "Exploitation",
+                desc: "What the victim interacts with to compromise the system or authorize fraudulent activity.",
+                items: [
+                    { icon: "&#128274;", text: "Cred Harvest (Fake Login)" },
+                    { icon: "&#128187;", text: "Malware (.exe, .docm)" },
+                    { icon: "&#128100;", text: "Direct Human Action (BEC)" },
+                    { icon: "&#127850;", text: "Token/Session Theft" },
+                    { icon: "&#127760;", text: "Drive-by browser exploit" },
+                    { icon: "&#128176;", text: "Wire Transfer Approval" }
+                ]
+            }
+        };
+
+        const stageBtns = document.querySelectorAll('.stage-btn');
+        const stageContent = document.getElementById('stage-content');
+
+        stageBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                stageBtns.forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+                    b.classList.add('bg-stone-100', 'text-stone-600', 'border-stone-300');
+                });
+                btn.classList.remove('bg-stone-100', 'text-stone-600', 'border-stone-300');
+                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+
+                const stage = btn.getAttribute('data-stage');
+                const data = anatomyData[stage];
+
+                let itemsHTML = '';
+                data.items.forEach(item => {
+                    itemsHTML += `<div class="p-3 border border-stone-100 bg-stone-50 rounded flex items-center space-x-2"><span class="text-xl">${item.icon}</span><span class="font-medium text-stone-800 text-sm">${item.text}</span></div>`;
+                });
+
+                stageContent.innerHTML = `
+                    <div class="flex items-center space-x-2 mb-4 transition-opacity duration-300">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Kill Chain: ${data.chain}</span>
+                        <h3 class="text-xl font-bold text-stone-900">${data.title}</h3>
+                    </div>
+                    <p class="text-stone-600 mb-6 transition-opacity duration-300">${data.desc}</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 transition-opacity duration-300">
+                        ${itemsHTML}
+                    </div>
+                `;
+            });
+        });
+
+        const authData = {
+            spf: {
+                title: "Sender Policy Framework (SPF)",
+                rfc: "RFC 7208",
+                question: "Is this connecting IP allowed to send mail for this domain?",
+                bullets: [
+                    "Domain owner publishes a DNS TXT record listing authorised IPs.",
+                    "Receiver looks up the record and compares it to the incoming connection.",
+                    "Mechanisms: <code>-all</code> (hard fail), <code>~all</code> (soft fail), <code>+all</code> (catastrophic)."
+                ],
+                warn: "Vulnerability: SPF breaks on email forwarding."
+            },
+            dkim: {
+                title: "DomainKeys Identified Mail (DKIM)",
+                rfc: "RFC 6376",
+                question: "Was this message cryptographically signed by the domain, and is it unaltered?",
+                bullets: [
+                    "Public key published in DNS, private key held on the sending server.",
+                    "Sender signs selected headers + body, creating a DKIM-Signature header.",
+                    "Receiver verifies the signature against the published public key."
+                ],
+                success: "Advantage: DKIM survives forwarding (the signature travels with the message)."
+            },
+            dmarc: {
+                title: "Domain-based Message Authentication, Reporting, and Conformance",
+                rfc: "RFC 7489",
+                question: "What should the receiver do if authentication fails, and how do we get reports?",
+                bullets: [
+                    "DNS record at <code>_dmarc.</code>",
+                    "Policies: <code>none</code> (monitor) / <code>quarantine</code> (spam folder) / <code>reject</code> (bounce).",
+                    "Enforces alignment: SPF/DKIM domain must match the visible 'From:' domain.",
+                    "<strong>Reporting (rua)</strong> is the under-appreciated superpower for visibility."
+                ],
+                success: "Advantage: Provides actionable intelligence and enforces strict alignment."
+            }
+        };
+
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authContent = document.getElementById('auth-content');
+
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                authTabs.forEach(t => {
+                    t.classList.remove('tab-active', 'text-stone-800');
+                    t.classList.add('text-stone-500');
+                });
+                tab.classList.remove('text-stone-500');
+                tab.classList.add('tab-active', 'text-stone-800');
+
+                const type = tab.getAttribute('data-auth');
+                const data = authData[type];
+
+                let bulletsHTML = data.bullets.map(b => `<li>${b}</li>`).join('');
+                let extraHTML = '';
+                
+                if(data.warn) {
+                    extraHTML = `<div class="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded font-medium text-sm"><span>&#9888;&#65039;</span><span>${data.warn}</span></div>`;
+                } else if(data.success) {
+                    extraHTML = `<div class="flex items-center space-x-2 text-emerald-700 bg-emerald-50 p-3 rounded font-medium text-sm"><span>&#10003;</span><span>${data.success}</span></div>`;
+                }
+
+                authContent.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-2xl font-bold text-stone-900">${data.title}</h3>
+                        <span class="bg-stone-200 text-stone-700 text-xs font-bold px-2 py-1 rounded uppercase">${data.rfc}</span>
+                    </div>
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r">
+                        <p class="text-indigo-900 font-medium"><strong>Core Question:</strong> ${data.question}</p>
+                    </div>
+                    <ul class="space-y-3 text-stone-700 mb-6 list-disc list-inside">
+                        ${bulletsHTML}
+                    </ul>
+                    ${extraHTML}
+                `;
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#78716c';
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1 (Baseline)', 'Day 30', 'Day 60', 'Day 90 (Final)'],
+                    datasets: [
+                        {
+                            label: 'Click Rate (%)',
+                            data: [25, 18, 10, 4],
+                            borderColor: '#ef4444', 
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: '#ef4444',
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Report Rate (%)',
+                            data: [8, 25, 55, 82],
+                            borderColor: '#10b981', 
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: '#10b981',
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(28, 25, 23, 0.9)',
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 14, weight: 'bold' },
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) { return value + '%'; },
+                                stepSize: 20
+                            },
+                            grid: { color: '#e7e5e4', borderDash: [5, 5] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
