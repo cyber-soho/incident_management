@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web App Security Incidents | Cyber.SoHo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals (Stone, Amber, Amber/Orange accents) -->
+    <!-- Application Structure Plan: The application uses a modular dashboard approach. The navigation allows users to move logically through the lifecycle of learning about and responding to an incident: Threat Landscape (OWASP) -> Attack Vectors (Trinity) -> Detection & Logs -> Response (Ladder) -> Case Studies. This structure breaks down the linear slide deck into task-oriented, easily digestible interactive modules, allowing the user to focus on specific phases of incident handling without scrolling through a massive wall of text. -->
+    <!-- Visualization & Content Choices: 
+         - OWASP Top 10 -> Goal: Compare prevalence vs impact -> Viz: Horizontal Bar Chart (Chart.js) -> Interaction: Tooltips with details -> Library: Chart.js.
+         - Unholy Trinity -> Goal: Inform on mechanics & targets -> Viz: Interactive Toggle Panel (HTML/Tailwind) -> Interaction: Click to switch attack types -> Library: Vanilla JS/DOM.
+         - Containment Ladder -> Goal: Organize sequential steps -> Viz: Interactive Accordion Timeline (HTML/Tailwind) -> Interaction: Click to expand details -> Library: Vanilla JS/DOM.
+         - Case Studies -> Goal: Inform & Compare real events -> Viz: Interactive Cards (HTML/Tailwind) -> Interaction: Hover effects, layout structure -> Library: CSS.
+         Confirming NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            background-color: #fdfbf7;
+            color: #292524;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .nav-active {
+            background-color: #d97706;
+            color: white;
+            font-weight: 600;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 50vh;
+            max-height: 400px;
+            min-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .section-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .section-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .trinity-btn.active {
+            background-color: #fbbf24;
+            color: #78350f;
+            border-left: 4px solid #b45309;
+        }
+        .ladder-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease;
+        }
+        .ladder-item.active .ladder-content {
+            max-height: 300px;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        .ladder-item.active .ladder-icon {
+            transform: rotate(90deg);
+        }
+        .ladder-icon {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <header class="bg-stone-900 text-stone-100 shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-amber-500">Cyber.SoHo</h1>
+                <p class="text-sm text-stone-400">Incident Handling & Response (IH&R)</p>
+            </div>
+            <nav class="mt-4 md:mt-0 flex flex-wrap gap-2 justify-center">
+                <button data-target="landscape" class="nav-btn px-4 py-2 rounded-md text-sm transition-colors hover:bg-stone-700 nav-active">1. Threat Landscape</button>
+                <button data-target="vectors" class="nav-btn px-4 py-2 rounded-md text-sm transition-colors hover:bg-stone-700">2. Attack Vectors</button>
+                <button data-target="detection" class="nav-btn px-4 py-2 rounded-md text-sm transition-colors hover:bg-stone-700">3. Detection & Logs</button>
+                <button data-target="response" class="nav-btn px-4 py-2 rounded-md text-sm transition-colors hover:bg-stone-700">4. Containment</button>
+                <button data-target="cases" class="nav-btn px-4 py-2 rounded-md text-sm transition-colors hover:bg-stone-700">5. Case Studies</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <section id="landscape" class="section-content active">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">&#x1F310; The Web Application Threat Landscape</h2>
+                <p class="text-lg text-stone-600 leading-relaxed max-w-4xl">
+                    Web applications are the number one breach vector worldwide, accounting for roughly 40% of all breaches. To effectively handle incidents, you must speak the vocabulary of root causes. This section visualizes the OWASP Top 10, highlighting that while some vulnerabilities are extremely common (prevalence), others are rarer but devastating (impact). The OWASP list is not a compliance checklist; it is a vital vocabulary for your post-mortems.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 mb-8">
+                <h3 class="text-xl font-semibold mb-2">The 2021 OWASP Top 10: Prevalence vs. Attention</h3>
+                <p class="text-sm text-stone-500 mb-6">Chart representing relative real-world prevalence of the top vulnerability categories based on test data.</p>
+                <div class="chart-container">
+                    <canvas id="owaspChart"></canvas>
+                </div>
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                        <h4 class="font-bold text-amber-900">&#x1F525; Top 3 by Real-World Prevalence</h4>
+                        <ul class="mt-2 space-y-1 text-sm text-amber-800">
+                            <li><strong>A01: Broken Access Control</strong> - Found in ~55% of tested apps.</li>
+                            <li><strong>A03: Injection</strong> - SQL is declining, but command injection is rising.</li>
+                            <li><strong>A06: Vulnerable Components</strong> - The mass-scan attacker's favorite.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-stone-100 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-bold text-stone-800">&#x26A0;&#xFE0F; Prevalence &ne; Impact</h4>
+                        <p class="mt-2 text-sm text-stone-600">
+                            <strong>A10 (SSRF)</strong> is historically lower in raw prevalence but is devastating in modern cloud environments. Always read the Top 10 as prevalence-weighted <em>plus</em> impact-weighted. "It was an A01" is a defensible post-mortem answer; "the app had an issue" is not.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vectors" class="section-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">&#x26A0;&#xFE0F; Attack Vectors: The Unholy Trinity</h2>
+                <p class="text-lg text-stone-600 leading-relaxed max-w-4xl">
+                    Despite the complexity of the web, the same 5-6 bug classes dominate year after year. The core of your technical understanding should be grounded in the "Unholy Trinity." This interactive section breaks down the three most critical attack patterns: SQLi, XSS, and CSRF. Understanding <em>who</em> each attack targets is the first step in triage.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <div class="w-full lg:w-1/3 flex flex-col gap-2">
+                    <button class="trinity-btn active text-left px-6 py-4 rounded-lg bg-stone-100 hover:bg-stone-200 font-semibold transition-all" data-trinity="sqli">
+                        <span class="text-xl mr-2">&#x1F5C4;&#xFE0F;</span> SQL Injection (SQLi)
+                    </button>
+                    <button class="trinity-btn text-left px-6 py-4 rounded-lg bg-stone-100 hover:bg-stone-200 font-semibold transition-all" data-trinity="xss">
+                        <span class="text-xl mr-2">&#x1F465;</span> Cross-Site Scripting (XSS)
+                    </button>
+                    <button class="trinity-btn text-left px-6 py-4 rounded-lg bg-stone-100 hover:bg-stone-200 font-semibold transition-all" data-trinity="csrf">
+                        <span class="text-xl mr-2">&#x1F511;</span> Cross-Site Request Forgery (CSRF)
+                    </button>
+                </div>
+                
+                <div class="w-full lg:w-2/3 bg-white rounded-xl shadow-sm border border-stone-200 p-8 min-h-[300px]" id="trinity-display">
+                </div>
+            </div>
+        </section>
+
+        <section id="detection" class="section-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">&#x1F50D; Detection: Logs & The Wedge Pattern</h2>
+                <p class="text-lg text-stone-600 leading-relaxed max-w-4xl">
+                    Logs are evidence, not absolute truth. A Web Application Firewall (WAF) block is not the end of the story; it signifies you are being probed. This section explores the six layers of logs you must consult and maps out the chronological "Wedge Attack Pattern." Train yourself to recognize the shape of an attack in your logs, not just the IP address.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+                    <h3 class="text-xl font-bold mb-4 border-b pb-2">The Wedge Attack Pattern</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-stone-200 text-stone-800 font-bold px-3 py-1 rounded mr-4 mt-1">1</div>
+                            <div>
+                                <h4 class="font-bold text-lg">Reconnaissance</h4>
+                                <p class="text-sm text-stone-600">Many requests, mostly <strong>404 Not Found</strong>. Searching for common paths: <code>/wp-admin</code>, <code>/.env</code>, <code>/.git/config</code>.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-amber-200 text-amber-900 font-bold px-3 py-1 rounded mr-4 mt-1">2</div>
+                            <div>
+                                <h4 class="font-bold text-lg">Targeted Probe</h4>
+                                <p class="text-sm text-stone-600">Fewer requests, carrying payloads. A mix of <strong>400s (Bad Request)</strong> and <strong>500s (Server Error)</strong> as the attacker tests inputs.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-200 text-red-900 font-bold px-3 py-1 rounded mr-4 mt-1">3</div>
+                            <div>
+                                <h4 class="font-bold text-lg">Exploit</h4>
+                                <p class="text-sm text-stone-600">Only two or three requests, returning <strong>200 OK</strong>. Often followed by complete silence. The payload executed successfully.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-purple-200 text-purple-900 font-bold px-3 py-1 rounded mr-4 mt-1">4</div>
+                            <div>
+                                <h4 class="font-bold text-lg">Persistence</h4>
+                                <p class="text-sm text-stone-600">Outbound connections from your web server. New files in the web root. New cron entries on the OS.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div class="bg-stone-800 text-stone-100 rounded-xl shadow-sm p-6">
+                        <h3 class="text-xl font-bold mb-4 text-amber-500">Six Layers of Evidence</h3>
+                        <div class="space-y-2 text-sm font-mono">
+                            <div class="p-2 border-l-2 border-stone-500">1. WAF / CDN Log (Perimeter)</div>
+                            <div class="p-2 border-l-2 border-stone-500">2. Web Server Log (Apache/Nginx)</div>
+                            <div class="p-2 border-l-2 border-stone-500">3. Application Log (Stack traces)</div>
+                            <div class="p-2 border-l-2 border-stone-500">4. Database Query Log (Slow/Unusual)</div>
+                            <div class="p-2 border-l-2 border-stone-500">5. OS Log (Files, sudo, cron)</div>
+                            <div class="p-2 border-l-2 border-stone-500 text-amber-400">6. SIEM Correlation (The Narrative)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-amber-50 rounded-xl shadow-sm border border-amber-200 p-6">
+                        <h3 class="text-lg font-bold text-amber-900 mb-2">&#x1F4DC; Log-Reading Rules of Thumb</h3>
+                        <ul class="list-disc pl-5 text-sm text-amber-800 space-y-1">
+                            <li><strong>Always work in UTC.</strong> Local time deceives.</li>
+                            <li><strong>Normalise URLs.</strong> Decode %27 to '.</li>
+                            <li><strong>Look adjacent in time.</strong> &plusmn;60 seconds around events.</li>
+                            <li><strong>Look adjacent in scope.</strong> Search the whole fleet.</li>
+                            <li><strong>Confirm in a second source.</strong> Prevent single-point failure.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="response" class="section-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">&#x1F6A8; Incident Response: The Containment Ladder</h2>
+                <p class="text-lg text-stone-600 leading-relaxed max-w-4xl">
+                    Incident handling is the discipline of doing the right thing in the wrong hour. The NIST SP 800-61r2 framework provides a strict ladder for containment. <strong>Skipping a rung means falling.</strong> Interact with the ladder below to understand the distinct phases of response and the critical rules that save careers. Furthermore, understand the legal ticking clock that governs your actions.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+                        <h3 class="text-xl font-bold mb-6 border-b pb-2">The 7 Rungs of Containment</h3>
+                        <div id="ladder-container" class="space-y-3">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div class="bg-red-50 rounded-xl border border-red-200 p-6">
+                        <h3 class="text-lg font-bold text-red-900 mb-3">&#x26A0;&#xFE0F; Two Rules That Save Careers</h3>
+                        <div class="mb-4">
+                            <strong class="text-red-800 block">1. Isolate Before You Eradicate</strong>
+                            <p class="text-sm text-red-700 mt-1">Cut the network before you cut the malware. If the attacker cannot see your cleanup, they cannot adapt. Do not rush to delete the webshell.</p>
+                        </div>
+                        <div>
+                            <strong class="text-red-800 block">2. Preserve Before You Eradicate</strong>
+                            <p class="text-sm text-red-700 mt-1">Snapshot disk/memory <em>before</em> cleanup. Forensics, Legal, and Commms need the exact state of the compromise.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
+                        <h3 class="text-lg font-bold text-blue-900 mb-2">&#x23F1;&#xFE0F; The Legal Clock (GDPR / AEPD)</h3>
+                        <p class="text-sm text-blue-800 mb-2"><strong>The 72-Hour Rule:</strong> GDPR Article 33 mandates notifying the supervisory authority within 72 hours of <em>becoming aware</em>.</p>
+                        <ul class="text-sm text-blue-800 list-disc pl-4 space-y-1">
+                            <li>Clock starts at awareness, not full understanding.</li>
+                            <li>The IR responder owns the timestamp.</li>
+                            <li>Documentation is your defense, not bureaucracy.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cases" class="section-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">&#x1F4DA; Case Studies & Post-Mortems</h2>
+                <p class="text-lg text-stone-600 leading-relaxed max-w-4xl">
+                    Reviewing historical breaches grounds our theory in reality. Tooling buys you the data; humans buy you the conclusion. In all three major case studies below, perimeter security failed, humans (not tools) connected the dots, dwell time was massive, and regulators got involved. The goal of incident response is to drive down Time-To-Detect (TTD) through blameless post-mortems.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="text-xs font-bold tracking-wider text-stone-400 uppercase mb-1">2017</div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-2">Equifax</h3>
+                    <div class="bg-stone-100 rounded px-3 py-1 inline-block text-sm font-semibold text-stone-700 mb-4">A06: Outdated Components</div>
+                    <ul class="space-y-2 text-stone-600 text-sm">
+                        <li><strong>Impact:</strong> 147 Million records exposed.</li>
+                        <li><strong>Vector:</strong> Apache Struts CVE-2017-5638.</li>
+                        <li><strong>Dwell Time Note:</strong> 67 days from public CVE release to attacker exploit.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="text-xs font-bold tracking-wider text-stone-400 uppercase mb-1">2018</div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-2">British Airways</h3>
+                    <div class="bg-stone-100 rounded px-3 py-1 inline-block text-sm font-semibold text-stone-700 mb-4">A08: Integrity Failures</div>
+                    <ul class="space-y-2 text-stone-600 text-sm">
+                        <li><strong>Impact:</strong> 380,000 credit cards stolen.</li>
+                        <li><strong>Vector:</strong> Magecart (JavaScript supply-chain).</li>
+                        <li><strong>Fallout:</strong> Initial &pound;183M fine (reduced to &pound;20M).</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="text-xs font-bold tracking-wider text-stone-400 uppercase mb-1">2019</div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-2">Capital One</h3>
+                    <div class="bg-stone-100 rounded px-3 py-1 inline-block text-sm font-semibold text-stone-700 mb-4">A10: SSRF</div>
+                    <ul class="space-y-2 text-stone-600 text-sm">
+                        <li><strong>Impact:</strong> 106 Million records exposed.</li>
+                        <li><strong>Vector:</strong> SSRF &rarr; cloud metadata &rarr; IAM &rarr; S3.</li>
+                        <li><strong>Note:</strong> Textbook cloud privilege amplification.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-stone-900 text-stone-100 rounded-xl p-8 text-center max-w-4xl mx-auto">
+                <h3 class="text-2xl font-bold text-amber-500 mb-4">The Blameless Post-Mortem</h3>
+                <p class="text-stone-300 mb-6 italic border-l-4 border-amber-500 pl-4 text-left max-w-2xl mx-auto">
+                    "We are not here to assign blame; we are here to find what made this possible. Every name in this room is here because they have something to teach us. The output of this meeting is three runbook changes, not three resignations."
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-stone-800 p-4 rounded-lg">
+                        <div class="text-sm text-stone-400 uppercase tracking-wide">Metric 1</div>
+                        <div class="text-2xl font-bold text-white">TTD</div>
+                        <div class="text-xs text-stone-400">Time-to-Detect</div>
+                    </div>
+                    <div class="bg-stone-800 p-4 rounded-lg">
+                        <div class="text-sm text-stone-400 uppercase tracking-wide">Metric 2</div>
+                        <div class="text-2xl font-bold text-white">TTC</div>
+                        <div class="text-xs text-stone-400">Time-to-Contain</div>
+                    </div>
+                    <div class="bg-stone-800 p-4 rounded-lg">
+                        <div class="text-sm text-stone-400 uppercase tracking-wide">Metric 3</div>
+                        <div class="text-2xl font-bold text-white">Dwell Time</div>
+                        <div class="text-xs text-stone-400">Total Attacker Time</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section-content');
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                
+                navBtns.forEach(b => b.classList.remove('nav-active'));
+                btn.classList.add('nav-active');
+
+                sections.forEach(sec => {
+                    sec.classList.remove('active');
+                    if(sec.id === target) {
+                        sec.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        const owaspCtx = document.getElementById('owaspChart').getContext('2d');
+        new Chart(owaspCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    'A01: Broken Access Control', 
+                    'A02: Cryptographic Failures', 
+                    'A03: Injection', 
+                    'A04: Insecure Design', 
+                    'A05: Security Misconfig', 
+                    'A06: Outdated Components', 
+                    'A07: Auth Failures', 
+                    'A08: Integrity Failures', 
+                    'A09: Logging Failures', 
+                    'A10: SSRF'
+                ],
+                datasets: [{
+                    label: 'Relative Prevalence / Focus Score',
+                    data: [90, 70, 85, 60, 65, 80, 50, 40, 30, 20],
+                    backgroundColor: [
+                        '#d97706', '#e7e5e4', '#d97706', '#e7e5e4', '#e7e5e4', 
+                        '#d97706', '#e7e5e4', '#e7e5e4', '#e7e5e4', '#991b1b'
+                    ],
+                    borderWidth: 0,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if(context.dataIndex === 0) return 'Found in ~55% of tested apps.';
+                                if(context.dataIndex === 2) return 'Declining for SQL, rising for command injection.';
+                                if(context.dataIndex === 5) return "Mass-scan attacker's favorite.";
+                                if(context.dataIndex === 9) return "Rare but devastating impact in cloud environments.";
+                                return 'Standard vulnerability category.';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        ticks: {
+                            autoSkip: false,
+                            callback: function(value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                return label.length > 20 ? label.substr(0, 20) + '...' : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const trinityData = {
+            sqli: {
+                title: "SQL Injection (SQLi)",
+                target: "The Database",
+                targetIcon: "&#x1F5C4;&#xFE0F;",
+                description: "Input supplied by the user becomes executable code within the database context. This allows attackers to read, modify, or delete internal data.",
+                signals: [
+                    "Spike of HTTP 500 errors from one IP",
+                    "Keywords in URL parameters: UNION, SELECT, DROP, --, 0x27",
+                    "Long, weird parameter values in narrow fields",
+                    "Time-based payloads like WAITFOR DELAY"
+                ]
+            },
+            xss: {
+                title: "Cross-Site Scripting (XSS)",
+                target: "Other Users",
+                targetIcon: "&#x1F465;",
+                description: "The attacker plants a malicious script that executes in the browser of other users visiting the application. <strong>Stored XSS</strong> is the worst kind, as it saves to the database and self-propagates (e.g., forum posts).",
+                signals: [
+                    "Presence of &lt;script&gt;, onerror=, onload=, javascript:, &lt;svg&gt;, &lt;iframe&gt;",
+                    "Hidden in once-uploaded content; must monitor responses as well as requests"
+                ]
+            },
+            csrf: {
+                title: "Cross-Site Request Forgery (CSRF)",
+                target: "The Logged-in User",
+                targetIcon: "&#x1F511;",
+                description: "The attacker tricks a victim's browser into executing unwanted actions on a web application where the victim is currently authenticated. They 'ride' the session.",
+                signals: [
+                    "State-changing POST requests with a foreign Origin or Referer header",
+                    "Missing or invalid anti-CSRF tokens in form submissions"
+                ]
+            }
+        };
+
+        const trinityDisplay = document.getElementById('trinity-display');
+        const trinityBtns = document.querySelectorAll('.trinity-btn');
+
+        function renderTrinity(key) {
+            const data = trinityData[key];
+            trinityDisplay.innerHTML = `
+                <div class="flex items-center mb-6 border-b border-stone-100 pb-4">
+                    <span class="text-4xl mr-4">${data.targetIcon}</span>
+                    <div>
+                        <h3 class="text-2xl font-bold text-stone-800">${data.title}</h3>
+                        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Target: ${data.target}</p>
+                    </div>
+                </div>
+                <p class="text-stone-600 mb-6 text-lg">${data.description}</p>
+                <div class="bg-stone-50 rounded-lg p-5 border border-stone-200">
+                    <h4 class="font-bold text-stone-800 mb-3 flex items-center"><span class="mr-2">&#x1F6A8;</span> Detection Signals</h4>
+                    <ul class="list-disc pl-5 text-stone-700 space-y-2">
+                        ${data.signals.map(sig => `<li>${sig}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        trinityBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                trinityBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderTrinity(btn.getAttribute('data-trinity'));
+            });
+        });
+        renderTrinity('sqli');
+
+        const ladderSteps = [
+            { id: 1, name: "Confirm", desc: "Validate the alert. Is it a single probe or a campaign?" },
+            { id: 2, name: "Isolate", desc: "Pull from the network or move to a quarantine VLAN. Do this BEFORE eradicating." },
+            { id: 3, name: "Preserve", desc: "Take a disk and memory snapshot. Forensics needs to know what was stolen; Legal needs keys in memory." },
+            { id: 4, name: "Eradicate", desc: "Remove webshells, inventory/remove attacker accounts, remove persistence (cron, .bashrc), rotate EVERY credential." },
+            { id: 5, name: "Patch & Harden", desc: "Fix the underlying vulnerability, tighten configuration, add missing monitoring." },
+            { id: 6, name: "Restore", desc: "Return to a known-good image with clean code." },
+            { id: 7, name: "Lessons Learned", desc: "Conduct a blameless post-mortem. Generate 3 runbook changes." }
+        ];
+
+        const ladderContainer = document.getElementById('ladder-container');
+        ladderSteps.forEach((step, idx) => {
+            const item = document.createElement('div');
+            item.className = 'ladder-item border border-stone-200 rounded-lg overflow-hidden';
+            item.innerHTML = `
+                <button class="w-full text-left px-4 py-3 bg-stone-50 hover:bg-stone-100 flex justify-between items-center transition-colors focus:outline-none" onclick="this.parentElement.classList.toggle('active')">
+                    <div class="flex items-center">
+                        <span class="bg-stone-800 text-white w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold mr-3">${step.id}</span>
+                        <span class="font-bold text-stone-800">${step.name}</span>
+                    </div>
+                    <span class="text-stone-400 ladder-icon">&#x25B6;</span>
+                </button>
+                <div class="ladder-content bg-white px-4 text-stone-600 text-sm border-t border-stone-100 ml-9">
+                    ${step.desc}
+                </div>
+            `;
+            ladderContainer.appendChild(item);
+        });
+    </script>
+</body>
+</html>
+
+

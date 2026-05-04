@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web App Security Incidents: Study Module</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tab Styles */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        .tab-btn.active { border-bottom: 2px solid #d97706; color: #d97706; font-weight: 600; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Flashcard Flip Styles */
+        .perspective { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; transition: transform 0.6s; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flip-card-inner.flipped { transform: rotateY(180deg); }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .flip-card-front { background-color: #ffffff; border: 1px solid #e7e5e4; color: #292524; cursor: pointer; }
+        .flip-card-front:hover { background-color: #fafaf9; }
+        .flip-card-back { background-color: #fef3c7; border: 1px solid #fde68a; color: #92400e; transform: rotateY(180deg); cursor: pointer; }
+
+        /* Quiz Styles */
+        .rationale-box { display: none; }
+        .rationale-box.visible { display: block; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans antialiased min-h-screen">
+
+    <header class="bg-stone-900 text-stone-100 shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl font-bold tracking-tight text-amber-500">Cyber.SoHo Study Module</h1>
+            <p class="text-sm text-stone-400">Web App Security Incidents (Days 09 & 10)</p>
+        </div>
+        <div class="bg-white border-b border-stone-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
+                <button class="tab-btn active px-6 py-3 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors" onclick="switchTab('flashcards')">
+                    &#x1F4C7; Flashcards (25)
+                </button>
+                <button class="tab-btn px-6 py-3 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors" onclick="switchTab('quiz')">
+                    &#x1F4DD; Practice Quiz (10)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <section id="flashcards" class="tab-content active">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-stone-800">Flashcards</h2>
+                <p class="text-stone-600">Click on any card to flip it and reveal the answer.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="flashcard-container">
+                </div>
+        </section>
+
+        <section id="quiz" class="tab-content">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-stone-800">Knowledge Check</h2>
+                <p class="text-stone-600">Test your practical understanding of threat landscapes, log analysis, and containment.</p>
+            </div>
+
+            <div class="bg-white shadow-sm border border-stone-200 rounded-xl p-6 lg:p-8" id="quiz-container">
+                </div>
+            
+            <div class="mt-8 flex justify-center">
+                <button onclick="gradeQuiz()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-lg shadow transition-colors text-lg">
+                    Submit Answers
+                </button>
+            </div>
+            
+            <div id="quiz-results" class="mt-6 text-center text-xl font-bold hidden p-4 rounded-lg bg-stone-100 border border-stone-300">
+                </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const flashcardsData = [
+            { front: "Percentage of all breaches starting at a web app", back: "Approximately 40%" },
+            { front: "OWASP", back: "Open Worldwide Application Security Project" },
+            { front: "Top 3 OWASP vulnerabilities by real-world prevalence", back: "Broken Access Control (A01), Injection (A03), and Vulnerable & Outdated Components (A06)" },
+            { front: "The \"Unholy Trinity\" of web attacks", back: "SQL Injection (SQLi), Cross-Site Scripting (XSS), and Cross-Site Request Forgery (CSRF)" },
+            { front: "Target of a SQL Injection (SQLi) attack", back: "The database" },
+            { front: "Target of a Cross-Site Scripting (XSS) attack", back: "Other users" },
+            { front: "Target of a Cross-Site Request Forgery (CSRF) attack", back: "The still-logged-in user themselves" },
+            { front: "Stored XSS", back: "The most dangerous flavor of XSS that is saved to a database and served to every visitor, allowing it to self-propagate" },
+            { front: "Meaning of a Web Application Firewall (WAF) block", back: "Somebody is probing your application; it warrants investigation even if the attempt was blocked" },
+            { front: "Log signals indicative of SQL Injection", back: "Spike of HTTP 500 errors, keywords like UNION or SELECT, long unusual parameter values, and time-based payloads" },
+            { front: "Log signals indicative of a CSRF attack", back: "State-changing POST requests with a foreign Origin or Referer header, or missing anti-CSRF tokens" },
+            { front: "Hot signal indicating a potentially successful exploit attempt", back: "An HTTP 200 OK status code in response to a request containing a malicious payload" },
+            { front: "Six layers of logs for incident evidence", back: "WAF/CDN, Web server, Application, Database query, Operating system, and SIEM correlation" },
+            { front: "The required timezone for reading and correlating logs", back: "UTC (Coordinated Universal Time)" },
+            { front: "Phases of the Wedge Attack Pattern", back: "Recon, Targeted Probe, Exploit, and Persistence" },
+            { front: "First two steps of the NIST Containment Ladder", back: "1. Confirm (validate the alert) and 2. Isolate (pull from network)" },
+            { front: "The two critical rules of containment that save careers", back: "Isolate before you eradicate, and Preserve before you eradicate" },
+            { front: "The reason to isolate before eradicating", back: "To prevent the attacker from seeing your cleanup efforts and adapting their tactics" },
+            { front: "GDPR Article 33 timeframe for notifying a supervisory authority", back: "Within 72 hours of becoming aware of the breach" },
+            { front: "TTD", back: "Time-to-Detect" },
+            { front: "Ideal output of a blameless post-mortem meeting", back: "Three concrete runbook changes, rather than assigning blame" },
+            { front: "Typical industry mean time to identify a web-app breach", back: "200+ days" },
+            { front: "Core actions of the \"Eradicate\" phase", back: "Removing webshells, deleting attacker-created accounts, eliminating persistence mechanisms, and rotating credentials" },
+            { front: "The vulnerability category involved in the 2019 Capital One breach", back: "A10 (Server-Side Request Forgery / SSRF) leading to cloud privilege amplification" },
+            { front: "Primary focus when observing Time-to-Detect (TTD) metrics over time", back: "The downward trend, demonstrating a culture of improvement, rather than the absolute number" }
+        ];
+
+        const quizData = [
+            {
+                q: "Why should an incident responder be highly concerned about an A10 (Server-Side Request Forgery - SSRF) vulnerability, even though it has lower real-world prevalence compared to Broken Access Control?",
+                options: [
+                    { text: "It is the easiest vulnerability to exploit using automated mass-scanning tools.", correct: false, rationale: "Vulnerable and Outdated Components (A06) is typically the favorite for automated mass-scanning, not SSRF." },
+                    { text: "It targets other users' browsers directly, making it highly contagious.", correct: false, rationale: "Attacks that target other users' browsers directly are categorized as Cross-Site Scripting (XSS)." },
+                    { text: "It is extremely devastating in cloud environments due to high impact.", correct: true, rationale: "The OWASP Top 10 must be read as prevalence-weighted plus impact-weighted, and SSRF allows attackers to pivot into highly privileged cloud infrastructure." },
+                    { text: "It is the only vulnerability that can reliably bypass a Web Application Firewall.", correct: false, rationale: "Many different vulnerability classes can bypass a WAF if the payloads are heavily obfuscated or the WAF is misconfigured." }
+                ]
+            },
+            {
+                q: "When triaging an alert for a Cross-Site Request Forgery (CSRF) attack, whose access or permissions is the attacker primarily attempting to exploit?",
+                options: [
+                    { text: "The underlying database holding user credentials.", correct: false, rationale: "Attacks aimed at manipulating or extracting data from the database fall under SQL Injection (SQLi)." },
+                    { text: "The logged-in user themselves.", correct: true, rationale: "CSRF works by forcing a victim's browser to execute unwanted actions on an application where they currently have an active, authenticated session." },
+                    { text: "The application's backend server architecture.", correct: false, rationale: "CSRF manipulates state on behalf of a user, rather than targeting the server itself for remote code execution." },
+                    { text: "Other users visiting a compromised forum page.", correct: false, rationale: "Attacking other users via planted scripts on a shared page is the mechanism of Stored XSS." }
+                ]
+            },
+            {
+                q: "During log analysis, you observe a burst of HTTP 404 errors targeting paths like `/wp-admin` and `/.env`, followed later by a few HTTP 500 errors. Which phase of the Wedge Attack Pattern does the initial 404 activity represent?",
+                options: [
+                    { text: "Targeted Probe", correct: false, rationale: "Targeted probes usually involve payload-bearing parameters resulting in HTTP 400s or 500s, rather than bulk 404 Not Found errors." },
+                    { text: "Reconnaissance", correct: true, rationale: "Mass 404 errors indicate the attacker is mapping the application by searching for known vulnerable endpoints or exposed configuration files." },
+                    { text: "Exploit", correct: false, rationale: "A successful exploit phase typically involves very few requests and returns an HTTP 200 OK status code." },
+                    { text: "Persistence", correct: false, rationale: "The persistence phase involves outbound connections from the server or new files and cron jobs being created, not incoming 404s." }
+                ]
+            },
+            {
+                q: "While tracing an attacker's activity through your web server logs, which HTTP status code in response to a request containing a malicious payload is considered a 'hot signal' indicating a potentially successful exploit?",
+                options: [
+                    { text: "400", correct: false, rationale: "A Bad Request status indicates the server rejected the malformed payload before processing it." },
+                    { text: "404", correct: false, rationale: "A Not Found status means the attacker is looking for a path or file that does not exist on the server." },
+                    { text: "500", correct: false, rationale: "A Server Error means the payload broke something within the application logic, which confirms a probe but not necessarily a clean exploit." },
+                    { text: "200", correct: true, rationale: "An OK status code returned for a malicious payload suggests the application successfully executed the attacker's input." }
+                ]
+            },
+            {
+                q: "Why is it a fundamental rule of thumb to always work in UTC when analyzing logs during an incident?",
+                options: [
+                    { text: "Local time deceives and makes correlating events across multiple systems extremely difficult.", correct: true, rationale: "Normalizing time to a single global standard across all six layers of evidence is essential to build an accurate, chronological narrative." },
+                    { text: "UTC automatically decodes malicious payloads hidden in URL parameters.", correct: false, rationale: "Timezones have no bearing on URL encoding, percent-encoding, or payload obfuscation techniques." },
+                    { text: "SIEM platforms are incapable of parsing logs that contain local timezone offsets.", correct: false, rationale: "Modern SIEMs can easily parse local time, but analysts must view events in a unified timezone to avoid critical mental math errors during triage." },
+                    { text: "It is a strict requirement for GDPR Article 33 breach notifications.", correct: false, rationale: "While accurate timelines are required for GDPR, using UTC is primarily an operational requirement for the investigation itself, not a legal mandate." }
+                ]
+            },
+            {
+                q: "According to the NIST containment ladder and the 'rules that save careers', why must an incident responder isolate a compromised host from the network before eradicating the malware?",
+                options: [
+                    { text: "To preserve the unencrypted keys in memory for the legal team.", correct: false, rationale: "Preserving memory is crucial, but it relates to the 'Preserve' rule, not the primary strategic reason for network isolation." },
+                    { text: "To allow the Web Application Firewall to automatically patch the vulnerability.", correct: false, rationale: "WAFs block malicious traffic at the perimeter but do not patch underlying vulnerable code on an isolated backend host." },
+                    { text: "To comply with the 72-hour notification window mandated by the supervisory authority.", correct: false, rationale: "Network isolation is a technical containment step to stop the bleeding, entirely separate from the legal notification timeline." },
+                    { text: "To prevent the attacker from seeing the cleanup effort and adapting their tactics.", correct: true, rationale: "Cutting the network blinds the attacker, preventing them from deploying secondary payloads or destroying evidence in retaliation to your cleanup." }
+                ]
+            },
+            {
+                q: "What is the primary output expected from a blameless post-mortem meeting following a major security incident?",
+                options: [
+                    { text: "A formal document assigning responsibility to the appropriate engineers.", correct: false, rationale: "Blameless post-mortems specifically avoid assigning blame or seeking resignations, focusing instead on systemic failures." },
+                    { text: "A reduction in the regulatory fine levied by the supervisory authority.", correct: false, rationale: "While good documentation helps with regulators, the immediate and primary internal output must be tangible process improvement." },
+                    { text: "Three concrete runbook changes with assigned owners and due dates.", correct: true, rationale: "The core objective of a post-mortem is actionable organizational learning that directly improves future incident handling." },
+                    { text: "The exact calculation of the attacker's dwell time in hours and minutes.", correct: false, rationale: "Dwell time is an important metric reported during the meeting, but the ultimate output must be actionable changes to the environment." }
+                ]
+            },
+            {
+                q: "Under GDPR Article 33, when does the 72-hour clock start for notifying the supervisory authority of a data breach?",
+                options: [
+                    { text: "When the incident handling team fully understands the scope of the exfiltrated data.", correct: false, rationale: "Waiting for full understanding would delay notification well past the legal deadline in most complex breaches." },
+                    { text: "When the organization first becomes aware of the breach.", correct: true, rationale: "The clock starts at the moment of awareness, requiring rapid triage, escalation, and precise documentation by the IR team." },
+                    { text: "When the external attacker publishes the stolen data online.", correct: false, rationale: "Notification must happen promptly upon internal discovery, regardless of whether the attacker has made the data public." },
+                    { text: "When the containment phase is officially completed and systems are restored.", correct: false, rationale: "Notification often occurs while the containment and eradication phases are still actively ongoing." }
+                ]
+            },
+            {
+                q: "In the 2019 Capital One breach, an attacker exploited an SSRF (A10) vulnerability. What was the critical next step in the attack path that led to the massive data exposure?",
+                options: [
+                    { text: "Injecting a malicious JavaScript payload into the checkout page.", correct: false, rationale: "This describes a client-side Magecart/XSS attack, which was the vector for the British Airways breach." },
+                    { text: "Accessing cloud metadata to steal IAM credentials and access S3 buckets.", correct: true, rationale: "SSRF is often used in cloud environments to query the local metadata service, allowing the attacker to extract high-privilege IAM tokens." },
+                    { text: "Exploiting an outdated Apache Struts component to gain a reverse shell.", correct: false, rationale: "Exploiting vulnerable components (A06) was the initial attack vector for the Equifax breach, not Capital One." },
+                    { text: "Executing a time-based SQL injection to dump the user credentials table.", correct: false, rationale: "The attack leveraged cloud IAM privileges to access storage, not a traditional SQL injection against a relational database." }
+                ]
+            },
+            {
+                q: "When tracking Time-to-Detect (TTD) metrics across a year of incidents, what is the most important factor to communicate to leadership?",
+                options: [
+                    { text: "The absolute number must consistently remain in the single-digit hours.", correct: false, rationale: "While single-digit hours are world-class, they are not normal for most organizations, and failing to meet this absolute number does not indicate total failure." },
+                    { text: "The metric should be compared against the total number of WAF blocks.", correct: false, rationale: "WAF blocks largely measure automated internet noise, whereas TTD measures the team's specific ability to identify true positive breaches." },
+                    { text: "The downward trend of the metric over time.", correct: true, rationale: "A consistent downward trend demonstrates that the organization's culture of blameless post-mortems and resulting runbook changes is successfully reducing risk." },
+                    { text: "The guarantee that a lower TTD will prevent regulatory fines entirely.", correct: false, rationale: "Fines depend on many factors, including the data lost and the organization's prior negligence; a low TTD mitigates impact but does not guarantee legal immunity." }
+                ]
+            }
+        ];
+
+        // --- RENDER LOGIC ---
+
+        // 1. Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 2. Render Flashcards
+        const flashcardContainer = document.getElementById('flashcard-container');
+        flashcardsData.forEach((card, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'perspective h-48 w-full';
+            cardEl.innerHTML = `
+                <div class="flip-card-inner relative w-full h-full preserve-3d" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-front">
+                        <p class="font-semibold text-lg">${card.front}</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <p class="text-sm font-medium leading-snug">${card.back}</p>
+                    </div>
+                </div>
+            `;
+            flashcardContainer.appendChild(cardEl);
+        });
+
+        // 3. Render Quiz
+        const quizContainer = document.getElementById('quiz-container');
+        quizData.forEach((item, qIndex) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = 'mb-10 pb-6 border-b border-stone-100 last:border-0 last:mb-0';
+            
+            let optionsHTML = '';
+            item.options.forEach((opt, oIndex) => {
+                const optId = `q${qIndex}_o${oIndex}`;
+                optionsHTML += `
+                    <div class="mb-3">
+                        <label class="flex items-start p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition-colors" id="label_${optId}">
+                            <div class="flex-shrink-0 mt-0.5">
+                                <input type="radio" name="q${qIndex}" value="${oIndex}" id="${optId}" class="w-4 h-4 text-amber-600 border-stone-300 focus:ring-amber-500">
+                            </div>
+                            <div class="ml-3 text-stone-700 font-medium">
+                                ${opt.text}
+                            </div>
+                        </label>
+                        <div class="rationale-box mt-2 ml-7 p-3 rounded-md text-sm" id="rationale_${optId}">
+                            ${opt.rationale}
+                        </div>
+                    </div>
+                `;
+            });
+
+            qDiv.innerHTML = `
+                <h3 class="text-lg font-bold text-stone-900 mb-4">
+                    <span class="text-amber-500 mr-2">${qIndex + 1}.</span> ${item.q}
+                </h3>
+                <div class="space-y-2">
+                    ${optionsHTML}
+                </div>
+            `;
+            quizContainer.appendChild(qDiv);
+        });
+
+        // 4. Grade Quiz
+        function gradeQuiz() {
+            let score = 0;
+            
+            quizData.forEach((item, qIndex) => {
+                const selectedOpt = document.querySelector(`input[name="q${qIndex}"]:checked`);
+                
+                // Reset styling for this question
+                item.options.forEach((opt, oIndex) => {
+                    const label = document.getElementById(`label_q${qIndex}_o${oIndex}`);
+                    const rationale = document.getElementById(`rationale_q${qIndex}_o${oIndex}`);
+                    label.classList.remove('bg-green-50', 'border-green-400', 'bg-red-50', 'border-red-400', 'bg-stone-50');
+                    rationale.classList.remove('visible', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+                    rationale.classList.add('hidden');
+                });
+
+                if (selectedOpt) {
+                    const selectedVal = parseInt(selectedOpt.value);
+                    
+                    if (item.options[selectedVal].correct) {
+                        score++;
+                        // Style correct choice
+                        const correctLabel = document.getElementById(`label_q${qIndex}_o${selectedVal}`);
+                        correctLabel.classList.add('bg-green-50', 'border-green-400');
+                        
+                        const correctRationale = document.getElementById(`rationale_q${qIndex}_o${selectedVal}`);
+                        correctRationale.classList.remove('hidden');
+                        correctRationale.classList.add('visible', 'bg-green-100', 'text-green-800');
+                    } else {
+                        // Style incorrect choice
+                        const wrongLabel = document.getElementById(`label_q${qIndex}_o${selectedVal}`);
+                        wrongLabel.classList.add('bg-red-50', 'border-red-400');
+                        
+                        const wrongRationale = document.getElementById(`rationale_q${qIndex}_o${selectedVal}`);
+                        wrongRationale.classList.remove('hidden');
+                        wrongRationale.classList.add('visible', 'bg-red-100', 'text-red-800');
+                        
+                        // Show the actual correct answer's rationale to learn
+                        const correctIndex = item.options.findIndex(o => o.correct);
+                        const correctRationale = document.getElementById(`rationale_q${qIndex}_o${correctIndex}`);
+                        correctRationale.classList.remove('hidden');
+                        correctRationale.classList.add('visible', 'bg-green-50', 'text-green-800', 'border', 'border-green-200');
+                    }
+                } else {
+                    // Highlight that they missed a question
+                    const correctIndex = item.options.findIndex(o => o.correct);
+                    const correctRationale = document.getElementById(`rationale_q${qIndex}_o${correctIndex}`);
+                    correctRationale.innerHTML = "<strong>Unanswered:</strong> " + correctRationale.innerHTML;
+                    correctRationale.classList.remove('hidden');
+                    correctRationale.classList.add('visible', 'bg-stone-200', 'text-stone-800');
+                }
+            });
+
+            // Display Results
+            const resultsDiv = document.getElementById('quiz-results');
+            resultsDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = `You scored ${score} out of 10! Review the feedback below.`;
+            
+            if(score === 10) {
+                resultsDiv.classList.add('text-green-700', 'bg-green-100', 'border-green-300');
+                resultsDiv.classList.remove('text-stone-800', 'bg-stone-100');
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
