@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Security Incidents: Study Canvas</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --correct: #22c55e;
+            --incorrect: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+
+        /* Tab Styles */
+        .tabs {
+            display: flex;
+            background: var(--border);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Flashcard Styles */
+        .flashcards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .flashcard {
+            perspective: 1000px;
+            height: 200px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .flashcard-front {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .flashcard-back {
+            background-color: var(--primary);
+            color: white;
+            transform: rotateY(180deg);
+            font-size: 1rem;
+        }
+
+        /* Quiz Styles */
+        .question-block {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .hint {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option {
+            margin-bottom: 10px;
+        }
+
+        .option label {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .option label:hover {
+            background: #f1f5f9;
+        }
+
+        .option input {
+            margin-top: 4px;
+            margin-right: 12px;
+        }
+
+        .rationale-box {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .rationale-box.correct {
+            background-color: #dcfce7;
+            border-left: 4px solid var(--correct);
+            display: block;
+        }
+
+        .rationale-box.incorrect {
+            background-color: #fee2e2;
+            border-left: 4px solid var(--incorrect);
+            display: block;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .quiz-score {
+            display: none;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'flashcards-tab')">Flashcards (25)</button>
+        <button class="tab-btn" onclick="openTab(event, 'quiz-tab')">Practice Quiz (10)</button>
+    </div>
+
+    <div id="flashcards-tab" class="tab-content active">
+        <h2>Network Security Concepts</h2>
+        <p>Click on any card to flip it and reveal the answer.</p>
+        <div class="flashcards-grid" id="flashcards-container">
+            </div>
+    </div>
+
+    <div id="quiz-tab" class="tab-content">
+        <h2>Incident Response Application Quiz</h2>
+        <div class="quiz-score" id="quiz-score"></div>
+        <div id="quiz-container">
+            </div>
+        <button class="submit-btn" onclick="submitQuiz()">Submit Answers & View Rationales</button>
+    </div>
+</div>
+
+<script>
+    // --- Data ---
+    const flashcardsData = [
+        { front: "Definition of a network-based attack", back: "An attack that abuses the protocols, services, or pathways that make networks work, rather than application logic flaws." },
+        { front: "Denial of Service (DoS)", back: "An attack where a single source overwhelms a target." },
+        { front: "Distributed Denial of Service (DDoS)", back: "An attack where a botnet of thousands of devices overwhelms a target." },
+        { front: "Man-in-the-Middle (MITM)", back: "An attack where an adversary sits between two parties to read or modify network traffic." },
+        { front: "Port Scanning / Reconnaissance", back: "The process where an adversary maps a network's attack surface." },
+        { front: "Unauthorized Access", back: "Network attacks involving credential abuse, lateral movement, or privilege escalation." },
+        { front: "Primary telltale of a DoS or DDoS attack", back: "Massive traffic volume with low session quality." },
+        { front: "Parties to contact during a DoS or DDoS attack", back: "The Internet Service Provider (ISP) and a specialized DDoS scrubbing provider." },
+        { front: "Primary telltale of a Man-in-the-Middle (MITM) attack", back: "Certificate anomalies and Address Resolution Protocol (ARP) drift." },
+        { front: "Primary telltale of a Port Scan", back: "SYN-to-many-ports traffic originating from a single source." },
+        { front: "Primary telltale of Unauthorized Access", back: "Anomalous logons, off-hours activity, or geo-impossible locations." },
+        { front: "Protocols associated with OSI Layer 7 (Application)", back: "HTTP, DNS, and SMTP." },
+        { front: "Example attacks at OSI Layer 7", back: "HTTP floods and DNS amplification." },
+        { front: "Defensive control for OSI Layer 4 (Transport) attacks", back: "SYN cookies and connection rate limits." },
+        { front: "Example attacks at OSI Layer 3 (Network)", back: "IP spoofing and BGP hijacking." },
+        { front: "Example attacks at OSI Layer 2 (Data Link)", back: "ARP poisoning and VLAN hopping." },
+        { front: "The three pillars of network detection", back: "Firewall/edge logs, IDS/IPS alerts, and authentication logs." },
+        { front: "Standard formula for scoring incident severity", back: "Severity = Asset Criticality × Threat Confidence × Blast Radius × Reversibility" },
+        { front: "P1 Incident Priority classification", back: "A confirmed, high severity incident requiring on-call staff to be paged immediately." },
+        { front: "Standard correlation window for network security events", back: "A 5-minute rolling window on the same source IP." },
+        { front: "The primary difference between Containment and Eradication", back: "Containment stops the bleeding, while eradication removes the root cause." },
+        { front: "Proper remediation for compromised hosts during Eradication", back: "Re-image the hosts completely rather than attempting to clean them." },
+        { front: "Essential step for handling compromised credentials", back: "Rotate every credential the adversary could have touched." },
+        { front: "Definition of Recovery in incident response", back: "A verified return to a known-good state using clean backups, not just turning systems back on." },
+        { front: "Required timeframe for a Post-Incident Review", back: "Within 2 weeks of the incident closure." }
+    ];
+
+    const quizData = [
+        {
+            q: "Your SOC dashboard suddenly shows a massive spike in inbound traffic from thousands of distinct IPs, but very few TCP handshakes are completing successfully. Based on the primary telltale, who should be your primary external contact to contain this?",
+            hint: "Focus on the high volume and low session quality, which points to a specific family of attacks designed to overwhelm.",
+            options: [
+                { text: "ISP and a specialized scrubbing provider", isCorrect: true, rationale: "Massive volume combined with low session quality from thousands of devices indicates a DDoS attack, which typically exceeds a local perimeter's capacity and requires upstream mitigation." },
+                { text: "Internal SOC and the endpoint team", isCorrect: false, rationale: "These teams are the primary contacts for Man-in-the-Middle (MITM) attacks, which are characterized by certificate anomalies and ARP drift, not sheer volume." },
+                { text: "The internal firewall team", isCorrect: false, rationale: "While the firewall team handles port scanning reconnaissance (SYN-to-many-ports), a massive distributed attack will likely overwhelm the physical firewall hardware before they can filter it." },
+                { text: "The identity team and legal department", isCorrect: false, rationale: "This escalation path is reserved for unauthorized access and credential abuse, which present as anomalous logons rather than traffic floods." }
+            ]
+        },
+        {
+            q: "An alert triggers showing a single external IP sending SYN packets to hundreds of sequential ports on your public-facing web server. To which OSI layer should you map this activity to determine the best defensive control?",
+            hint: "SYN packets are part of the connection establishment phase of a protocol that ensures reliable data delivery.",
+            options: [
+                { text: "Layer 4 — Transport", isCorrect: true, rationale: "TCP SYN packets operate at the Transport layer, making controls like SYN cookies and connection rate limits the most effective defense." },
+                { text: "Layer 7 — Application", isCorrect: false, rationale: "Application layer attacks involve protocols like HTTP or DNS (e.g., HTTP floods), whereas this alert specifically targets the underlying connection mechanism." },
+                { text: "Layer 3 — Network", isCorrect: false, rationale: "Network layer attacks involve IP routing abuse, such as IP spoofing or BGP hijacking, rather than the port-level connection requests seen in this scan." },
+                { text: "Layer 2 — Data Link", isCorrect: false, rationale: "Data Link controls like Dynamic ARP Inspection operate on local network segments and MAC addresses, which cannot mitigate an external port scan." }
+            ]
+        },
+        {
+            q: "You receive an IDS alert for a suspected exploit attempt. Upon reviewing the firewall logs, you see a port scan from the same source IP that occurred 45 minutes prior. According to standard correlation rules, how should you treat these two events?",
+            hint: "Consider the typical timeline attackers use when clustering their reconnaissance and exploitation activities to avoid dropping idle connections.",
+            options: [
+                { text: "They are likely unrelated background noise because they fall outside the standard rolling window.", isCorrect: true, rationale: "Most multi-source attacks cluster their telltales within a 5-minute rolling window; events separated by 45 minutes are typically treated as isolated incidents or background noise." },
+                { text: "They should be strongly correlated and immediately escalated to a P1 priority.", isCorrect: false, rationale: "Strong correlation requires indicators to happen in close temporal proximity, usually within minutes of each other." },
+                { text: "They confirm an active APT presence because the attacker is moving slowly.", isCorrect: false, rationale: "While advanced threats can move slowly, standard automated triage rules require tighter time bounds to prevent overwhelming analysts with false correlations." },
+                { text: "They trigger an automatic block rule because two distinct sources convicted the IP.", isCorrect: false, rationale: "Although two sources reported the IP, the vast time gap invalidates the correlation needed to safely trigger an automated conviction and block." }
+            ]
+        },
+        {
+            q: "During triage, you confirm an event is real, the asset is moderately critical, and the blast radius is small. However, the attacker deployed destructive ransomware that wiped the local backups. Which variable in the severity scoring formula will drive the score up the most in this specific scenario?",
+            hint: "Think about the impact of wiped backups on your ability to restore the system to a known-good state.",
+            options: [
+                { text: "Reversibility", isCorrect: true, rationale: "Reversibility measures the difficulty of returning to a known-good state; wiped backups make recovery highly difficult or destructive, drastically increasing the severity." },
+                { text: "Threat Confidence", isCorrect: false, rationale: "While threat confidence is high (the event is confirmed), it acts as a multiplier rather than the specific variable describing the destructive nature of the payload." },
+                { text: "Asset Criticality", isCorrect: false, rationale: "The scenario states the asset is only moderately critical, meaning this factor contributes less to the final score than the extreme difficulty of recovery." },
+                { text: "Blast Radius", isCorrect: false, rationale: "The scenario explicitly states the blast radius is small and isolated to a single server, keeping this multiplier low." }
+            ]
+        },
+        {
+            q: "An endpoint has been confirmed as compromised with a persistence mechanism via a malicious scheduled task. The analyst isolates the machine from the network. What is the recommended Eradication step for this specific host?",
+            hint: "NIST guidelines have a strict philosophy on how to handle heavily compromised systems to ensure no hidden persistence remains.",
+            options: [
+                { text: "Re-image the host entirely.", isCorrect: true, rationale: "NIST guidelines emphasize wiping and re-imaging compromised hosts rather than attempting to clean them, as sophisticated persistence mechanisms can easily evade manual removal." },
+                { text: "Delete the malicious scheduled task and run a full antivirus scan.", isCorrect: false, rationale: "Attempting to manually clean a system leaves the organization vulnerable to hidden backdoors or secondary payloads the antivirus might miss." },
+                { text: "Block the IP address the scheduled task was communicating with at the firewall.", isCorrect: false, rationale: "Blocking the IP is a valid containment step to stop data exfiltration, but it does not remove the root compromise from the endpoint itself." },
+                { text: "Rotate the local administrator password.", isCorrect: false, rationale: "While rotating credentials is a critical part of eradication, doing so on a machine that still harbors a backdoor allows the attacker to immediately steal the new password." }
+            ]
+        },
+        {
+            q: "After re-imaging a compromised server, the IT team restores data from a backup taken two days before the incident. Before officially declaring the Recovery phase complete, what critical step must be performed?",
+            hint: "Rebuilding a system isn't the end; you have to prove it's actually secure and matches its expected state before trusting it.",
+            options: [
+                { text: "Run a post-restore integrity sweep to compare against a pre-incident baseline.", isCorrect: true, rationale: "Recovery is not just turning systems back on; it requires verifying file hashes, services, and ports against a known-good baseline to ensure the restored backup wasn't also compromised." },
+                { text: "Hold the post-incident review meeting with the affected business owners.", isCorrect: false, rationale: "The lessons-learned meeting is part of the Post-Incident Activity phase, which occurs after the incident is entirely closed and recovery is complete." },
+                { text: "Notify the privacy regulator that the system is back online.", isCorrect: false, rationale: "Regulator notification is a compliance and legal requirement often tied to the initial breach discovery, not a technical gate for completing the recovery phase." },
+                { text: "Patch the vulnerability that initially allowed the attacker access.", isCorrect: false, rationale: "Patching the vulnerability must happen during the Eradication phase to prevent the attacker from immediately re-compromising the system upon boot." }
+            ]
+        },
+        {
+            q: "Your internal SOC is overwhelmed by a multi-vector DDoS attack saturating your external internet links. You engaged your ISP's Network Operations Center (NOC), but the attack volume continues to bypass their basic filtering. What is the next logical step on the escalation ladder?",
+            hint: "When standard internet pipes are clogged and the provider can't handle the volume, you need a specialized entity designed specifically to handle massive traffic.",
+            options: [
+                { text: "Engage a specialized DDoS scrubbing service.", isCorrect: true, rationale: "When an ISP's NOC cannot filter the volume, the escalation ladder dictates moving traffic to a specialized scrubbing provider like Cloudflare or Akamai." },
+                { text: "Contact the National CSIRT.", isCorrect: false, rationale: "National CSIRTs are typically engaged for intelligence sharing or severe national infrastructure threats, usually after commercial mitigation options have been exhausted." },
+                { text: "Notify Law Enforcement.", isCorrect: false, rationale: "Law enforcement is notified later in the escalation chain for investigative purposes, but they cannot technically mitigate an active traffic flood." },
+                { text: "Contact your Cyber Insurance Carrier.", isCorrect: false, rationale: "While the carrier must be notified per policy deadlines, they provide financial and legal support, not real-time network traffic mitigation." }
+            ]
+        },
+        {
+            q: "A P2 unauthorized access incident is officially closed on a Friday. What is the deadline to hold the lessons-learned meeting, and what is one of the mandatory questions that must be answered?",
+            hint: "Institutional memory fades quickly, so these reviews have a relatively short, specific deadline to ensure actionable changes are made.",
+            options: [
+                { text: "Within 2 weeks; \"What will we change — process, control, training?\"", isCorrect: true, rationale: "NIST guidelines state post-incident reviews must be held within two weeks of closure and must result in actionable changes to prevent recurrence." },
+                { text: "Within 24 hours; \"Who was the specific attacker responsible?\"", isCorrect: false, rationale: "Twenty-four hours is too short to gather all stakeholders, and definitive attribution of an attacker is often impossible and not strictly required for a review." },
+                { text: "Within 30 days; \"What worked in our response?\"", isCorrect: false, rationale: "While asking what worked is a required question, waiting 30 days risks losing crucial institutional memory and delays necessary security improvements." },
+                { text: "Within 72 hours; \"Has the privacy regulator been notified?\"", isCorrect: false, rationale: "Seventy-two hours is a common regulatory deadline for initial breach notification, not the deadline for an internal post-incident technical review." }
+            ]
+        },
+        {
+            q: "Your monitoring tools detect Address Resolution Protocol (ARP) drift, indicating a potential Man-in-the-Middle (MITM) attack occurring on the local network segment. To mitigate this Layer 2 (Data Link) attack, which quick defensive control should be implemented?",
+            hint: "Look for a security control that operates at the switch level and specifically validates MAC-to-IP bindings.",
+            options: [
+                { text: "Dynamic ARP Inspection (DAI) and port security", isCorrect: true, rationale: "DAI specifically validates ARP packets on a network segment, preventing malicious actors from poisoning the ARP cache and executing MITM attacks at Layer 2." },
+                { text: "Reverse Path Forwarding (RPF) and Resource Public Key Infrastructure (RPKI)", isCorrect: false, rationale: "These are Layer 3 (Network) controls used to prevent IP spoofing and BGP hijacking across routers, not local segment MITM attacks." },
+                { text: "Short-lived tokens and re-authentication on sensitive actions", isCorrect: false, rationale: "These are Layer 5 (Session) application controls designed to prevent session hijacking, not local network traffic interception." },
+                { text: "Web Application Firewall (WAF) and rate limiting", isCorrect: false, rationale: "A WAF operates at Layer 7 (Application) to inspect HTTP/HTTPS traffic and cannot detect or stop low-level Ethernet frame manipulation." }
+            ]
+        },
+        {
+            q: "An analyst receives a single IDS alert for a suspected SQL injection. Upon checking the Web Application Firewall (WAF) logs, they find no matching events, and authentication logs show no abnormal activity. Based on the \"Three Pillars of Network Detection,\" what is the most appropriate next step?",
+            hint: "Consider the rule regarding how many sources are needed to merely indicate an issue versus convicting an attacker.",
+            options: [
+                { text: "Validate the IDS alert as a likely false positive, since a single source can be unreliable without correlation.", isCorrect: true, rationale: "The core tenet is that a single source lies, but two correlate. Without secondary confirmation from edge logs or auth logs, the event is likely a false positive." },
+                { text: "Immediately classify the event as a P1 incident because IDS alerts are definitive proof of an attack.", isCorrect: false, rationale: "IDS alerts are notoriously noisy and prone to false positives; acting on them without correlation leads to alert fatigue and wasted incident response efforts." },
+                { text: "Escalate the event to the national CSIRT for advanced analysis of the SQL injection payload.", isCorrect: false, rationale: "Escalating an unvalidated, single-source alert to a national body is an inappropriate use of the escalation ladder." },
+                { text: "Re-image the database server as a precautionary measure during the eradication phase.", isCorrect: false, rationale: "Eradication steps like re-imaging should only occur after an incident has been fully validated and containment is in place, not based on a single uncorroborated alert." }
+            ]
+        }
+    ];
+
+    // --- Rendering Functions ---
+
+    function renderFlashcards() {
+        const container = document.getElementById('flashcards-container');
+        flashcardsData.forEach(card => {
+            const el = document.createElement('div');
+            el.className = 'flashcard';
+            el.onclick = function() { this.classList.toggle('flipped'); };
+            el.innerHTML = `
+                <div class="flashcard-inner">
+                    <div class="flashcard-front">${card.front}</div>
+                    <div class="flashcard-back">${card.back}</div>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        quizData.forEach((qObj, index) => {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+            
+            let optionsHTML = '';
+            qObj.options.forEach((opt, optIdx) => {
+                const id = `q${index}_o${optIdx}`;
+                optionsHTML += `
+                    <div class="option">
+                        <label for="${id}">
+                            <input type="radio" name="q${index}" id="${id}" value="${opt.isCorrect}">
+                            ${opt.text}
+                        </label>
+                        <div class="rationale-box" id="rat_${id}">
+                            ${opt.rationale}
+                        </div>
+                    </div>
+                `;
+            });
+
+            block.innerHTML = `
+                <div class="question-text">${index + 1}. ${qObj.q}</div>
+                <div class="hint">Hint: ${qObj.hint}</div>
+                <ul class="options-list">
+                    ${optionsHTML}
+                </ul>
+            `;
+            container.appendChild(block);
+        });
+    }
+
+    // --- Interactions ---
+
+    function openTab(evt, tabId) {
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        quizData.forEach((qObj, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            
+            // Hide all rationales for this question first
+            qObj.options.forEach((opt, optIdx) => {
+                const ratBox = document.getElementById(`rat_q${index}_o${optIdx}`);
+                ratBox.className = 'rationale-box'; // Reset classes
+            });
+
+            if (selected) {
+                const isCorrect = selected.value === 'true';
+                const ratBox = document.getElementById(`rat_${selected.id}`);
+                
+                if (isCorrect) {
+                    score++;
+                    ratBox.classList.add('correct');
+                } else {
+                    ratBox.classList.add('incorrect');
+                    // Show the correct rationale too
+                    qObj.options.forEach((opt, optIdx) => {
+                        if(opt.isCorrect) {
+                           const correctRatBox = document.getElementById(`rat_q${index}_o${optIdx}`);
+                           correctRatBox.classList.add('correct');
+                        }
+                    });
+                }
+            } else {
+                 // If not answered, show correct answer rationale
+                 qObj.options.forEach((opt, optIdx) => {
+                    if(opt.isCorrect) {
+                       const correctRatBox = document.getElementById(`rat_q${index}_o${optIdx}`);
+                       correctRatBox.classList.add('correct');
+                    }
+                });
+            }
+        });
+
+        const scoreDiv = document.getElementById('quiz-score');
+        scoreDiv.style.display = 'block';
+        scoreDiv.innerHTML = `You scored ${score} out of ${quizData.length}`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        renderFlashcards();
+        renderQuiz();
+    });
+</script>
+
+</body>
+</html>
+
+

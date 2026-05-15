@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Security Incidents: DoS & Unauthorized Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals & Tactical Indigo (Stone, Indigo, Emerald, Rose) -->
+    <!-- Application Structure Plan: The SPA uses a module-based dashboard structure. Instead of reading top-to-bottom, users navigate via a persistent top-bar to distinct interactive modules: 'Threat Matrix', 'OSI Diagnostics', 'Triage Engine', and 'Response Protocol'. This structure was chosen to transform a linear lecture into a functional toolkit. It separates theory (Threats/OSI) from practice (Triage/Response), allowing analysts to quickly reference the specific tool or framework they need during a simulated or actual event. -->
+    <!-- Visualization & Content Choices: 
+         1. Threat Matrix: Goal - Categorize attacks. Viz - Interactive flip-cards. Justification - Encourages active recall of 'telltales' and 'contacts' rather than passive reading. (HTML/CSS)
+         2. OSI Diagnostics: Goal - Map vectors to layers. Viz - Clickable stack diagram. Justification - Physically represents the top-down nature of the OSI model, making layer selection intuitive. (HTML/JS)
+         3. Triage Engine: Goal - Correlate logs & score severity. Viz - Chart.js line chart simulating a 5-minute event window + Interactive sliders for the severity formula. Justification - Visually proves the 'correlation' concept and turns a static formula into an interactive tool. (Chart.js + HTML/JS)
+         4. Response Protocol: Goal - Track escalation and recovery. Viz - Step-through ladder and interactive checklists. Justification - Gamifies the eradication process and visually represents the escalation hierarchy. (HTML/JS)
+         Confirming NO SVG/Mermaid used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            height: 40vh;
+            max-height: 400px;
+            min-height: 300px;
+        }
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; transition: transform 0.6s; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .group:hover .transform-style-3d { transform: rotateY(180deg); }
+        
+        .osi-layer { transition: all 0.2s ease; cursor: pointer; }
+        .osi-layer.active { transform: translateX(10px); border-left: 4px solid #4f46e5; font-weight: bold; background-color: #e0e7ff; }
+        
+        .nav-btn.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: 600; }
+        
+        input[type=range] { accent-color: #4f46e5; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center py-4">
+                <div class="flex items-center gap-3 mb-4 md:mb-0">
+                    <span class="text-3xl">🛡️</span>
+                    <div>
+                        <h1 class="text-xl font-bold text-stone-900 tracking-tight">Cyber.SoHo Incident Toolkit</h1>
+                        <p class="text-xs text-stone-500 font-medium tracking-wide uppercase">Module: Network Security Incidents</p>
+                    </div>
+                </div>
+                <nav class="flex space-x-1 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 hide-scroll">
+                    <button onclick="navigate('overview')" id="nav-overview" class="nav-btn active px-3 py-2 text-sm text-stone-600 hover:text-indigo-600 whitespace-nowrap transition-colors">Overview</button>
+                    <button onclick="navigate('threats')" id="nav-threats" class="nav-btn px-3 py-2 text-sm text-stone-600 hover:text-indigo-600 whitespace-nowrap transition-colors">Threat Matrix</button>
+                    <button onclick="navigate('osi')" id="nav-osi" class="nav-btn px-3 py-2 text-sm text-stone-600 hover:text-indigo-600 whitespace-nowrap transition-colors">OSI Diagnostics</button>
+                    <button onclick="navigate('triage')" id="nav-triage" class="nav-btn px-3 py-2 text-sm text-stone-600 hover:text-indigo-600 whitespace-nowrap transition-colors">Triage Engine</button>
+                    <button onclick="navigate('response')" id="nav-response" class="nav-btn px-3 py-2 text-sm text-stone-600 hover:text-indigo-600 whitespace-nowrap transition-colors">Response Protocol</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+
+        <section id="sec-overview" class="block animate-fade-in">
+            <div class="bg-indigo-600 text-white rounded-2xl p-8 md:p-12 shadow-lg mb-8">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">From "On Fire" to "Verifiably Clean"</h2>
+                <p class="text-indigo-100 text-lg max-w-3xl leading-relaxed">
+                    Welcome to the Interactive Incident Management & Response module. A network-based attack abuses the protocols and pathways that make networks work. Your goal is to move from initial panic to a contained, eradicated, and verifiably clean network with a rock-solid paper trail.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm flex flex-col items-center text-center">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="font-bold text-lg mb-2">The Goal</h3>
+                    <p class="text-stone-600 text-sm">To contain, eradicate, and recover network integrity following DoS, MITM, or Unauthorized Access events.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm flex flex-col items-center text-center">
+                    <div class="text-4xl mb-4">⏱️</div>
+                    <h3 class="font-bold text-lg mb-2">The Challenge</h3>
+                    <p class="text-stone-600 text-sm">Categorizing before containing, identifying the exact OSI layer, and correlating logs within a 5-minute window.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm flex flex-col items-center text-center">
+                    <div class="text-4xl mb-4">🤝</div>
+                    <h3 class="font-bold text-lg mb-2">The Resolution</h3>
+                    <p class="text-stone-600 text-sm">Coordinating effectively with ISPs and external parties, then implementing NIST-aligned eradication.</p>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-center">
+                <button onclick="navigate('threats')" class="bg-stone-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors shadow-md">
+                    Begin the Module ➡️
+                </button>
+            </div>
+        </section>
+
+        <section id="sec-threats" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-2">Network Threat Matrix</h2>
+                <p class="text-stone-600">
+                    This section breaks down the five primary families of network attacks. Understanding these is crucial because <strong>categorizing an attack correctly dictates your playbook</strong>. Hover over (or tap) each threat card to reveal its primary signature and the specific team or external party you must involve for containment. Applying the wrong playbook makes things worse.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="group perspective-1000 h-48 cursor-pointer">
+                    <div class="relative w-full h-full transform-style-3d shadow-md rounded-xl">
+                        <div class="absolute w-full h-full bg-white border border-stone-200 rounded-xl p-6 backface-hidden flex flex-col justify-center items-center text-center">
+                            <span class="text-3xl mb-2">🌊</span>
+                            <h3 class="font-bold text-lg text-stone-900">DoS / DDoS</h3>
+                            <p class="text-xs text-stone-500 mt-2 uppercase tracking-wide">Denial of Service</p>
+                        </div>
+                        <div class="absolute w-full h-full bg-rose-50 border border-rose-200 rounded-xl p-6 backface-hidden rotate-y-180 flex flex-col justify-center text-center">
+                            <h4 class="font-bold text-rose-800 text-sm mb-1">Primary Telltale</h4>
+                            <p class="text-sm text-stone-700 mb-3">Massive volume, low session quality.</p>
+                            <h4 class="font-bold text-rose-800 text-sm mb-1">Who You Call</h4>
+                            <p class="text-sm text-stone-700 font-medium">ISP + Scrubbing Provider</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group perspective-1000 h-48 cursor-pointer">
+                    <div class="relative w-full h-full transform-style-3d shadow-md rounded-xl">
+                        <div class="absolute w-full h-full bg-white border border-stone-200 rounded-xl p-6 backface-hidden flex flex-col justify-center items-center text-center">
+                            <span class="text-3xl mb-2">🎭</span>
+                            <h3 class="font-bold text-lg text-stone-900">MITM</h3>
+                            <p class="text-xs text-stone-500 mt-2 uppercase tracking-wide">Man-in-the-Middle</p>
+                        </div>
+                        <div class="absolute w-full h-full bg-amber-50 border border-amber-200 rounded-xl p-6 backface-hidden rotate-y-180 flex flex-col justify-center text-center">
+                            <h4 class="font-bold text-amber-800 text-sm mb-1">Primary Telltale</h4>
+                            <p class="text-sm text-stone-700 mb-3">Certificate anomalies, ARP drift.</p>
+                            <h4 class="font-bold text-amber-800 text-sm mb-1">Who You Call</h4>
+                            <p class="text-sm text-stone-700 font-medium">Internal SOC + Endpoint Team</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group perspective-1000 h-48 cursor-pointer">
+                    <div class="relative w-full h-full transform-style-3d shadow-md rounded-xl">
+                        <div class="absolute w-full h-full bg-white border border-stone-200 rounded-xl p-6 backface-hidden flex flex-col justify-center items-center text-center">
+                            <span class="text-3xl mb-2">📡</span>
+                            <h3 class="font-bold text-lg text-stone-900">Port Scanning</h3>
+                            <p class="text-xs text-stone-500 mt-2 uppercase tracking-wide">Reconnaissance</p>
+                        </div>
+                        <div class="absolute w-full h-full bg-blue-50 border border-blue-200 rounded-xl p-6 backface-hidden rotate-y-180 flex flex-col justify-center text-center">
+                            <h4 class="font-bold text-blue-800 text-sm mb-1">Primary Telltale</h4>
+                            <p class="text-sm text-stone-700 mb-3">SYN-to-many-ports from one source.</p>
+                            <h4 class="font-bold text-blue-800 text-sm mb-1">Who You Call</h4>
+                            <p class="text-sm text-stone-700 font-medium">Firewall Team</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group perspective-1000 h-48 cursor-pointer sm:col-span-2 lg:col-span-1 lg:col-start-2">
+                    <div class="relative w-full h-full transform-style-3d shadow-md rounded-xl">
+                        <div class="absolute w-full h-full bg-white border border-stone-200 rounded-xl p-6 backface-hidden flex flex-col justify-center items-center text-center">
+                            <span class="text-3xl mb-2">🔓</span>
+                            <h3 class="font-bold text-lg text-stone-900">Unauthorized Access</h3>
+                            <p class="text-xs text-stone-500 mt-2 uppercase tracking-wide">Credential Abuse</p>
+                        </div>
+                        <div class="absolute w-full h-full bg-emerald-50 border border-emerald-200 rounded-xl p-6 backface-hidden rotate-y-180 flex flex-col justify-center text-center">
+                            <h4 class="font-bold text-emerald-800 text-sm mb-1">Primary Telltale</h4>
+                            <p class="text-sm text-stone-700 mb-3">Anomalous logons, off-hours, geo-impossible.</p>
+                            <h4 class="font-bold text-emerald-800 text-sm mb-1">Who You Call</h4>
+                            <p class="text-sm text-stone-700 font-medium">Identity Team + Legal</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 bg-stone-100 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                <p class="text-sm text-stone-700 font-medium">✅ Key Takeaway: Categorize before you contain. The wrong playbook on the right incident makes things worse.</p>
+            </div>
+        </section>
+
+        <section id="sec-osi" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-2">OSI Diagnostic Map</h2>
+                <p class="text-stone-600">
+                    The OSI model is a diagnostic grid. When an alert fires, the first analyst question is: <em>"Which layer is this hitting?"</em> The layer determines your logs, your containment team, and external help viability. Click through the layers below to view the common attack vectors and corresponding rapid defensive controls.
+                </p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-8 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="w-full md:w-1/3 flex flex-col gap-2" id="osi-stack">
+                </div>
+                
+                <div class="w-full md:w-2/3 flex items-center justify-center p-6 bg-stone-50 rounded-xl border border-stone-200">
+                    <div id="osi-details" class="w-full">
+                        <div class="text-center text-stone-400 py-12">
+                            <span class="text-4xl block mb-4">👆</span>
+                            <p>Select a layer from the stack to view attack vectors and defensive controls.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 bg-stone-100 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                <p class="text-sm text-stone-700 font-medium">✅ Key Takeaway: Every alert lives on one or more layers. Naming the layer first cuts triage time in half.</p>
+            </div>
+        </section>
+
+        <section id="sec-triage" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-2">Triage & Detection Engine</h2>
+                <p class="text-stone-600">
+                    Effective detection relies on correlating logs (Firewall, IDS, Authentication). A single source lies, two correlate, three convict. Most multi-source attacks cluster indicators within a <strong>5-minute rolling window</strong>. Use the simulation below to visualize this correlation, then use the Triage Calculator to score the incident severity.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h3 class="font-bold text-lg mb-1">The 5-Minute Correlation Window</h3>
+                    <p class="text-xs text-stone-500 mb-6">Visualizing overlapping indicators leading up to an event (T-0).</p>
+                    <div class="chart-container">
+                        <canvas id="correlationChart"></canvas>
+                    </div>
+                    <p class="text-xs text-stone-500 mt-4 text-center">Note: A SIEM is only as good as its correlation rules. Without them, you have an expensive log archive.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col">
+                    <h3 class="font-bold text-lg mb-1">Incident Severity Calculator</h3>
+                    <p class="text-xs text-stone-500 mb-6">Adjust parameters based on the validated event (Step 2 of Triage).</p>
+                    
+                    <div class="space-y-6 flex-grow">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-stone-700">Asset Criticality</label>
+                                <span id="val-asset" class="text-sm font-bold text-indigo-600">5</span>
+                            </div>
+                            <input type="range" id="sl-asset" min="1" max="10" value="5" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-[10px] text-stone-400 mt-1"><span>Low (1)</span><span>High (10)</span></div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-stone-700">Threat Confidence</label>
+                                <span id="val-threat" class="text-sm font-bold text-indigo-600">5</span>
+                            </div>
+                            <input type="range" id="sl-threat" min="1" max="10" value="5" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-[10px] text-stone-400 mt-1"><span>Suspected (1)</span><span>Confirmed (10)</span></div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-stone-700">Blast Radius</label>
+                                <span id="val-blast" class="text-sm font-bold text-indigo-600">5</span>
+                            </div>
+                            <input type="range" id="sl-blast" min="1" max="10" value="5" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-[10px] text-stone-400 mt-1"><span>Isolated (1)</span><span>Widespread (10)</span></div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-stone-700">Reversibility Difficulty</label>
+                                <span id="val-reverse" class="text-sm font-bold text-indigo-600">5</span>
+                            </div>
+                            <input type="range" id="sl-reverse" min="1" max="10" value="5" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-[10px] text-stone-400 mt-1"><span>Easy/Quick (1)</span><span>Destructive (10)</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 p-4 bg-stone-50 rounded-xl border border-stone-200 text-center">
+                        <div class="text-xs text-stone-500 uppercase tracking-wide mb-1">Calculated Priority Class</div>
+                        <div id="calc-result" class="text-3xl font-black text-stone-800">P2 — Medium Severity</div>
+                        <div id="calc-action" class="text-sm text-stone-600 mt-2 font-medium">Ticket within 1 hour.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-response" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-2">Response Protocol</h2>
+                <p class="text-stone-600">
+                    When an attack exceeds perimeter capacity, you must escalate. This section covers external coordination and the NIST-aligned Eradication & Recovery phases. Containment stops the bleeding; eradication removes the cause; recovery is a verified return to a known-good state.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 lg:col-span-1">
+                    <h3 class="font-bold text-lg mb-4">The Escalation Ladder</h3>
+                    <p class="text-xs text-stone-500 mb-4">Climb only as needed, but climb early. Most teams under-escalate.</p>
+                    
+                    <div class="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-stone-200 before:to-stone-200">
+                        <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-indigo-100 text-indigo-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">1</div>
+                            <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white border border-stone-200 p-3 rounded shadow-sm text-sm font-medium">Internal SOC</div>
+                        </div>
+                        <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">2</div>
+                            <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white border border-stone-200 p-3 rounded shadow-sm text-sm">ISP NOC</div>
+                        </div>
+                        <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">3</div>
+                            <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white border border-stone-200 p-3 rounded shadow-sm text-sm">DDoS Scrubber</div>
+                        </div>
+                        <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">4</div>
+                            <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white border border-stone-200 p-3 rounded shadow-sm text-sm">National CSIRT</div>
+                        </div>
+                        <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-stone-100 text-stone-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">5</div>
+                            <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white border border-stone-200 p-3 rounded shadow-sm text-sm text-stone-400">Law / Regulators</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-amber-50 p-4 rounded border border-amber-200 text-xs text-amber-800">
+                        <strong>Before you call, have ready:</strong> IP ranges/ASN, Volume (pps/bps), Attack vector, Point of Contact, Internal Ticket Ref.
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 lg:col-span-2 flex flex-col">
+                    <h3 class="font-bold text-lg mb-1">Eradication & Recovery Tracker</h3>
+                    <p class="text-xs text-stone-500 mb-6">Ensure all steps are complete before considering the incident closed. Click to verify completion.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-rose-700 border-b border-rose-200 pb-2 mb-3 flex items-center gap-2"><span>🧹</span> Eradication</h4>
+                            <div class="space-y-2" id="eradication-list">
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer transition-colors">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="updateRecoveryStatus()">
+                                    <span class="text-sm"><strong class="text-stone-900">Rotate</strong> every credential touched.</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer transition-colors">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="updateRecoveryStatus()">
+                                    <span class="text-sm"><strong class="text-stone-900">Re-image</strong> compromised hosts (don't "clean").</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer transition-colors">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="updateRecoveryStatus()">
+                                    <span class="text-sm"><strong class="text-stone-900">Block</strong> indicators of compromise (IPs, hashes).</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer transition-colors">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="updateRecoveryStatus()">
+                                    <span class="text-sm"><strong class="text-stone-900">Purge</strong> persistence mechanisms.</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer transition-colors">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="updateRecoveryStatus()">
+                                    <span class="text-sm"><strong class="text-stone-900">Patch</strong> the vulnerability.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="opacity-50 pointer-events-none transition-opacity duration-300" id="recovery-panel">
+                            <h4 class="font-bold text-emerald-700 border-b border-emerald-200 pb-2 mb-3 flex items-center gap-2"><span>🔄</span> Recovery</h4>
+                            <div class="space-y-2">
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="checkPostIncident()">
+                                    <span class="text-sm">Restore from verified clean backups.</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="checkPostIncident()">
+                                    <span class="text-sm">Run post-restore integrity sweep.</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="checkPostIncident()">
+                                    <span class="text-sm">Compare against pre-incident baseline.</span>
+                                </label>
+                                <label class="flex items-start gap-3 p-2 hover:bg-stone-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-indigo-600 rounded border-stone-300 focus:ring-indigo-500" onchange="checkPostIncident()">
+                                    <span class="text-sm">Enable enhanced monitoring (30-90 days).</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="post-incident-msg" class="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg hidden">
+                        <h4 class="font-bold text-indigo-900 mb-2">🎉 Network Restored. Next Step: Post-Incident Review</h4>
+                        <p class="text-sm text-indigo-800 mb-2">Held within 2 weeks. Must answer 5 questions:</p>
+                        <ol class="list-decimal pl-5 text-sm text-indigo-800 space-y-1">
+                            <li>What happened, on what timeline?</li>
+                            <li>What worked in our response?</li>
+                            <li>What did not work, and why?</li>
+                            <li>What will we change?</li>
+                            <li>Who owns each change, by when?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 text-center py-6 mt-auto">
+        <p class="text-xs">© Cyber.SoHo Educational Hub. Code samples are defensive and educational.</p>
+        <p class="text-xs mt-1">Based on NIST SP 800-61 Rev. 2 and OSI model ISO/IEC 7498-1.</p>
+    </footer>
+
+    <script>
+        const sections = ['overview', 'threats', 'osi', 'triage', 'response'];
+        let chartInstance = null;
+
+        function navigate(targetId) {
+            sections.forEach(sec => {
+                document.getElementById('sec-' + sec).classList.add('hidden');
+                document.getElementById('nav-' + sec).classList.remove('active', 'border-b-2', 'border-indigo-600');
+            });
+            
+            document.getElementById('sec-' + targetId).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById('nav-' + targetId);
+            activeBtn.classList.add('active');
+            activeBtn.style.borderBottom = '2px solid #4f46e5';
+
+            if(targetId === 'triage' && !chartInstance) {
+                initChart();
+            }
+        }
+
+        const osiData = [
+            { layer: 7, name: "Application", protocols: "HTTP, DNS, SMTP", attack: "HTTP flood, DNS amplification", control: "WAF, rate limiting" },
+            { layer: 6, name: "Presentation", protocols: "TLS, encoding", attack: "TLS downgrade", control: "Pin modern cipher suites" },
+            { layer: 5, name: "Session", protocols: "Session tokens, RPC", attack: "Session hijacking", control: "Short-lived tokens, re-auth" },
+            { layer: 4, name: "Transport", protocols: "TCP, UDP", attack: "SYN flood, UDP flood", control: "SYN cookies, connection rate limits" },
+            { layer: 3, name: "Network", protocols: "IP, routing, BGP", attack: "IP spoofing, BGP hijack", control: "RPF, RPKI" },
+            { layer: 2, name: "Data Link", protocols: "Ethernet, ARP, switching", attack: "ARP poisoning, VLAN hopping", control: "DAI, port security" },
+            { layer: 1, name: "Physical", protocols: "Cabling, radio, ports", attack: "Cable tap, rogue access point", control: "Access control, RF surveys" }
+        ];
+
+        function renderOsiStack() {
+            const container = document.getElementById('osi-stack');
+            container.innerHTML = '';
+            
+            osiData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'osi-layer bg-stone-100 border border-stone-200 p-3 rounded text-sm text-stone-700 flex justify-between items-center';
+                div.innerHTML = `<span>Layer ${item.layer}</span> <span class="font-semibold">${item.name}</span>`;
+                div.onclick = () => showOsiDetails(item, div);
+                container.appendChild(div);
+            });
+        }
+
+        function showOsiDetails(data, element) {
+            document.querySelectorAll('.osi-layer').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            const details = document.getElementById('osi-details');
+            details.innerHTML = `
+                <div class="animate-fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-indigo-600 text-white w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl">${data.layer}</div>
+                        <h3 class="text-2xl font-bold text-stone-900">${data.name} Layer</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs text-stone-500 uppercase tracking-wide font-bold">Key Protocols</p>
+                            <p class="text-stone-800 font-medium">${data.protocols}</p>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded-lg border border-rose-100">
+                            <p class="text-xs text-rose-800 uppercase tracking-wide font-bold mb-1">Example Attack Vectors</p>
+                            <p class="text-rose-900">${data.attack}</p>
+                        </div>
+                        <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                            <p class="text-xs text-emerald-800 uppercase tracking-wide font-bold mb-1">Rapid Defensive Control</p>
+                            <p class="text-emerald-900">${data.control}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateSeverity() {
+            const asset = parseInt(document.getElementById('sl-asset').value);
+            const threat = parseInt(document.getElementById('sl-threat').value);
+            const blast = parseInt(document.getElementById('sl-blast').value);
+            const reverse = parseInt(document.getElementById('sl-reverse').value);
+
+            document.getElementById('val-asset').innerText = asset;
+            document.getElementById('val-threat').innerText = threat;
+            document.getElementById('val-blast').innerText = blast;
+            document.getElementById('val-reverse').innerText = reverse;
+
+            const score = asset * threat * blast * reverse; 
+
+            let priority = "";
+            let action = "";
+            let colorClass = "";
+
+            if (score > 4000) {
+                priority = "P1 — High Severity";
+                action = "Confirmed incident. Page on-call NOW.";
+                colorClass = "text-rose-600";
+            } else if (score > 1000) {
+                priority = "P2 — Medium Severity";
+                action = "Confirmed incident. Ticket within 1 hour.";
+                colorClass = "text-amber-600";
+            } else {
+                priority = "P3 — Low Severity / Suspected";
+                action = "Investigate within 24 hours.";
+                colorClass = "text-emerald-600";
+            }
+
+            const resultEl = document.getElementById('calc-result');
+            resultEl.innerText = priority;
+            resultEl.className = `text-3xl font-black ${colorClass}`;
+            document.getElementById('calc-action').innerText = action;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('correlationChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['T-10m', 'T-9m', 'T-8m', 'T-7m', 'T-6m', 'T-5m', 'T-4m', 'T-3m', 'T-2m', 'T-1m', 'T-0'],
+                    datasets: [
+                        {
+                            label: 'Firewall Denies (Port Scan)',
+                            data: [10, 15, 12, 18, 50, 450, 600, 580, 500, 400, 300],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Auth Failures (Brute Force)',
+                            data: [2, 1, 3, 2, 5, 10, 80, 250, 150, 20, 5],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'IDS Alerts (Exploit Attempt)',
+                            data: [0, 0, 0, 0, 0, 2, 5, 20, 100, 400, 800],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    let label = context[0].label || '';
+                                    if(label === 'T-5m' || label === 'T-4m' || label === 'T-3m' || label === 'T-2m' || label === 'T-1m') {
+                                        return label + ' (Correlation Window)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6 } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#e5e7eb' }, title: { display: true, text: 'Event Volume' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateRecoveryStatus() {
+            const eradicationChecks = document.querySelectorAll('#eradication-list input[type="checkbox"]');
+            let allChecked = true;
+            eradicationChecks.forEach(chk => { if (!chk.checked) allChecked = false; });
+            
+            const panel = document.getElementById('recovery-panel');
+            if (allChecked) {
+                panel.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                panel.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function checkPostIncident() {
+            const recoveryChecks = document.querySelectorAll('#recovery-panel input[type="checkbox"]');
+            let allChecked = true;
+            recoveryChecks.forEach(chk => { if (!chk.checked) allChecked = false; });
+            
+            const msg = document.getElementById('post-incident-msg');
+            if (allChecked) {
+                msg.classList.remove('hidden');
+                msg.classList.add('block', 'animate-fade-in');
+            } else {
+                msg.classList.add('hidden');
+                msg.classList.remove('block');
+            }
+        }
+
+        document.getElementById('sl-asset').addEventListener('input', calculateSeverity);
+        document.getElementById('sl-threat').addEventListener('input', calculateSeverity);
+        document.getElementById('sl-blast').addEventListener('input', calculateSeverity);
+        document.getElementById('sl-reverse').addEventListener('input', calculateSeverity);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('nav-overview').style.borderBottom = '2px solid #4f46e5';
+            renderOsiStack();
+            calculateSeverity();
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+                .hide-scroll::-webkit-scrollbar { display: none; }
+                .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+            `;
+            document.head.appendChild(style);
+        });
+
+    </script>
+</body>
+</html>
+
+
