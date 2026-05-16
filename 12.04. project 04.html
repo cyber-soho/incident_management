@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 04 - Network Traffic Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+        body {
+            background-color: #FDFBF7; 
+            color: #292524;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        .code-block {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .code-block:hover {
+            background-color: #e5e7eb;
+        }
+        .code-block::after {
+            content: "📋 Click to copy";
+            font-size: 0.75rem;
+            opacity: 0;
+            position: absolute;
+            right: 0.5rem;
+            top: 0.5rem;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover::after {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen">
+
+    <!-- Chosen Palette: Warm Neutral Harmony (Background: #FDFBF7, Text: #292524, Accents: Teal/Emerald #0D9488 and Amber #D97706 for warnings) -->
+    <!-- Application Structure Plan: The SPA uses a task-oriented dashboard layout. The source document is a highly structured, sequential academic lab. A linear reading experience is poor for a 5-hour technical task. Thus, the SPA breaks the content into thematic views: 'Mission Brief' (overview, times, goals), 'Pre-Flight' (setup and disclaimers), 'Active Lab' (a tabbed interface for sequential execution of Tasks A1-A5 & B to focus the user on one task at a time without overwhelming scrolling), and 'Reporting' (deliverables & grading). This structure transforms a static wall of text into a trackable, interactive workbench. -->
+    <!-- Visualization & Content Choices: 1. Time Budget -> Goal: Inform proportions -> Viz: Donut Chart (Chart.js) -> Justification: Shows how the 8 total hours are distributed. 2. Grading Rubric -> Goal: Compare -> Viz: Horizontal Bar Chart (Chart.js) -> Justification: Instantly highlights the most valuable sections of the report. 3. Task A3 Beaconing -> Goal: Inform/Change -> Viz: Line Chart (Chart.js) -> Justification: Simulates the Wireshark I/O graph students need to look for, aiding visual recognition. 4. Code commands -> Goal: Action/Interaction -> Viz: Click-to-copy HTML blocks -> Justification: Improves lab workflow efficiency. All visuals adhere to NO SVG/Mermaid rules. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="fixed w-full z-50 glass-panel border-b shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">🛡️</span>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight text-teal-800">Project 04 — Day 13</h1>
+                        <p class="text-xs text-stone-500 font-medium">Cyber.SoHo Educational Hub</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center text-sm font-semibold">
+                    <button class="nav-btn text-teal-700 border-b-2 border-teal-700 px-1 py-4 transition-colors" data-target="view-overview">Overview</button>
+                    <button class="nav-btn text-stone-500 hover:text-teal-700 border-b-2 border-transparent hover:border-teal-300 px-1 py-4 transition-colors" data-target="view-prep">Pre-Flight</button>
+                    <button class="nav-btn text-stone-500 hover:text-teal-700 border-b-2 border-transparent hover:border-teal-300 px-1 py-4 transition-colors" data-target="view-lab">Active Lab</button>
+                    <button class="nav-btn text-stone-500 hover:text-teal-700 border-b-2 border-transparent hover:border-teal-300 px-1 py-4 transition-colors" data-target="view-report">Reporting</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <section id="view-overview" class="view-section block animate-fade-in">
+            <div class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h2 class="text-3xl font-bold text-stone-800 mb-2">Network Traffic Analysis & Incident Validation</h2>
+                <p class="text-stone-600 text-lg mb-6">Course: Incident Management (420-4C1-DW) &middot; Week 7</p>
+                <div class="prose max-w-none text-stone-700 mb-6">
+                    <p><strong>Purpose of this section:</strong> This overview defines the core parameters of your project. It translates the raw syllabus data into a clear visual breakdown of your time commitments and explicitly states what you are expected to learn and deliver by the deadline. Review this to understand the "big picture" before diving into technical tasks.</p>
+                    <p>By the time the workweek closes, you should be able to walk into any incident-response (IR) room, sit down in front of a packet capture you have never seen before, and answer the four questions that always matter:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                        <li><strong>What happened on the wire?</strong> — capture and reduce traffic.</li>
+                        <li><strong>Is this actually an incident, or noise?</strong> — separate background chatter from alerts.</li>
+                        <li><strong>Can I back this finding up?</strong> — cross-check with firewall/IDS logs.</li>
+                        <li><strong>In what order did events occur?</strong> — produce a chronological timeline.</li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-stone-50 p-6 rounded-xl border border-stone-200">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center"><span class="mr-2 text-2xl">⏳</span> Time & Ponderation (3-2-3)</h3>
+                        <p class="text-sm mb-4"><strong>Due:</strong> Sunday, 31 May 2026, 23:59 EST</p>
+                        <p class="text-sm mb-4"><strong>Deliverable:</strong> One A4 PDF research-report, max 4 pages.</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-center"><span class="w-3 h-3 rounded-full bg-teal-600 mr-3"></span> 3 hours — guided hands-on lab tasks</li>
+                            <li class="flex items-center"><span class="w-3 h-3 rounded-full bg-amber-500 mr-3"></span> 2 hours — independent PCAP analysis</li>
+                            <li class="flex items-center"><span class="w-3 h-3 rounded-full bg-stone-700 mr-3"></span> 3 hours — homework / report writing</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="chart-container">
+                            <canvas id="timeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-prep" class="view-section hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-amber-200 border-l-4 border-l-amber-500">
+                        <h2 class="text-2xl font-bold text-stone-800 mb-4 flex items-center"><span class="mr-2 text-2xl">⚠️</span> Mandatory Disclaimer</h2>
+                        <p class="text-stone-700 mb-4 text-sm leading-relaxed">
+                            <strong>Purpose of this section:</strong> Cybersecurity labs utilize dual-use tools. This section ensures you understand the ethical and legal boundaries of the techniques you are about to practice. You must agree to these terms to proceed.
+                        </p>
+                        <p class="text-stone-700 mb-4 text-sm leading-relaxed">
+                            The techniques covered here sit very close to the tradecraft used by both defenders and attackers. They are taught here <strong>exclusively for defensive, academic, and analytical purposes</strong>. Any unauthorised capture of network traffic, any attempt to intercept communications on networks you do not own, and any reuse of these techniques against third-party systems may constitute a criminal offence.
+                        </p>
+                        <div class="bg-amber-50 p-4 rounded-lg text-sm text-stone-800 space-y-2 font-mono mt-4">
+                            <p>▹ Canada — Criminal Code, sec 342.1</p>
+                            <p>▹ US — CFAA, 18 U.S.C. § 1030</p>
+                            <p>▹ EU — Directive 2013/40/EU</p>
+                            <p>▹ ACM & IEEE Codes of Ethics apply.</p>
+                        </div>
+                        <div class="mt-6 flex items-center">
+                            <input type="checkbox" id="ack-disclaimer" class="w-5 h-5 text-teal-600 rounded focus:ring-teal-500">
+                            <label for="ack-disclaimer" class="ml-3 text-sm font-bold text-stone-800 cursor-pointer">I have read, understood, and agree to abide by the legal and ethical guidelines.</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                        <h2 class="text-2xl font-bold text-stone-800 mb-4 flex items-center"><span class="mr-2 text-2xl">🛠️</span> Environment Setup</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-teal-800 mb-2 border-b pb-1">Required OS</h4>
+                                <ul class="list-disc pl-5 text-sm space-y-1 text-stone-700">
+                                    <li>Linux VM (Kali, Parrot OS, Ubuntu)</li>
+                                    <li>Controlled end-to-end by you</li>
+                                </ul>
+                                <h4 class="font-bold text-teal-800 mb-2 border-b pb-1 mt-4">Required Tools</h4>
+                                <ul class="list-disc pl-5 text-sm space-y-1 text-stone-700">
+                                    <li>Wireshark (or TShark / Brim)</li>
+                                    <li>tcpdump (preinstalled usually)</li>
+                                    <li>Text editor for note-taking</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-teal-800 mb-2 border-b pb-1">Sample Data Sources</h4>
+                                <ul class="list-disc pl-5 text-sm space-y-1 text-stone-700">
+                                    <li>Malware-Traffic-Analysis.net</li>
+                                    <li>SecRepo.com</li>
+                                </ul>
+                                <div class="mt-4 p-3 bg-stone-100 rounded text-xs text-stone-600 font-mono">
+                                    <strong>Important:</strong> Check any downloaded files on VirusTotal before opening.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 h-fit sticky top-24">
+                    <h3 class="text-xl font-bold mb-4">Verification Commands</h3>
+                    <p class="text-xs text-stone-500 mb-3">Click blocks to copy. Run these to ensure your environment is ready.</p>
+                    
+                    <div class="space-y-3">
+                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">
+                            which tcpdump<br>tcpdump --version
+                        </div>
+                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">
+                            wireshark --version
+                        </div>
+                        <p class="text-xs text-stone-500 mt-2">If missing (Debian/Ubuntu):</p>
+                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">
+                            sudo apt install tcpdump wireshark
+                        </div>
+                        <p class="text-xs text-stone-500 mt-2">Add user to wireshark group:</p>
+                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">
+                            sudo usermod -aG wireshark $USER<br>newgrp wireshark
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="view-lab" class="view-section hidden animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="p-6 bg-stone-50 border-b border-stone-200">
+                    <h2 class="text-2xl font-bold text-stone-800">Active Laboratory Workbench</h2>
+                    <p class="text-stone-600 text-sm mt-2"><strong>Purpose of this section:</strong> This interactive workbench houses the 5 hours of practical lab tasks. It is designed sequentially. Complete each tab before moving to the next, as subsequent tasks rely on data generated in earlier ones. Follow the instructions, run the commands, and capture the requested screenshots for your final report.</p>
+                </div>
+                
+                <div class="flex flex-wrap border-b border-stone-200 bg-white">
+                    <button class="lab-tab-btn flex-1 py-3 px-4 text-sm font-bold text-teal-700 border-b-2 border-teal-600 bg-teal-50/30" data-task="A1">Task A1 (40m)</button>
+                    <button class="lab-tab-btn flex-1 py-3 px-4 text-sm font-bold text-stone-500 hover:bg-stone-50 border-b-2 border-transparent" data-task="A2">Task A2 (40m)</button>
+                    <button class="lab-tab-btn flex-1 py-3 px-4 text-sm font-bold text-stone-500 hover:bg-stone-50 border-b-2 border-transparent" data-task="A3">Task A3 (40m)</button>
+                    <button class="lab-tab-btn flex-1 py-3 px-4 text-sm font-bold text-stone-500 hover:bg-stone-50 border-b-2 border-transparent" data-task="A4">Task A4 (30m)</button>
+                    <button class="lab-tab-btn flex-1 py-3 px-4 text-sm font-bold text-stone-500 hover:bg-stone-50 border-b-2 border-transparent" data-task="A5">Task A5 (30m)</button>
+                    <button class="lab-tab-btn flex-1 py-3 px-4 text-sm font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border-b-2 border-transparent" data-task="B">Part B (2h)</button>
+                </div>
+
+                <div class="p-6 md:p-8">
+                    
+                    <div id="task-A1" class="task-content block animate-fade-in">
+                        <h3 class="text-xl font-bold mb-2">Live capture and BPF filtering with tcpdump</h3>
+                        <p class="text-stone-600 mb-6"><strong>Objective:</strong> capture a few minutes of traffic on your lab interface, and learn to slice it down with BPF expressions.</p>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-4">1</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold mb-2">List interfaces and pick the lab one:</p>
+                                    <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm mb-1" onclick="copyCode(this)">ip a</div>
+                                    <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">sudo tcpdump -D</div>
+                                    <p class="text-xs text-amber-600 mt-2">Note the number/name. NEVER use the production Wi-Fi.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-4">2</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold mb-2">Start a five-minute capture, writing to a file:</p>
+                                    <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">sudo tcpdump -i enp0s8 -w /tmp/labA1.pcap -G 300 -W 1</div>
+                                    <p class="text-xs text-stone-500 mt-2">Generate traffic (web browsing, ping 1.1.1.1) in another terminal while this runs.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-4">3</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold mb-2">Replay the file with filters. Take a screenshot of each output:</p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-xs" onclick="copyCode(this)">tcpdump -r /tmp/labA1.pcap -nn 'tcp and dst port 443'</div>
+                                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-xs" onclick="copyCode(this)">tcpdump -r /tmp/labA1.pcap -nn 'udp port 53'</div>
+                                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-xs" onclick="copyCode(this)">tcpdump -r /tmp/labA1.pcap -nn 'not (port 53 or port 80 or port 443)'</div>
+                                        <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-xs" onclick="copyCode(this)">tcpdump -r /tmp/labA1.pcap -nn 'host 10.0.2.15'</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <h4 class="font-bold text-teal-800 mb-1">Deliverable A1</h4>
+                            <p class="text-sm text-stone-700">Four screenshots (one per filter) + a short paragraph explaining BPF expressions (primitives, qualifiers, boolean operators).</p>
+                        </div>
+                    </div>
+
+                    <div id="task-A2" class="task-content hidden animate-fade-in">
+                        <h3 class="text-xl font-bold mb-2">Same capture, opened in Wireshark</h3>
+                        <p class="text-stone-600 mb-6"><strong>Objective:</strong> move from CLI to GUI, learn display filters, and explore Wireshark dialogs.</p>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-4">1</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold mb-2">Open the file:</p>
+                                    <div class="code-block relative bg-stone-800 text-stone-100 p-3 rounded font-mono text-sm" onclick="copyCode(this)">wireshark /tmp/labA1.pcap &</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-4">2</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold mb-2">Apply Display Filters (Re-create Task A1):</p>
+                                    <ul class="font-mono text-sm space-y-1 bg-stone-100 p-4 rounded text-stone-800 border border-stone-200">
+                                        <li>tcp.dstport == 443</li>
+                                        <li>dns</li>
+                                        <li>not (tcp.port == 80 or tcp.port == 443 or udp.port == 53)</li>
+                                        <li>ip.addr == 10.0.2.15</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-4">3</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold mb-2">Walk through menus & screenshot each:</p>
+                                    <ul class="list-disc pl-5 text-sm space-y-2 text-stone-700">
+                                        <li><strong>Statistics → Conversations</strong> (who is talking, how much)</li>
+                                        <li><strong>Statistics → Endpoints</strong> (every IP address)</li>
+                                        <li><strong>Statistics → Protocol Hierarchy</strong> (bytes per protocol)</li>
+                                        <li><strong>Statistics → I/O Graph</strong> (packets/sec over time)</li>
+                                        <li><strong>File → Export Objects → HTTP</strong> (extract unencrypted files)</li>
+                                        <li><strong>Right-click TCP packet → Follow → TCP Stream</strong> (compare plain HTTP vs HTTPS)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <h4 class="font-bold text-teal-800 mb-1">Deliverable A2</h4>
+                            <p class="text-sm text-stone-700">Five screenshots (one per menu) + half-page note comparing capture filters (BPF) vs display filters.</p>
+                        </div>
+                    </div>
+
+                    <div id="task-A3" class="task-content hidden animate-fade-in">
+                        <h3 class="text-xl font-bold mb-2">Hunting Anomalies</h3>
+                        <p class="text-stone-600 mb-6"><strong>Objective:</strong> find traffic that does not belong using a Malware-Traffic-Analysis.net sample PCAP.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                            <div>
+                                <h4 class="font-bold text-lg mb-4 border-b pb-2">Three Anomaly Patterns</h4>
+                                <ul class="space-y-4">
+                                    <li class="bg-stone-50 p-4 rounded border border-stone-200">
+                                        <strong class="text-teal-800 block mb-1">(a) Unusual Ports</strong>
+                                        <p class="text-sm text-stone-600 mb-2">Look for outbound on 4444, 8080. Sort by frequency.</p>
+                                        <code class="text-xs bg-stone-200 px-1 py-0.5 rounded break-all">tcp.dstport > 1024 and not (tcp.dstport in {443, 8443, 3389, 5060})</code>
+                                    </li>
+                                    <li class="bg-stone-50 p-4 rounded border border-stone-200">
+                                        <strong class="text-teal-800 block mb-1">(b) High-Volume Flows</strong>
+                                        <p class="text-sm text-stone-600">A single IP carrying 70% of bytes. Use Statistics → Conversations, sort by bytes.</p>
+                                    </li>
+                                    <li class="bg-stone-50 p-4 rounded border border-stone-200">
+                                        <strong class="text-teal-800 block mb-1">(c) Beaconing</strong>
+                                        <p class="text-sm text-stone-600">Steady drumbeat callback to C2. Filter convo, use I/O Graph (1s interval).</p>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-white border border-stone-200 rounded shadow-sm p-4 flex flex-col">
+                                <h4 class="font-bold text-sm text-stone-500 mb-2 uppercase tracking-wider">Simulation: I/O Graph Beacon Pattern</h4>
+                                <p class="text-xs text-stone-600 mb-4">This dynamic chart illustrates what a C2 beacon looks like when plotted over time. Notice the highly regular, repeating spikes representing small, periodic bursts of packets sent by the infected host.</p>
+                                <div class="chart-container flex-grow" style="height: 250px;">
+                                    <canvas id="beaconChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <h4 class="font-bold text-teal-800 mb-1">Deliverable A3</h4>
+                            <p class="text-sm text-stone-700">For each pattern (3 total): one annotated screenshot + short paragraph (what you saw, why benign is unlikely, next steps).</p>
+                        </div>
+                    </div>
+
+                    <div id="task-A4" class="task-content hidden animate-fade-in">
+                        <h3 class="text-xl font-bold mb-2">Correlating packets with other log sources</h3>
+                        <p class="text-stone-600 mb-6"><strong>Objective:</strong> practise turning a "the packets say so" finding into a multi-source argument using Firewall, IDS/IPS, and Router logs.</p>
+                        
+                        <div class="overflow-x-auto border border-stone-200 rounded-lg mb-6">
+                            <table class="min-w-full divide-y divide-stone-200 bg-white text-sm">
+                                <thead class="bg-stone-100">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-stone-700">Time (UTC)</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-stone-700">Source</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-stone-700">Evidence</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-stone-700">What it confirms</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-stone-200">
+                                    <tr>
+                                        <td class="px-4 py-3 text-stone-600 whitespace-nowrap">2026-05-12 14:03:12</td>
+                                        <td class="px-4 py-3 font-medium text-stone-800">PCAP, frame 1432</td>
+                                        <td class="px-4 py-3 font-mono text-xs text-stone-600">TCP SYN, 10.0.0.15 → 198.51.100.7:4444</td>
+                                        <td class="px-4 py-3 text-stone-600">Suspect beacon observed</td>
+                                    </tr>
+                                    <tr class="bg-stone-50">
+                                        <td class="px-4 py-3 text-stone-600 whitespace-nowrap">2026-05-12 14:03:12</td>
+                                        <td class="px-4 py-3 font-medium text-stone-800">Firewall log</td>
+                                        <td class="px-4 py-3 font-mono text-xs text-stone-600">pass in on em0 ... 10.0.0.15.49321 > 198.51.100.7.4444</td>
+                                        <td class="px-4 py-3 text-stone-600">Firewall allowed it</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-stone-600 whitespace-nowrap">2026-05-12 14:03:13</td>
+                                        <td class="px-4 py-3 font-medium text-stone-800">Suricata alert</td>
+                                        <td class="px-4 py-3 font-mono text-xs text-stone-600">SID 2027865 "ET MALWARE Cobalt Strike Beacon"</td>
+                                        <td class="px-4 py-3 text-stone-600">IDS classified it as malicious</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <h4 class="font-bold text-teal-800 mb-1">Deliverable A4</h4>
+                            <p class="text-sm text-stone-700">One filled-in correlation table with at least three rows validating your finding from A3.</p>
+                        </div>
+                    </div>
+
+                    <div id="task-A5" class="task-content hidden animate-fade-in">
+                        <h3 class="text-xl font-bold mb-2">Building the incident timeline</h3>
+                        <p class="text-stone-600 mb-6"><strong>Objective:</strong> turn your matrix into a clean chronological narrative (6-10 lines).</p>
+                        
+                        <div class="bg-stone-50 p-6 rounded-lg border border-stone-200 mb-6">
+                            <h4 class="font-bold mb-3">Timeline Rules</h4>
+                            <ul class="list-disc pl-5 space-y-2 text-sm text-stone-700">
+                                <li>Use <strong>UTC</strong> timestamps to avoid timezone confusion.</li>
+                                <li>One sentence, present tense, neutral tone per event.</li>
+                                <li>State the source (PCAP, FW, IDS).</li>
+                                <li>List IoCs (IP, domain, hash).</li>
+                                <li>Include Analyst notes for context.</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <h4 class="font-bold text-teal-800 mb-1">Deliverable A5</h4>
+                            <p class="text-sm text-stone-700">The 6-10 line timeline + one paragraph "executive summary" written above it.</p>
+                        </div>
+                    </div>
+
+                    <div id="task-B" class="task-content hidden animate-fade-in">
+                        <h3 class="text-xl font-bold mb-2 text-amber-800">Independent analysis on a public PCAP</h3>
+                        <p class="text-stone-600 mb-6"><strong>Objective:</strong> demonstrate independent thinking by applying A1-A5 techniques to a new trace.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white border border-stone-200 p-5 rounded-lg">
+                                <h4 class="font-bold text-lg border-b pb-2 mb-3 flex items-center"><span class="text-xl mr-2">🎯</span> 1. Pick a Source</h4>
+                                <ul class="list-disc pl-5 text-sm space-y-2 text-stone-700">
+                                    <li><strong>DDoS Trace:</strong> Look for SYN-flood, UDP amp from SecRepo or CAIDA dataset.</li>
+                                    <li><strong>Intrusion Trace:</strong> A new exercise from Malware-Traffic-Analysis.net.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-white border border-stone-200 p-5 rounded-lg">
+                                <h4 class="font-bold text-lg border-b pb-2 mb-3 flex items-center"><span class="text-xl mr-2">📝</span> 2. Analyze & Document</h4>
+                                <ul class="list-decimal pl-5 text-sm space-y-2 text-stone-700">
+                                    <li>Describe environment subnets/roles.</li>
+                                    <li>Identify the attack pattern.</li>
+                                    <li>Validate using PCAP + Readme info.</li>
+                                    <li>Produce short timeline (6-10 events).</li>
+                                    <li>Suggest 1 containment action & 1 detection rule (e.g., Snort/Suricata syntax).</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <h4 class="font-bold text-amber-800 mb-1">Deliverable Part B</h4>
+                            <p class="text-sm text-stone-700">Incorporate all 5 documentation points into your final report. This is heavily weighted (25%).</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="view-report" class="view-section hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-2">Grading Rubric</h2>
+                    <p class="text-stone-600 text-sm mb-6"><strong>Purpose of this section:</strong> To transparently display how your 4-page report will be evaluated. Pay close attention to the visual weight of each category—Independent Analysis and Anomalies carry nearly half the grade.</p>
+                    <div class="chart-container">
+                        <canvas id="rubricChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-3 bg-stone-50 border border-stone-200 rounded text-center text-sm font-bold text-stone-700">
+                        Total: 100 Points | Passing Threshold: 60%
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                        <h2 class="text-xl font-bold text-stone-800 mb-4 border-b pb-2">Formatting Checklist</h2>
+                        <ul class="space-y-2 text-sm text-stone-700">
+                            <li class="flex items-center"><span class="text-green-600 mr-2">✓</span> Maximum 4 pages of A4 (including cover/refs).</li>
+                            <li class="flex items-center"><span class="text-green-600 mr-2">✓</span> Body text 11pt, single-spaced. Monospace for code.</li>
+                            <li class="flex items-center"><span class="text-green-600 mr-2">✓</span> Numbered headings, page numbers on every page.</li>
+                            <li class="flex items-center"><span class="text-green-600 mr-2">✓</span> Submitted ONLY as PDF.</li>
+                            <li class="flex items-center"><span class="text-green-600 mr-2">✓</span> Late penalty: 10% per calendar day.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                        <h2 class="text-xl font-bold text-stone-800 mb-4 border-b pb-2">Report Structure (Chapters)</h2>
+                        <ol class="list-decimal pl-5 space-y-1 text-sm text-stone-700 font-medium">
+                            <li>Executive summary</li>
+                            <li>Scope and methodology</li>
+                            <li>Findings — anomalies observed (Task A3)</li>
+                            <li>Findings — cross-source validation (Task A4)</li>
+                            <li>Incident timeline (Task A5)</li>
+                            <li>Independent analysis (Part B)</li>
+                            <li>Limitations and lessons learned</li>
+                            <li>References</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-stone-800 text-stone-100 p-6 rounded-2xl shadow-sm mt-8">
+                <h3 class="text-xl font-bold mb-4 text-teal-400">Critical: Screenshots & Citations</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <p class="mb-2"><strong>Screenshots:</strong> One per finding. Annotate them (draw colored boxes). Add captions below. Redact personal info. Save as PNG.</p>
+                        <p><strong>Citations:</strong> Every external reference must be a clickable hyperlink. Quote verbatim properly. Cite generated figures (e.g., "Generated by J. Doe").</p>
+                    </div>
+                    <div class="bg-stone-900 p-4 rounded border border-stone-700">
+                        <h4 class="text-amber-400 font-bold mb-1">Plagiarism</h4>
+                        <p class="text-stone-300">Copy-pasting text without attribution, stealing screenshots, or reusing reports = failure and academic report. LLM use for brainstorming is fine, but words/screenshots MUST be yours and LLM use must be disclosed.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-8 text-center text-sm">
+        <p>&copy; 2026 Cyber.SoHo Educational Hub</p>
+        <p class="mt-1 italic">From the Industry to the Classroom — Building the IT's Future, Today and Together!</p>
+    </footer>
+
+    <script>
+        // State & Navigation Logic
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const viewSections = document.querySelectorAll('.view-section');
+
+        function switchView(targetId) {
+            viewSections.forEach(section => {
+                section.classList.add('hidden');
+                section.classList.remove('block');
+            });
+            document.getElementById(targetId).classList.remove('hidden');
+            document.getElementById(targetId).classList.add('block');
+
+            navBtns.forEach(btn => {
+                if(btn.dataset.target === targetId) {
+                    btn.classList.add('text-teal-700', 'border-teal-700');
+                    btn.classList.remove('text-stone-500', 'border-transparent');
+                } else {
+                    btn.classList.remove('text-teal-700', 'border-teal-700');
+                    btn.classList.add('text-stone-500', 'border-transparent');
+                }
+            });
+            
+            // Re-render chart if switching to report view to fix sizing issues
+            if(targetId === 'view-report' && rubricChartInstance) {
+                rubricChartInstance.resize();
+            }
+        }
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchView(btn.dataset.target));
+        });
+
+        // Lab Tasks Tab Logic
+        const labTabBtns = document.querySelectorAll('.lab-tab-btn');
+        const taskContents = document.querySelectorAll('.task-content');
+
+        labTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTask = 'task-' + btn.dataset.task;
+                
+                // Hide all contents
+                taskContents.forEach(content => {
+                    content.classList.add('hidden');
+                    content.classList.remove('block');
+                });
+                
+                // Show target content
+                document.getElementById(targetTask).classList.remove('hidden');
+                document.getElementById(targetTask).classList.add('block');
+
+                // Update styling
+                labTabBtns.forEach(b => {
+                    if (b.dataset.task === 'B') {
+                        b.classList.remove('bg-amber-100', 'border-amber-600');
+                        b.classList.add('bg-amber-50', 'border-transparent');
+                    } else {
+                        b.classList.remove('text-teal-700', 'border-teal-600', 'bg-teal-50/30');
+                        b.classList.add('text-stone-500', 'border-transparent');
+                    }
+                });
+
+                if (btn.dataset.task === 'B') {
+                    btn.classList.remove('bg-amber-50', 'border-transparent');
+                    btn.classList.add('bg-amber-100', 'border-amber-600');
+                } else {
+                    btn.classList.remove('text-stone-500', 'border-transparent');
+                    btn.classList.add('text-teal-700', 'border-teal-600', 'bg-teal-50/30');
+                }
+                
+                // resize beacon chart if task A3 is selected
+                if(btn.dataset.task === 'A3' && beaconChartInstance) {
+                   beaconChartInstance.resize();
+                }
+            });
+        });
+
+        // Copy Code to Clipboard Function
+        function copyCode(element) {
+            const textToCopy = element.innerText.replace("📋 Click to copy", "").trim();
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalBg = element.style.backgroundColor;
+                element.style.backgroundColor = '#0D9488'; // Teal
+                setTimeout(() => {
+                    element.style.backgroundColor = originalBg;
+                }, 300);
+            });
+        }
+
+        // Charts Initialization
+        let rubricChartInstance = null;
+        let beaconChartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 1. Time Budget Doughnut Chart
+            const ctxTime = document.getElementById('timeChart').getContext('2d');
+            new Chart(ctxTime, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Guided Lab (A1-A5)', 'Independent (B)', 'Homework/Report (C)'],
+                    datasets: [{
+                        data: [3, 2, 3],
+                        backgroundColor: ['#0D9488', '#F59E0B', '#44403C'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'system-ui' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + ' hours';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // 2. Grading Rubric Bar Chart
+            const ctxRubric = document.getElementById('rubricChart').getContext('2d');
+            rubricChartInstance = new Chart(ctxRubric, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        ['Independent Analysis', '(Part B)'],
+                        ['Anomaly Findings', '(Task A3)'],
+                        ['Cross-Source Valid.', '(Task A4)'],
+                        ['Report Structure', '& Writing'],
+                        ['Incident Timeline', '(Task A5)'],
+                        ['References &', 'Originality'],
+                        ['Formatting &', 'Delivery']
+                    ],
+                    datasets: [{
+                        label: 'Points',
+                        data: [25, 20, 15, 15, 10, 10, 5],
+                        backgroundColor: [
+                            '#F59E0B', '#0D9488', '#0D9488', '#44403C', '#0D9488', '#44403C', '#A8A29E'
+                        ],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) { return context[0].label.replace(/,/g, ' '); }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { max: 30, grid: { color: '#E5E7EB' } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11, family: 'system-ui' } } }
+                    }
+                }
+            });
+
+            // 3. Simulated Beaconing Line Chart
+            const ctxBeacon = document.getElementById('beaconChart').getContext('2d');
+            
+            // Generate simulated beacon data (spikes every 10 seconds)
+            const timeLabels = Array.from({length: 60}, (_, i) => i);
+            const beaconData = timeLabels.map(t => {
+                if (t % 10 === 0) return Math.floor(Math.random() * 5) + 15; // Spike
+                return Math.floor(Math.random() * 2); // Noise
+            });
+
+            beaconChartInstance = new Chart(ctxBeacon, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: 'Packets/Tick',
+                        data: beaconData,
+                        borderColor: '#0D9488',
+                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHitRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 }, // Disable animation for instantaneous rendering when tab opens
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Time (Seconds)', font: {size: 10} },
+                            grid: { display: false },
+                            ticks: { maxTicksLimit: 10 }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Packets', font: {size: 10} },
+                            beginAtZero: true,
+                            max: 25
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
