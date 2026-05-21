@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>00. GNS3-Software_Usage</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="gns3-networking-lab-vm-debian-software-usage-guide">GNS3
+Networking Lab VM — DEBIAN’ Software Usage Guide ! :</h1>
+<p><em>Debian 13.4 XFCE · VirtualBox 7.2.8 · GNS3 3.0.6 · May
+2026</em></p>
+<hr />
+<h2 id="web-dashboards-summary">Web Dashboards Summary</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>URL</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Netdata</td>
+<td>http://localhost:19999</td>
+<td>Real-time performance</td>
+</tr>
+<tr class="even">
+<td>Cockpit</td>
+<td>https://localhost:9090</td>
+<td>System management</td>
+</tr>
+<tr class="odd">
+<td>Portainer</td>
+<td>https://localhost:9443</td>
+<td>Docker management</td>
+</tr>
+<tr class="even">
+<td>Webmin</td>
+<td>https://localhost:10000</td>
+<td>Full admin panel</td>
+</tr>
+<tr class="odd">
+<td>Glances</td>
+<td>http://localhost:61208</td>
+<td>System monitor (run: <code>glances -w</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="tool-usage-guide">Tool Usage Guide</h2>
+<hr />
+<h3 id="system-monitors">System Monitors</h3>
+<h4 id="btop-all-in-one-tui-monitor">btop — All-in-one TUI monitor</h4>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">btop</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: q=quit, F2=setup, m=memory, n=network, p=process</span></span></code></pre></div>
+<h4 id="bottom-btm-modern-htop-with-graphs">bottom (btm) — Modern htop
+with graphs</h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">btm</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: q=quit, Tab=switch panels, f=filter, s=sort</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># dd=kill process, c=CPU sort, m=RAM sort</span></span></code></pre></div>
+<h4 id="glances-monitor-with-web-interface">glances — Monitor with web
+interface</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">glances</span>              <span class="co"># TUI mode</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">glances</span> <span class="at">-w</span>           <span class="co"># Web server → http://localhost:61208</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">glances</span> <span class="at">--export</span> csv <span class="co"># Export stats to CSV</span></span></code></pre></div>
+<h4 id="htop-classic-interactive-monitor">htop — Classic interactive
+monitor</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">htop</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># F5=tree view, F6=sort, F9=kill, F10=quit</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># u=filter by user, /=search</span></span></code></pre></div>
+<h4 id="nmon-performance-monitor-with-logging">nmon — Performance
+monitor with logging</h4>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nmon</span>                 <span class="co"># Interactive TUI</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nmon</span> <span class="at">-f</span> <span class="at">-s</span> 5 <span class="at">-c</span> 60  <span class="co"># Log to file (every 5s, 60 times)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: c=CPU, m=memory, n=network, d=disk, t=top processes</span></span></code></pre></div>
+<h4 id="s-tui-cpu-frequency-stress-tui">s-tui — CPU frequency + stress
+TUI</h4>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">s-tui</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Shows CPU frequency, utilisation, temperature</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Built-in stress test mode</span></span></code></pre></div>
+<h4 id="fastfetch-system-info">fastfetch — System info</h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fastfetch</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">fastfetch</span> <span class="at">--logo</span>    <span class="co"># With distro logo</span></span></code></pre></div>
+<hr />
+<h3 id="disk-tools">Disk Tools</h3>
+<h4 id="ncdu-interactive-disk-usage">ncdu — Interactive disk usage</h4>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ncdu</span> /              <span class="co"># Scan root filesystem</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ncdu</span> ~              <span class="co"># Scan home directory</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: d=delete, i=info, q=quit, /=select</span></span></code></pre></div>
+<h4 id="duf-modern-df-replacement">duf — Modern df replacement</h4>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">duf</span>                 <span class="co"># Show all mounts</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">duf</span> /home           <span class="co"># Specific path</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">duf</span> <span class="at">--only</span> local    <span class="co"># Local filesystems only</span></span></code></pre></div>
+<h4 id="dust-modern-du-replacement">dust — Modern du replacement</h4>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dust</span>                <span class="co"># Current directory usage</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">dust</span> /var           <span class="co"># Specific directory</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dust</span> <span class="at">-n</span> 20          <span class="co"># Top 20 items</span></span></code></pre></div>
+<h4 id="ioping-disk-latency-tester">ioping — Disk latency tester</h4>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ioping</span> .            <span class="co"># Test current disk latency</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ioping</span> <span class="at">-c</span> 10 /      <span class="co"># 10 requests to root</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ioping</span> <span class="at">-R</span> /dev/sda  <span class="co"># Disk seek rate test</span></span></code></pre></div>
+<h4 id="gsmartcontrol-hddssd-health-gui">gsmartcontrol — HDD/SSD health
+GUI</h4>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gsmartcontrol</span>       <span class="co"># Launch GUI</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># View SMART data, run tests, check health</span></span></code></pre></div>
+<hr />
+<h3 id="network-tools">Network Tools</h3>
+<h4 id="bandwhich-per-process-bandwidth-tui">bandwhich — Per-process
+bandwidth TUI</h4>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> bandwhich      <span class="co"># Show bandwidth per process/connection</span></span></code></pre></div>
+<h4 id="gping-visual-ping-with-graph">gping — Visual ping with
+graph</h4>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gping</span> 8.8.8.8              <span class="co"># Ping with graph</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gping</span> google.com 1.1.1.1   <span class="co"># Multiple hosts</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gping</span> <span class="at">--cmd</span> <span class="st">&quot;curl google.com&quot;</span></span></code></pre></div>
+<h4 id="trippy-modern-traceroute-tui">trippy — Modern traceroute
+TUI</h4>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> trip 8.8.8.8</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> trip <span class="at">--protocol</span> udp google.com</span></code></pre></div>
+<h4 id="termshark-terminal-wireshark-tui">termshark — Terminal Wireshark
+TUI</h4>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> termshark <span class="at">-i</span> enp0s3           <span class="co"># Capture on interface</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> termshark <span class="at">-r</span> file.pcap        <span class="co"># Read pcap file</span></span></code></pre></div>
+<h4 id="nload-real-time-bandwidth-per-interface">nload — Real-time
+bandwidth per interface</h4>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nload</span>               <span class="co"># All interfaces</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nload</span> enp0s3        <span class="co"># Specific interface</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: arrows=switch interface, F2=options</span></span></code></pre></div>
+<h4 id="nethogs-per-process-network-usage">nethogs — Per-process network
+usage</h4>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nethogs</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nethogs enp0s3</span></code></pre></div>
+<h4 id="iftop-real-time-connection-monitor">iftop — Real-time connection
+monitor</h4>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iftop</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iftop <span class="at">-i</span> enp0s3 <span class="at">-n</span>  <span class="co"># No DNS resolution</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: n=hostname/IP, p=ports, s=sort, q=quit</span></span></code></pre></div>
+<h4 id="bmon-bandwidth-monitor-tui">bmon — Bandwidth monitor TUI</h4>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bmon</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">bmon</span> <span class="at">-p</span> enp0s3</span></code></pre></div>
+<h4 id="kdig-dns-lookup-tool">kdig — DNS lookup tool</h4>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">kdig</span> google.com           <span class="co"># Basic DNS lookup</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kdig</span> <span class="at">-T</span> google.com        <span class="co"># DNS trace</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">kdig</span> MX gmail.com         <span class="co"># Mail records</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ex">kdig</span> @8.8.8.8 google.com  <span class="co"># Use specific DNS server</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kdig</span> <span class="at">-d</span> google.com        <span class="co"># Debug mode</span></span></code></pre></div>
+<p>Aliased as <code>dog</code> and <code>doggo</code>.</p>
+<h4 id="nmtui-networkmanager-tui">nmtui — NetworkManager TUI</h4>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nmtui</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit connections, activate/deactivate, set hostname</span></span></code></pre></div>
+<h4 id="nmap-network-scanner">nmap — Network scanner</h4>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> 192.168.1.0/24          <span class="co"># Scan subnet</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sV</span> <span class="at">-p</span> 1-65535 host     <span class="co"># Full port scan with versions</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-A</span> target               <span class="co"># Aggressive scan (OS detect + scripts)</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nmap <span class="at">-sS</span> target         <span class="co"># Stealth SYN scan</span></span></code></pre></div>
+<h4 id="zenmap-nmap-gui">Zenmap — Nmap GUI</h4>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">zenmap</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Save profiles, visualise network topology</span></span></code></pre></div>
+<h4 id="netdiscover-arp-network-scanner">netdiscover — ARP network
+scanner</h4>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> netdiscover <span class="at">-r</span> 192.168.1.0/24</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> netdiscover <span class="at">-i</span> enp0s3</span></code></pre></div>
+<h4 id="masscan-ultra-fast-port-scanner">masscan — Ultra-fast port
+scanner</h4>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> masscan <span class="at">-p</span> 80,443 192.168.0.0/16 <span class="at">--rate</span><span class="op">=</span>1000</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> masscan <span class="at">-p</span> 1-65535 target <span class="at">--rate</span><span class="op">=</span>10000</span></code></pre></div>
+<h4 id="xh-modern-http-client">xh — Modern HTTP client</h4>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">xh</span> GET httpbin.org/get</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">xh</span> POST httpbin.org/post a=1</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="ex">xh</span> <span class="at">-j</span> GET api.github.com       <span class="co"># JSON request</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="ex">xh</span> <span class="at">--headers</span> GET google.com    <span class="co"># Show headers only</span></span></code></pre></div>
+<h4 id="iperf3-bandwidth-testing">iperf3 — Bandwidth testing</h4>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Server side:</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iperf3</span> <span class="at">-s</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Client side:</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="ex">iperf3</span> <span class="at">-c</span> server_ip</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="ex">iperf3</span> <span class="at">-c</span> server_ip <span class="at">-t</span> 30 <span class="at">-P</span> 4  <span class="co"># 30s, 4 parallel streams</span></span></code></pre></div>
+<h4 id="tcpdump-packet-capture">tcpdump — Packet capture</h4>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-i</span> enp0s3              <span class="co"># Capture all traffic</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-i</span> enp0s3 port 80      <span class="co"># HTTP only</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-w</span> capture.pcap        <span class="co"># Save to file</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-r</span> capture.pcap        <span class="co"># Read file</span></span></code></pre></div>
+<hr />
+<h3 id="process-system-tools">Process &amp; System Tools</h3>
+<h4 id="procs-modern-ps-replacement">procs — Modern ps replacement</h4>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">procs</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ex">procs</span> nginx         <span class="co"># Filter by name</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="ex">procs</span> <span class="at">--tree</span>        <span class="co"># Process tree</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="ex">procs</span> <span class="at">--sort</span> cpu    <span class="co"># Sort by CPU</span></span></code></pre></div>
+<h4 id="fd-modern-find-replacement">fd — Modern find replacement</h4>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fd</span> pattern          <span class="co"># Find files matching pattern</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ex">fd</span> <span class="at">-e</span> py            <span class="co"># Find .py files</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="ex">fd</span> <span class="at">-t</span> f             <span class="co"># Files only</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="ex">fd</span> passwd /etc</span></code></pre></div>
+<h4 id="bat-modern-cat-with-syntax-highlighting">bat — Modern cat with
+syntax highlighting</h4>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bat</span> file.py</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">bat</span> /etc/ssh/sshd_config</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="ex">bat</span> <span class="at">--paging</span><span class="op">=</span>never file</span></code></pre></div>
+<h4 id="lnav-log-file-navigator">lnav — Log file navigator</h4>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lnav</span> /var/log/syslog</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lnav</span> /var/log/auth.log</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lnav</span> <span class="pp">*</span>.log</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: /, n=next match, e=errors only, i=info</span></span></code></pre></div>
+<h4 id="tldr-tealdeer-quick-command-help">tldr (tealdeer) — Quick
+command help</h4>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tldr</span> tar</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tldr</span> git</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tldr</span> <span class="at">--update</span></span></code></pre></div>
+<h4 id="stress-ng-system-stress-testing">stress-ng — System stress
+testing</h4>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">stress-ng</span> <span class="at">--cpu</span> 4 <span class="at">--timeout</span> 60s    <span class="co"># CPU stress 60s</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">stress-ng</span> <span class="at">--vm</span> 2 <span class="at">--vm-bytes</span> 512M   <span class="co"># RAM stress</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="ex">stress-ng</span> <span class="at">--all</span> 1 <span class="at">--timeout</span> 30s    <span class="co"># All resources</span></span></code></pre></div>
+<h4 id="memtester-ram-fault-finder">memtester — RAM fault finder</h4>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> memtester 512M 3   <span class="co"># Test 512MB, 3 iterations</span></span></code></pre></div>
+<hr />
+<h3 id="security-tools">Security Tools</h3>
+<h4 id="wireshark-packet-analyzer-gui">Wireshark — Packet analyzer
+GUI</h4>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">wireshark</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="ex">wireshark</span> <span class="at">-i</span> enp0s3</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filters: tcp.port==80, ip.addr==192.168.1.1</span></span></code></pre></div>
+<h4 id="clamtk-antivirus-gui">ClamTK — Antivirus GUI</h4>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">clamtk</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Scan files, update definitions, schedule scans</span></span></code></pre></div>
+<h4 id="rkhunter-rootkit-scanner">rkhunter — Rootkit scanner</h4>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkhunter <span class="at">--check</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkhunter <span class="at">--check</span> <span class="at">--skip-keypress</span>  <span class="co"># Non-interactive</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rkhunter <span class="at">--propupd</span>                <span class="co"># Update file properties DB</span></span></code></pre></div>
+<h4 id="lynis-security-audit">lynis — Security audit</h4>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lynis audit system</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lynis audit system <span class="at">--quick</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Report saved to /var/log/lynis.log</span></span></code></pre></div>
+<h4 id="fail2ban-brute-force-protection">fail2ban — Brute force
+protection</h4>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fail2ban-client status</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fail2ban-client status sshd</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fail2ban-client set sshd unbanip IP</span></code></pre></div>
+<h4 id="gufw-firewall-gui">GUFW — Firewall GUI</h4>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gufw</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add/remove rules, enable/disable UFW graphically</span></span></code></pre></div>
+<h4 id="auditd-system-audit-logs">auditd — System audit logs</h4>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> aureport <span class="at">--summary</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> aureport <span class="at">--failed</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ausearch <span class="at">-k</span> sudoers</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ausearch <span class="at">-ui</span> 1000</span></code></pre></div>
+<hr />
+<h3 id="container-tools">Container Tools</h3>
+<h4 id="ctop-docker-container-monitor-tui">ctop — Docker container
+monitor TUI</h4>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ctop</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: q=quit, s=stop, r=restart, l=logs, e=exec</span></span></code></pre></div>
+<h4 id="portainer-docker-gui">Portainer — Docker GUI</h4>
+<pre><code>Access: https://localhost:9443
+# Manage containers, images, volumes, networks
+# Deploy stacks, view logs, exec into containers</code></pre>
+<hr />
+<h3 id="file-managers">File Managers</h3>
+<h4 id="ranger-terminal-file-manager-with-previews">ranger — Terminal
+file manager with previews</h4>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ranger</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Keys: h/j/k/l=navigate, Enter=open, q=quit</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># yy=copy, dd=cut, pp=paste, :delete=delete</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co"># zh=show hidden, zp=toggle preview</span></span></code></pre></div>
+<h4 id="midnight-commander-mc-classic-tui-file-manager">Midnight
+Commander (mc) — Classic TUI file manager</h4>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mc</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co"># F5=copy, F6=move, F8=delete, F10=quit</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Tab=switch panel, Insert=select files</span></span></code></pre></div>
+</body>
+</html>
