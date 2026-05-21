@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insider Threats Study Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* 3D Flip Card CSS */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-flip-container { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .flipped .card-flip-container { transform: rotateY(180deg); }
+        
+        /* Custom Scrollbar for Quiz */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-slate-900 text-white py-8 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h1 class="text-3xl font-bold tracking-tight">Insider Threats: Study Hub</h1>
+            <p class="text-slate-400 mt-2">Master the profiles, red flags, and investigative processes.</p>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl mx-auto w-full px-4 py-8">
+        <div class="flex space-x-2 border-b border-stone-200 mb-8">
+            <button onclick="switchTab('flashcards')" id="tab-flashcards" class="px-6 py-3 text-sm font-semibold rounded-t-lg transition-colors bg-white text-slate-800 border-t border-l border-r border-stone-200 shadow-sm relative top-[1px]">
+                📇 Flashcards (25)
+            </button>
+            <button onclick="switchTab('quiz')" id="tab-quiz" class="px-6 py-3 text-sm font-semibold rounded-t-lg transition-colors text-stone-500 hover:text-slate-800 hover:bg-stone-100">
+                📝 Practice Quiz (10)
+            </button>
+        </div>
+
+        <section id="sec-flashcards" class="block">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">Concept Review</h2>
+                    <span id="fc-counter" class="text-sm font-medium text-stone-500 bg-stone-100 px-3 py-1 rounded-full">1 / 25</span>
+                </div>
+
+                <div class="perspective-1000 w-full h-80 sm:h-64 cursor-pointer" onclick="flipCard()">
+                    <div id="fc-container" class="card-flip-container relative w-full h-full transform-style-3d shadow-lg rounded-xl">
+                        <div class="absolute inset-0 backface-hidden bg-white border-2 border-slate-100 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                            <span class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-4">Front</span>
+                            <h3 id="fc-front" class="text-2xl font-bold text-slate-800"></h3>
+                        </div>
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 bg-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                            <span class="text-xs uppercase tracking-widest text-slate-400 font-bold mb-4">Back</span>
+                            <p id="fc-back" class="text-xl text-white font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-center gap-4 mt-8">
+                    <button onclick="prevCard()" class="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-medium transition-colors">← Previous</button>
+                    <button onclick="flipCard()" class="px-6 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg font-bold transition-colors">Flip Card</button>
+                    <button onclick="nextCard()" class="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg font-medium transition-colors">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-quiz" class="hidden space-y-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 mb-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-2">Knowledge Check</h2>
+                <p class="text-stone-600">Apply what you've learned. Select an answer to see the rationale.</p>
+            </div>
+            
+            <div id="quiz-container" class="space-y-6">
+                </div>
+        </section>
+    </main>
+
+    <script>
+        // --- DATA: Flashcards ---
+        const flashcards = [
+            { front: "Insider Threat (CISA Definition)", back: "The risk that someone with authorised access uses it, wittingly or unwittingly, to harm the organisation." },
+            { front: "Malicious Insider", back: "An insider who wants to do harm and knows what they are doing, often motivated by revenge, money, ideology, or ego." },
+            { front: "Negligent Insider", back: "An insider with no intent to harm whose actions result from total carelessness, such as clicking phishing links or losing devices." },
+            { front: "Compromised Insider", back: "An unaware user whose identity is worn by an attacker, often acquired via phishing or infostealer malware." },
+            { front: "Insider profile responsible for the largest volume of incidents", back: "Negligent insiders (>55% of all insider events)." },
+            { front: "Primary defence focus for Malicious Insiders", back: "UEBA on resignation/firing windows, just-in-time access, and tight off-boarding." },
+            { front: "Primary defence focus for Negligent Insiders", back: "Training, safe defaults, and friction-removing controls." },
+            { front: "Primary defence focus for Compromised Insiders", back: "MFA, EDR, impossible-travel detection, and conditional access/session controls." },
+            { front: "Biggest single behavioural red flag", back: "A resignation announced in the last 60 days (highest risk in the last 30 days)." },
+            { front: "Bright red technical flag", back: "First-time use of a dormant high-privilege account." },
+            { front: "The Correlation Rule for investigating insider threats", back: "Three correlated red flags (at least one behavioural and one technical) in the same user within a 7-14 day window." },
+            { front: "Function of Data Loss Prevention (DLP)", back: "Watches data by reading actual content on the network or endpoint and matching it against policies to block, quarantine, or alert." },
+            { front: "Function of User & Entity Behaviour Analytics (UEBA)", back: "Watches people by learning a user's normal baseline and scoring relative deviations." },
+            { front: "Function of Access Monitoring (IAM/PAM)", back: "Watches rights to enforce the principle of least privilege." },
+            { front: "What is the formula for calculating the UEBA z-score?", back: "$z = \\frac{today - mean}{stdev}$" },
+            { front: "Classic alert threshold for UEBA z-scores", back: "$z \\ge 3$" },
+            { front: "The Three Investigation Gates", back: "Legal, Ethical, and HR." },
+            { front: "Legal Gate Requirements", back: "Documented lawful basis to monitor, employee acceptance, adherence to laws, chain of custody, and written counsel sign-off." },
+            { front: "Ethical Gate Requirements", back: "Proportionality, least-intrusive method, bias check, reversibility, and preservation of employee dignity." },
+            { front: "HR Gate Requirements", back: "Review of performance record, EAP consideration, adherence to disciplinary procedures, and manager briefed on a need-to-know basis." },
+            { front: "Members of the Cross-functional Panel", back: "Security, Legal, HR, and Communications (the manager joins later)." },
+            { front: "Three layers of an Insider Threat Program (ITP)", back: "Governance (top), Operations (middle), and Culture (foundation)." },
+            { front: "Five operational pillars of an ITP", back: "Define, Detect, Assess, Manage, and Learn." },
+            { front: "Just-Culture Model", back: "A workplace culture approach where mistakes are coached and only deliberate harm is punished." },
+            { front: "The one sentence to remember about insider threats", back: "They are a people problem solved by tools, process, law, and culture, managed by a cross-functional panel." }
+        ];
+
+        // --- DATA: Quiz ---
+        const quizData = [
+            {
+                question: "Sarah, an accountant, is rushing to finish a report at a coffee shop and connects to an open Wi-Fi network. Her credentials are stolen, and an attacker later uses them from a foreign IP to access payroll data. Which insider threat profile does this scenario represent, and what is the most effective primary defense?",
+                options: [
+                    { text: "Compromised; MFA and impossible-travel detection.", isCorrect: true, rationale: "Even though carelessness led to the theft, the actual threat event is an external attacker wearing a legitimate identity, which is mitigated by strong authentication controls." },
+                    { text: "Negligent; Security awareness training.", isCorrect: false, rationale: "While training might prevent the initial Wi-Fi connection, it does not detect or stop the active misuse of the stolen credentials by the threat actor." },
+                    { text: "Malicious; UEBA and tight off-boarding.", isCorrect: false, rationale: "The user in this scenario has no intent to harm the organization, making controls designed for deliberate sabotage less relevant." },
+                    { text: "Compromised; DLP and access monitoring.", isCorrect: false, rationale: "While these tools might detect data movement, they do not address the root vulnerability of unauthorized access via stolen credentials as effectively as session controls and MFA." }
+                ]
+            },
+            {
+                question: "A SOC analyst observes that an engineer downloaded 5GB of source code (normally downloads 1GB) on Tuesday. On Thursday, the same engineer logged in at 3 AM. What is the appropriate next step according to the correlation rule?",
+                options: [
+                    { text: "Keep watching the user; this is currently considered noise.", isCorrect: true, rationale: "The scenario only presents technical flags; a valid case requires at least three flags crossing different categories (including a behavioural flag) within a specific time window." },
+                    { text: "Immediately convene the cross-functional panel.", isCorrect: false, rationale: "Convening the panel requires a correlated trigger across different categories, which is missing here." },
+                    { text: "Lock the user's account and confront them.", isCorrect: false, rationale: "Direct confrontation based on partial technical indicators violates the principle of silent investigation and can humiliate an innocent employee." },
+                    { text: "Escalate to the employee's manager for a disciplinary meeting.", isCorrect: false, rationale: "Managers are not utilized for disciplinary meetings based on unverified technical anomalies, as this skips the established investigation gates." }
+                ]
+            },
+            {
+                question: "An analyst is reviewing a UEBA alert. A marketing employee typically exports 10 MB of data daily (mean = 10, stdev = 2). Today, they exported 15 MB. Using the standard formula ($z = \\frac{today - mean}{stdev}$), does this trigger a classic UEBA alert?",
+                options: [
+                    { text: "No, the z-score is 2.5, which is below the alert threshold.", isCorrect: true, rationale: "The calculation (15 - 10) / 2 yields 2.5, which does not meet the classic threshold of 3 or greater required to trigger a standard alert." },
+                    { text: "Yes, the z-score is 5, which exceeds the threshold.", isCorrect: false, rationale: "This calculation incorrectly subtracts the standard deviation before dividing, leading to a false mathematical conclusion." },
+                    { text: "Yes, any export above the mean triggers an alert.", isCorrect: false, rationale: "UEBA relies on statistical deviations rather than absolute values above a mean, otherwise normal daily fluctuations would cause massive alert fatigue." },
+                    { text: "No, the z-score is 1.5, which is normal behavior.", isCorrect: false, rationale: "The mathematical calculation is incorrect, as (15 - 10) / 2 does not equal 1.5." }
+                ]
+            },
+            {
+                question: "HR notifies the security team that an employee is undergoing a severe personal crisis and has suddenly become hostile in meetings. The security team wants to secretly install a keylogger on the employee's laptop to monitor for data theft. Which investigation gate is most explicitly violated by this proposed technical action?",
+                options: [
+                    { text: "The Ethical Gate", isCorrect: true, rationale: "A keylogger captures highly personal information (passwords, private messages) and fails the test of using the least-intrusive method proportional to the suspicion." },
+                    { text: "The Legal Gate", isCorrect: false, rationale: "While potentially legally problematic, the scenario highlights a failure of proportionality and intrusiveness, which are core ethical assessments." },
+                    { text: "The HR Gate", isCorrect: false, rationale: "HR initiated the behavioral flag, but evaluating the technical method of monitoring falls outside HR's primary assessment of performance records and disciplinary procedures." },
+                    { text: "The Correlation Gate", isCorrect: false, rationale: "This is a fabricated gate; the actual gates are Legal, Ethical, and HR." }
+                ]
+            },
+            {
+                question: "A manager provides a list of observations about a team member over the last two months. According to CERT research, which of the following observations presents the highest statistical risk for an insider threat event?",
+                options: [
+                    { text: "The employee formally announced their resignation three weeks ago.", isCorrect: true, rationale: "The 30-day window prior to an employee leaving the company is recognized as the highest-risk period for malicious insider activity." },
+                    { text: "The employee expressed frustration about the new remote work policy.", isCorrect: false, rationale: "While this indicates disgruntlement, it lacks the definitive timeline pressure associated with an impending departure." },
+                    { text: "The employee was recently passed over for a team lead position.", isCorrect: false, rationale: "This is a common trigger for malicious behavior, but a confirmed resignation is a stronger immediate indicator of risk." },
+                    { text: "The employee requested to change their mandatory vacation dates.", isCorrect: false, rationale: "Resistance to mandatory vacation can be a flag, but requesting a date change is often benign administrative friction." }
+                ]
+            },
+            {
+                question: "An alert combining a DLP block, a high UEBA z-score, and a recent behavioral flag points to a specific developer. A cross-functional panel is convened. What role should the developer's direct manager play at this exact moment?",
+                options: [
+                    { text: "They should be briefed on a need-to-know basis and instructed not to confront the employee.", isCorrect: true, rationale: "Managers are kept informed to monitor behavior, but are excluded from early investigative decisions to prevent them from tipping off the employee or acting emotionally." },
+                    { text: "They should lead the cross-functional panel to provide context.", isCorrect: false, rationale: "The panel is strictly led by Security, Legal, HR, and Comms to ensure objective, legally sound decisions without departmental bias." },
+                    { text: "They should immediately pull the employee into a 1-on-1 meeting to ask about the anomalies.", isCorrect: false, rationale: "Confronting an employee before the investigation concludes can destroy evidence, create legal liability, or cause an innocent employee distress." },
+                    { text: "They should be kept completely unaware until the investigation is concluded and closed.", isCorrect: false, rationale: "Managers often need to provide operational context or monitor the employee, making a 'need-to-know' briefing necessary rather than total exclusion." }
+                ]
+            },
+            {
+                question: "A system administrator transfers from the IT infrastructure team to the marketing department. Six months later, their old infrastructure admin account is used to access a sensitive database at 2 AM. Which technical control failure allowed this, and how is this specific action categorized?",
+                options: [
+                    { text: "Failure of Access Monitoring; the use of a dormant high-privilege account is a bright red flag.", isCorrect: true, rationale: "Identity Governance and Administration (IGA) processes failed to revoke unnecessary privileges upon transfer, leaving a highly exploitable account active." },
+                    { text: "Failure of DLP; the export of database records is a medium flag.", isCorrect: false, rationale: "While DLP might detect data movement, the root vulnerability is the active dormant account, which is a much higher severity indicator." },
+                    { text: "Failure of UEBA; the late-night login is an info-level flag.", isCorrect: false, rationale: "UEBA would detect the time anomaly, but the critical failure is the lack of access rights management that allowed the login to succeed in the first place." },
+                    { text: "Failure of EDR; the unauthorized database access is a critical flag.", isCorrect: false, rationale: "EDR focuses on endpoint threats like malware or process injection, not necessarily the misuse of valid, existing credentials." }
+                ]
+            },
+            {
+                question: "An organization purchases a top-tier UEBA tool, integrates it with their SIEM, and creates automated DLP blocking rules. However, when an alert fires, nobody is sure who has the authority to authorize an email search. Which layer of the Insider Threat Program is failing?",
+                options: [
+                    { text: "Layer 1 - Governance", isCorrect: true, rationale: "The lack of an executive sponsor and a defined charter means there is no established authority or risk appetite to guide the investigative process." },
+                    { text: "Layer 2 - Detect", isCorrect: false, rationale: "The detection layer is functioning properly, as evidenced by the successful integration of UEBA, SIEM, and DLP tools." },
+                    { text: "Layer 3 - Culture", isCorrect: false, rationale: "While a confusing environment impacts culture, the specific failure to establish authority and rules is a governance issue, not a psychological safety issue." },
+                    { text: "Layer 2 - Manage", isCorrect: false, rationale: "The manage pillar relies on the rules established by governance; without governance, the management pillar has no framework to operate within." }
+                ]
+            },
+            {
+                question: "A junior developer accidentally commits a hardcoded AWS access key to a public GitHub repository. The key is quickly revoked before any damage is done. Under a 'Just-Culture' model, how should the organization respond?",
+                options: [
+                    { text: "Coach the developer on secret management tools and implement safe defaults in the deployment pipeline.", isCorrect: true, rationale: "This model dictates that mistakes made without malicious intent are treated as coaching opportunities and system design flaws, rather than punishable offenses." },
+                    { text: "Immediately terminate the developer to set a zero-tolerance example for security breaches.", isCorrect: false, rationale: "Punishing honest mistakes creates a culture of fear, leading employees to hide future errors rather than reporting them promptly." },
+                    { text: "Fine the developer but allow them to keep their job with reduced access privileges.", isCorrect: false, rationale: "Financial penalties for unintentional errors violate the psychological safety bedrock required for a healthy security culture." },
+                    { text: "Ignore the incident completely since no actual damage occurred.", isCorrect: false, rationale: "Ignoring the event fails the 'Learn' operational pillar; the organization must still identify the root cause and improve processes." }
+                ]
+            },
+            {
+                question: "The SOC receives an alert that an employee has attached a personal USB drive to their corporate machine. Which of the following statements accurately describes how this single event should be processed based on the red-flag funnel?",
+                options: [
+                    { text: "It is treated as noise and filtered by DLP/UEBA until correlated with other flags.", isCorrect: true, rationale: "A single technical flag does not warrant an investigation on its own; it requires correlation with behavioural flags or other technical anomalies within the same window." },
+                    { text: "It represents a validated case requiring immediate panel review.", isCorrect: false, rationale: "Convening the panel for every single technical anomaly would overwhelm the group and result in investigating innocent employees." },
+                    { text: "It is a behavioural flag that should be immediately reported to HR.", isCorrect: false, rationale: "Using a USB drive is a system-level action detected by tools, classifying it as a technical flag, not an observable human behaviour like disgruntlement." },
+                    { text: "It automatically triggers a CRITICAL severity response if it contains company data.", isCorrect: false, rationale: "Even if data is present, the severity ladder requires combining UEBA spikes (z-scores) or dormant access use to reach a CRITICAL status." }
+                ]
+            }
+        ];
+
+        // --- APP LOGIC ---
+        
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['flashcards', 'quiz'];
+            tabs.forEach(t => {
+                document.getElementById(`sec-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                btn.classList.remove('bg-white', 'text-slate-800', 'border-t', 'border-l', 'border-r', 'shadow-sm', 'relative', 'top-[1px]');
+                btn.classList.add('text-stone-500', 'hover:text-slate-800', 'hover:bg-stone-100');
+            });
+
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('text-stone-500', 'hover:text-slate-800', 'hover:bg-stone-100');
+            activeBtn.classList.add('bg-white', 'text-slate-800', 'border-t', 'border-l', 'border-r', 'shadow-sm', 'relative', 'top-[1px]');
+        }
+
+        // Flashcards Logic
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        function loadCard() {
+            const card = flashcards[currentCardIndex];
+            document.getElementById('fc-front').innerHTML = card.front;
+            document.getElementById('fc-back').innerHTML = card.back;
+            document.getElementById('fc-counter').innerText = `${currentCardIndex + 1} / ${flashcards.length}`;
+            
+            // Re-render math if present
+            if(window.MathJax) { MathJax.typesetPromise(); }
+        }
+
+        function flipCard() {
+            const container = document.getElementById('fc-container').parentElement;
+            container.classList.toggle('flipped');
+            isFlipped = !isFlipped;
+        }
+
+        function nextCard() {
+            if (isFlipped) flipCard();
+            setTimeout(() => {
+                currentCardIndex = (currentCardIndex + 1) % flashcards.length;
+                loadCard();
+            }, isFlipped ? 300 : 0);
+        }
+
+        function prevCard() {
+            if (isFlipped) flipCard();
+            setTimeout(() => {
+                currentCardIndex = (currentCardIndex - 1 + flashcards.length) % flashcards.length;
+                loadCard();
+            }, isFlipped ? 300 : 0);
+        }
+
+        // Quiz Logic
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            
+            quizData.forEach((q, qIndex) => {
+                // Shuffle options
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                
+                let optionsHTML = '';
+                shuffledOptions.forEach((opt, oIndex) => {
+                    const optId = `q${qIndex}-o${oIndex}`;
+                    optionsHTML += `
+                        <button id="btn-${optId}" onclick="checkAnswer(${qIndex}, ${oIndex}, ${opt.isCorrect}, '${optId}')" class="w-full text-left p-4 rounded-xl border-2 border-stone-100 bg-stone-50 hover:bg-stone-100 hover:border-slate-300 transition-all font-medium text-slate-700">
+                            ${opt.text}
+                        </button>
+                        <div id="rat-${optId}" class="hidden mt-2 p-3 text-sm rounded-lg"></div>
+                    `;
+                });
+
+                const qHTML = `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200" id="question-card-${qIndex}">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">${qIndex + 1}. ${q.question}</h3>
+                        <div class="space-y-3">
+                            ${optionsHTML}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += qHTML;
+            });
+        }
+
+        function checkAnswer(qIndex, oIndex, isCorrect, optId) {
+            const btn = document.getElementById(`btn-${optId}`);
+            const ratDiv = document.getElementById(`rat-${optId}`);
+            
+            // Find the original option data to get the rationale
+            const originalOption = quizData[qIndex].options.find(o => o.text === btn.innerText.trim());
+
+            if (isCorrect) {
+                btn.className = "w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 transition-all font-medium text-emerald-900";
+                ratDiv.className = "mt-2 p-3 text-sm rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 block";
+                ratDiv.innerHTML = `<strong>Correct!</strong> ${originalOption.rationale}`;
+                
+                // Disable other buttons for this question
+                const questionCard = document.getElementById(`question-card-${qIndex}`);
+                const buttons = questionCard.querySelectorAll('button');
+                buttons.forEach(b => { if(b.id !== btn.id) b.disabled = true; b.classList.add('opacity-60', 'cursor-not-allowed'); });
+                
+            } else {
+                btn.className = "w-full text-left p-4 rounded-xl border-2 border-rose-400 bg-rose-50 transition-all font-medium text-rose-900";
+                ratDiv.className = "mt-2 p-3 text-sm rounded-lg bg-rose-100 text-rose-800 border border-rose-200 block";
+                ratDiv.innerHTML = `<strong>Incorrect.</strong> ${originalOption.rationale}`;
+            }
+        }
+
+        // Initialize App
+        window.onload = () => {
+            loadCard();
+            renderQuiz();
+        };
+    </script>
+</body>
+</html>
+
+
+

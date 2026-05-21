@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 13 — Insider Threats | Cyber.SoHo Educational Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals & Slate with Semantic Threat Accents (Stone-50 background, Slate-800 primary, Rose-600/Amber-500/Emerald-600 semantic indicators) -->
+    <!-- Application Structure Plan: A single-page scrolling dashboard organized by the narrative flow of incident response: Understanding the Threat (Profiles) -> Detection (Red Flags & Simulator) -> Technical Controls (UEBA Chart) -> Process (Gates) -> Governance (Metrics). This linear but interactive flow guides the user from problem definition to systemic solution, allowing deep dives into specific cases (like Diego or Eve) without losing the big picture. -->
+    <!-- Visualization & Content Choices: 1. Profiles -> Goal: Inform -> Interactive Tabbed Cards -> Click to reveal stories/stats -> Allows comparison without overwhelming text -> Vanilla JS. 2. Red Flag Correlation -> Goal: Compare/Organize -> Interactive Timeline Simulator -> User clicks flags to see correlation -> Active learning of the 3-flag rule -> Vanilla JS/HTML. 3. UEBA Spike -> Goal: Change -> Line Chart -> Shows normal baseline vs anomaly -> Illustrates z-score math visually -> Chart.js. 4. ITP Metrics -> Goal: Inform -> Horizontal Bar Chart -> Displays target vs actual health metrics -> Easy KPI reading -> Chart.js. Confirming NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, .font-heading { font-family: 'Outfit', sans-serif; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+
+        .tab-btn.active {
+            background-color: #1e293b;
+            color: white;
+            border-color: #1e293b;
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .gate-panel { transition: max-height 0.3s ease-out, padding 0.3s ease-out; overflow: hidden; max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .gate-panel.open { max-height: 500px; padding-top: 1rem; padding-bottom: 1rem; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased leading-relaxed">
+
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <span class="text-2xl">🛡️</span>
+                    <span class="font-heading font-bold text-slate-800 text-lg tracking-tight">Cyber.SoHo</span>
+                </div>
+                <div class="hidden md:flex space-x-6 text-sm font-medium text-stone-600">
+                    <a href="#profiles" class="hover:text-rose-600 transition-colors">Profiles</a>
+                    <a href="#red-flags" class="hover:text-rose-600 transition-colors">Red Flags</a>
+                    <a href="#controls" class="hover:text-rose-600 transition-colors">Controls</a>
+                    <a href="#gates" class="hover:text-rose-600 transition-colors">Investigation</a>
+                    <a href="#program" class="hover:text-rose-600 transition-colors">ITP</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-slate-900 text-white py-20 lg:py-28 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 32px 32px;"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="inline-block bg-rose-500/20 border border-rose-500/30 text-rose-300 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase mb-6">
+                Incident Management &middot; Week 8
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight">Day 13: Insider Threats</h1>
+            <p class="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto font-light">
+                Up to now, we studied outsiders trying to get in. From today, the threat may already be inside, with a valid badge and a payslip.
+            </p>
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl text-left inline-block shadow-xl">
+                <p class="text-amber-400 font-semibold mb-2">⚠️ The Hinge Class</p>
+                <p class="text-sm text-slate-300">The conversation with HR — which never happened in the malware lecture — suddenly becomes the most important conversation in the room.</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+
+        <section id="profiles" class="scroll-mt-24">
+            <div class="max-w-3xl mx-auto text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4 font-heading">The Three Profiles</h2>
+                <p class="text-stone-600 text-lg">An insider threat is the risk that someone with authorised access uses it — <em>wittingly or unwittingly</em> — to harm the organisation. Asking "what is an insider threat?" is the wrong question. You must ask: <strong>which of the three is it?</strong></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8" id="profile-tabs">
+                <button onclick="app.setProfile('malicious')" id="btn-malicious" class="tab-btn active w-full py-4 px-6 rounded-xl border-2 border-stone-200 font-semibold text-lg transition-all shadow-sm flex flex-col items-center gap-2">
+                    <span class="text-3xl">🦹</span> Malicious
+                </button>
+                <button onclick="app.setProfile('negligent')" id="btn-negligent" class="tab-btn w-full py-4 px-6 rounded-xl border-2 border-stone-200 font-semibold text-lg transition-all shadow-sm flex flex-col items-center gap-2 bg-white text-stone-600 hover:border-slate-400">
+                    <span class="text-3xl">🤷</span> Negligent
+                </button>
+                <button onclick="app.setProfile('compromised')" id="btn-compromised" class="tab-btn w-full py-4 px-6 rounded-xl border-2 border-stone-200 font-semibold text-lg transition-all shadow-sm flex flex-col items-center gap-2 bg-white text-stone-600 hover:border-slate-400">
+                    <span class="text-3xl">🧟</span> Compromised
+                </button>
+            </div>
+
+            <div id="profile-content" class="bg-white rounded-2xl shadow-xl border border-stone-100 p-8 md:p-12 fade-in">
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div>
+                        <h3 id="p-title" class="text-2xl font-bold text-slate-900 mb-2 font-heading">Wants to do harm. Knows what they are doing.</h3>
+                        <p id="p-intent" class="text-rose-600 font-medium mb-6 uppercase tracking-wider text-sm">Intent: Deliberate Harm</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex gap-4 items-start">
+                                <div class="bg-stone-100 p-2 rounded-lg text-xl">🎯</div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Motive / Triggers</h4>
+                                    <p id="p-motive" class="text-stone-600 text-sm">Revenge, money, ideology, ego. Missed promotion, firing, recruitment by competitor.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="bg-stone-100 p-2 rounded-lg text-xl">📊</div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Volume & Cost</h4>
+                                    <p id="p-stats" class="text-stone-600 text-sm">Small volume, but enormous cost (~US $4.99M average per incident according to IBM 2024).</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="bg-stone-100 p-2 rounded-lg text-xl">🛡️</div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Defence Focus</h4>
+                                    <p id="p-defence" class="text-stone-600 text-sm">UEBA on resignation/firing windows, Just-in-time access, Tight off-boarding.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 relative">
+                        <div class="absolute -top-3 -left-3 bg-slate-800 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">CASE STUDY</div>
+                        <h4 id="p-story-title" class="text-lg font-bold text-slate-900 mt-2 mb-3">Story A — Tom in Sales</h4>
+                        <ul id="p-story-list" class="space-y-2 text-stone-600 text-sm list-disc list-inside">
+                            <li>Passed over for promotion in March</li>
+                            <li>Exports entire EMEA customer list Friday 19:42</li>
+                            <li>Resignation letter Monday morning</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-stone-200">
+
+        <section id="red-flags" class="scroll-mt-24">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4 font-heading">Recognizing Red Flags</h2>
+                    <p class="text-stone-600 text-lg mb-6">Singles are gossip. Combinations are cases. The bell rings when categories cross over within a tight time window.</p>
+                    
+                    <div class="space-y-6">
+                        <div class="border-l-4 border-amber-400 pl-4">
+                            <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-2"><span>👤</span> Behavioural Flags</h3>
+                            <p class="text-sm text-stone-600 mb-2">Observed by managers, HR. Not the SIEM.</p>
+                            <ul class="text-sm text-stone-500 list-disc list-inside space-y-1">
+                                <li>Sudden disgruntlement</li>
+                                <li>Resignation announced in last 60 days <strong class="text-amber-600">(Highest risk: last 30 days)</strong></li>
+                                <li>Severe personal-life stressors</li>
+                            </ul>
+                        </div>
+                        <div class="border-l-4 border-rose-500 pl-4">
+                            <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-2"><span>💻</span> Technical Flags</h3>
+                            <p class="text-sm text-stone-600 mb-2">Observed by DLP, UEBA, IAM.</p>
+                            <ul class="text-sm text-stone-500 list-disc list-inside space-y-1">
+                                <li>Mass downloads far above user baseline</li>
+                                <li>Outbound uploads to personal cloud</li>
+                                <li>First-time use of dormant high-privilege account <strong class="text-rose-600">(Bright red flag)</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2 text-center font-heading">The Correlation Engine</h3>
+                    <p class="text-sm text-center text-stone-500 mb-6">Reconstruct the Diego Case. Click events to add them to the timeline.</p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <button onclick="app.addEvent('behav')" class="w-full text-left p-3 rounded-lg border border-stone-200 hover:bg-amber-50 hover:border-amber-300 transition-colors text-sm font-medium">
+                            ➕ Heated conversation about missed promotion (Behavioural)
+                        </button>
+                        <button onclick="app.addEvent('tech1')" class="w-full text-left p-3 rounded-lg border border-stone-200 hover:bg-rose-50 hover:border-rose-300 transition-colors text-sm font-medium">
+                            ➕ Pulls 4.2 GB of code (Technical)
+                        </button>
+                        <button onclick="app.addEvent('tech2')" class="w-full text-left p-3 rounded-lg border border-stone-200 hover:bg-rose-50 hover:border-rose-300 transition-colors text-sm font-medium">
+                            ➕ Uploads 4.1 GB to Mega.nz (Technical)
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 min-h-[160px] flex flex-col justify-end relative">
+                        <div id="sim-status" class="absolute top-4 right-4 bg-stone-200 text-stone-600 text-xs font-bold px-3 py-1 rounded-full">STATUS: NORMAL</div>
+                        <div id="sim-timeline" class="space-y-2 mb-4 text-xs font-mono">
+                        </div>
+                        <div class="w-full bg-stone-200 rounded-full h-2.5">
+                            <div id="sim-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500 w-0"></div>
+                        </div>
+                        <p id="sim-message" class="text-center text-sm font-semibold mt-3 text-stone-500">Awaiting events...</p>
+                    </div>
+                    <button onclick="app.resetSim()" class="mt-4 text-xs text-stone-400 hover:text-stone-600 underline w-full text-center">Reset Simulator</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-slate-900 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden" id="controls">
+            <div class="absolute top-0 right-0 p-16 opacity-5 pointer-events-none">
+                <span class="text-[200px] leading-none">🛡️</span>
+            </div>
+            
+            <div class="relative z-10">
+                <div class="max-w-3xl mb-12">
+                    <h2 class="text-3xl font-bold mb-4 font-heading">The Defence Stack</h2>
+                    <p class="text-slate-300 text-lg">Three pillars. Each one watches a different thing. No pillar alone is enough. The SIEM glues them together.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                        <h3 class="text-xl font-bold mb-2 text-rose-400">DLP</h3>
+                        <p class="text-sm text-slate-300 mb-2"><strong>Watches Data</strong></p>
+                        <p class="text-xs text-slate-400">Matches content against policy (PII, Source code). Verbs: block, quarantine, alert.</p>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                        <h3 class="text-xl font-bold mb-2 text-amber-400">UEBA</h3>
+                        <p class="text-sm text-slate-300 mb-2"><strong>Watches People</strong></p>
+                        <p class="text-xs text-slate-400">Learns user baseline, scores deviations. Flags relative behaviour using z-scores.</p>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                        <h3 class="text-xl font-bold mb-2 text-emerald-400">IAM / Access</h3>
+                        <p class="text-sm text-slate-300 mb-2"><strong>Watches Rights</strong></p>
+                        <p class="text-xs text-slate-400">Enforces least privilege. Dormant high privilege is a top 3 incident predictor.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-inner text-slate-900">
+                    <h4 class="font-bold text-center mb-1">UEBA Anomaly Detection (The Diego Case)</h4>
+                    <p class="text-xs text-center text-stone-500 mb-4">z-score = (today - mean) / stdev. A z-score &ge; 3 triggers an alert.</p>
+                    <div class="chart-container">
+                        <canvas id="uebaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gates" class="scroll-mt-24">
+            <div class="max-w-3xl mx-auto text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4 font-heading">The Investigation Panel</h2>
+                <p class="text-stone-600 text-lg">The moment an alert points at a named human, every subsequent action must pass <strong>three gates</strong>. No single function gets to fire alone.</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto space-y-4">
+                <div class="border border-stone-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <button class="w-full px-6 py-4 flex items-center justify-between bg-stone-50 hover:bg-stone-100 transition-colors" onclick="app.toggleGate('gate-legal')">
+                        <span class="font-bold text-lg text-slate-800 flex items-center gap-3"><span>⚖️</span> 1. The Legal Gate</span>
+                        <span class="text-stone-400" id="icon-legal">▼</span>
+                    </button>
+                    <div id="gate-legal" class="gate-panel px-6 text-stone-600 text-sm">
+                        <ul class="list-disc list-inside space-y-2 mb-4">
+                            <li>Documented lawful basis to monitor?</li>
+                            <li>Did employee accept monitoring (contract / banner)?</li>
+                            <li>Action permitted by applicable law (GDPR, PIPEDA, CCPA)?</li>
+                            <li>Evidence chain of custody maintained?</li>
+                            <li><strong>Counsel signed off in writing.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="border border-stone-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <button class="w-full px-6 py-4 flex items-center justify-between bg-stone-50 hover:bg-stone-100 transition-colors" onclick="app.toggleGate('gate-ethical')">
+                        <span class="font-bold text-lg text-slate-800 flex items-center gap-3"><span>🧭</span> 2. The Ethical Gate</span>
+                        <span class="text-stone-400" id="icon-ethical">▼</span>
+                    </button>
+                    <div id="gate-ethical" class="gate-panel px-6 text-stone-600 text-sm">
+                        <ul class="list-disc list-inside space-y-2 mb-4">
+                            <li>Is the investigation proportional to suspicion?</li>
+                            <li>Least-intrusive method that still answers the question?</li>
+                            <li>Bias check — are we scrutinising one group disproportionately?</li>
+                            <li>Reversible until guilt is established?</li>
+                            <li><strong>Dignity of the employee preserved at every step?</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="border border-stone-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <button class="w-full px-6 py-4 flex items-center justify-between bg-stone-50 hover:bg-stone-100 transition-colors" onclick="app.toggleGate('gate-hr')">
+                        <span class="font-bold text-lg text-slate-800 flex items-center gap-3"><span>👥</span> 3. The HR Gate</span>
+                        <span class="text-stone-400" id="icon-hr">▼</span>
+                    </button>
+                    <div id="gate-hr" class="gate-panel px-6 text-stone-600 text-sm">
+                        <ul class="list-disc list-inside space-y-2 mb-4">
+                            <li>Performance record reviewed — outlier or pattern?</li>
+                            <li>EAP (Employee Assistance Programme) considered as first option?</li>
+                            <li>Disciplinary procedure followed step by step?</li>
+                            <li>Manager briefed need-to-know only — <strong>and told not to confront</strong>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 max-w-2xl mx-auto bg-rose-50 border border-rose-100 p-6 rounded-xl text-center">
+                <p class="text-rose-800 font-medium">A fair process protects the innocent <strong>silently</strong>.</p>
+                <p class="text-sm text-rose-600 mt-2">If any gate fails, you do not escalate. The manager joins the panel later, on legal advice.</p>
+            </div>
+        </section>
+
+        <section id="program" class="scroll-mt-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="chart-container">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4 font-heading">The Insider Threat Program</h2>
+                    <p class="text-stone-600 text-lg mb-6">An ITP is not a tool. It is a sustained program built on three layers.</p>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-bold text-slate-800 border-b pb-1 mb-2">1. Governance (Top)</h4>
+                            <p class="text-sm text-stone-600">One named executive (CISO, CRO) owns the charter, budget, and board reporting. Boring rituals keep it funded.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 border-b pb-1 mb-2">2. Operations (Middle)</h4>
+                            <p class="text-sm text-stone-600">Five verbs: <strong>Define</strong> (crown jewels), <strong>Detect</strong> (tools), <strong>Assess</strong> (the panel), <strong>Manage</strong> (intervene), <strong>Learn</strong> (post-incident review).</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 border-b pb-1 mb-2">3. Culture (Foundation)</h4>
+                            <p class="text-sm text-stone-600">Trust + verify. Psychological safety. A "just-culture" model where mistakes are coached and only deliberate harm is punished. Wellbeing & EAP are cheaper than incidents.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 text-center text-sm">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="mb-2 font-heading text-slate-300 font-semibold text-base">🛡️ Cyber.SoHo Educational Hub</p>
+            <p class="mb-6">From the Industry to the Classroom — Building the IT's Future, Today and Together!</p>
+            <p class="text-xs max-w-2xl mx-auto opacity-60">Insider threats are not a tool problem. They are a people problem solved by tools, by process, by law and by culture — in that order, all at once, with a panel of grown-ups in the room.</p>
+        </div>
+    </footer>
+
+    <script>
+        const app = {
+            profileData: {
+                malicious: {
+                    title: "Wants to do harm. Knows what they are doing.",
+                    intent: "Intent: Deliberate Harm",
+                    motive: "Revenge, money, ideology, ego. Missed promotion, firing, recruitment by competitor.",
+                    stats: "Small volume, but enormous cost (~US $4.99M average per incident).",
+                    defence: "UEBA on resignation/firing windows, Just-in-time access, Tight off-boarding.",
+                    storyTitle: "Story A — Tom in Sales",
+                    storyList: [
+                        "Passed over for promotion in March",
+                        "Exports entire EMEA customer list Friday 19:42",
+                        "Resignation letter Monday morning"
+                    ],
+                    color: "text-rose-600"
+                },
+                negligent: {
+                    title: "No intent. Total carelessness.",
+                    intent: "Intent: None (Careless)",
+                    motive: "Clicks phishing links, plugs in parking-lot USB, forgets to encrypt laptop, ships spreadsheet to wrong list.",
+                    stats: "Largest volume by far (> 55% of all insider events per Ponemon).",
+                    defence: "Training, safe defaults, friction-removing controls (don't punish, fix the tool).",
+                    storyTitle: "Story B — Maria in Engineering",
+                    storyList: [
+                        "02:14 release push",
+                        "Downloads unencrypted DB backup to laptop",
+                        "Laptop pickpocketed on the train"
+                    ],
+                    color: "text-amber-500"
+                },
+                compromised: {
+                    title: "The user is asleep. An attacker wears their identity.",
+                    intent: "Intent: None (Unaware)",
+                    motive: "Acquired via phishing, infostealer malware, session-cookie theft.",
+                    stats: "Infostealer-driven credential theft is one of the dominant vectors (IBM X-Force).",
+                    defence: "MFA, EDR, Impossible-travel detection, Conditional access / session controls.",
+                    storyTitle: "Story C — Igor in Marketing",
+                    storyList: [
+                        "Clicks 'CFO' email",
+                        "Enters credentials on microsft365-secure",
+                        "Bucharest IP signs in as Igor",
+                        "Three weeks of insider trading on press releases"
+                    ],
+                    color: "text-emerald-600"
+                }
+            },
+
+            simState: {
+                behav: false,
+                tech1: false,
+                tech2: false,
+                count: 0
+            },
+
+            init() {
+                this.initCharts();
+            },
+
+            setProfile(type) {
+                // Update tabs
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active', 'bg-slate-800', 'text-white', 'border-slate-800');
+                    btn.classList.add('bg-white', 'text-stone-600');
+                });
+                const activeBtn = document.getElementById(`btn-${type}`);
+                activeBtn.classList.add('active', 'bg-slate-800', 'text-white', 'border-slate-800');
+                activeBtn.classList.remove('bg-white', 'text-stone-600');
+
+                // Update content
+                const data = this.profileData[type];
+                const content = document.getElementById('profile-content');
+                
+                // trigger reflow for animation
+                content.classList.remove('fade-in');
+                void content.offsetWidth; 
+                content.classList.add('fade-in');
+
+                document.getElementById('p-title').textContent = data.title;
+                const intentEl = document.getElementById('p-intent');
+                intentEl.textContent = data.intent;
+                intentEl.className = `font-medium mb-6 uppercase tracking-wider text-sm ${data.color}`;
+                
+                document.getElementById('p-motive').textContent = data.motive;
+                document.getElementById('p-stats').textContent = data.stats;
+                document.getElementById('p-defence').textContent = data.defence;
+                
+                document.getElementById('p-story-title').textContent = data.storyTitle;
+                const list = document.getElementById('p-story-list');
+                list.innerHTML = data.storyList.map(item => `<li>${item}</li>`).join('');
+            },
+
+            addEvent(type) {
+                if (this.simState[type]) return; // Already added
+                this.simState[type] = true;
+                this.simState.count++;
+
+                const timeline = document.getElementById('sim-timeline');
+                let text = "";
+                let color = "";
+                if(type === 'behav') { text = "[14 Days Ago] Manager flagged heated conversation"; color = "text-amber-600"; }
+                if(type === 'tech1') { text = "[Wed 09:45] UEBA/DLP: 4.2 GB code pull (Normal: 0.8GB)"; color = "text-rose-600"; }
+                if(type === 'tech2') { text = "[Thu 11:20] UEBA/DLP: 4.1 GB upload to Mega.nz"; color = "text-rose-600"; }
+
+                timeline.innerHTML += `<div class="${color} fade-in">> ${text}</div>`;
+                
+                this.updateSimUI();
+            },
+
+            updateSimUI() {
+                const bar = document.getElementById('sim-bar');
+                const status = document.getElementById('sim-status');
+                const msg = document.getElementById('sim-message');
+                
+                const percentage = (this.simState.count / 3) * 100;
+                bar.style.width = `${percentage}%`;
+
+                if(this.simState.count === 1) {
+                    bar.className = "h-2.5 rounded-full transition-all duration-500 bg-emerald-500";
+                    status.textContent = "INFO: GOSSIP/NOISE";
+                    status.className = "absolute top-4 right-4 bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full";
+                    msg.textContent = "One flag alone is not enough.";
+                } else if(this.simState.count === 2) {
+                    bar.className = "h-2.5 rounded-full transition-all duration-500 bg-amber-500";
+                    status.textContent = "MEDIUM: WATCHING";
+                    status.className = "absolute top-4 right-4 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full";
+                    msg.textContent = "Flags accumulating. Need correlation.";
+                } else if(this.simState.count === 3) {
+                    bar.className = "h-2.5 rounded-full transition-all duration-500 bg-rose-600";
+                    status.textContent = "CRITICAL: CASE OPENED";
+                    status.className = "absolute top-4 right-4 bg-rose-600 text-white text-xs font-bold px-3 py-1 rounded-full fade-in";
+                    msg.innerHTML = "<strong>Rule Triggered:</strong> Behavioural + Technical in 14-day window. <br/><em>Do not call Diego. Convene the panel.</em>";
+                }
+            },
+
+            resetSim() {
+                this.simState = { behav: false, tech1: false, tech2: false, count: 0 };
+                document.getElementById('sim-timeline').innerHTML = "";
+                document.getElementById('sim-bar').style.width = "0%";
+                document.getElementById('sim-bar').className = "h-2.5 rounded-full transition-all duration-500 bg-emerald-500";
+                
+                const status = document.getElementById('sim-status');
+                status.textContent = "STATUS: NORMAL";
+                status.className = "absolute top-4 right-4 bg-stone-200 text-stone-600 text-xs font-bold px-3 py-1 rounded-full";
+                
+                document.getElementById('sim-message').textContent = "Awaiting events...";
+            },
+
+            toggleGate(id) {
+                const panel = document.getElementById(id);
+                const icon = document.getElementById('icon-' + id.split('-')[1]);
+                if (panel.classList.contains('open')) {
+                    panel.classList.remove('open');
+                    icon.textContent = '▼';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    // Close others
+                    document.querySelectorAll('.gate-panel').forEach(p => p.classList.remove('open'));
+                    document.querySelectorAll('[id^="icon-"]').forEach(i => { i.textContent = '▼'; i.style.transform = 'rotate(0deg)'; });
+                    
+                    panel.classList.add('open');
+                    icon.style.transform = 'rotate(180deg)';
+                    icon.style.transition = 'transform 0.3s ease';
+                }
+            },
+
+            initCharts() {
+                // UEBA Line Chart (Diego Case)
+                const ctxUeba = document.getElementById('uebaChart').getContext('2d');
+                new Chart(ctxUeba, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu (11:20)'],
+                        datasets: [{
+                            label: 'Data Extracted (GB)',
+                            data: [0.8, 0.9, 4.2, 4.1],
+                            borderColor: '#e11d48', // rose-600
+                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: ['#1e293b', '#1e293b', '#e11d48', '#e11d48'],
+                            pointRadius: [4, 4, 6, 6],
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Normal Baseline Mean',
+                            data: [0.8, 0.8, 0.8, 0.8],
+                            borderColor: '#94a3b8', // slate-400
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { family: 'Inter' } } },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        if(context.dataIndex >= 2 && context.datasetIndex === 0) {
+                                            return 'Z-Score: > 6.0 (Alert Threshold: 3.0)';
+                                        }
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                max: 5,
+                                title: { display: true, text: 'Gigabytes' }
+                            }
+                        }
+                    }
+                });
+
+                // ITP Metrics Bar Chart
+                const ctxMetrics = document.getElementById('metricsChart').getContext('2d');
+                new Chart(ctxMetrics, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            'Training Completion', 
+                            'Privilege Recert (<90d)', 
+                            'Time to Panel (<1d)', 
+                            'Off-board Revoke (<24h)'
+                        ],
+                        datasets: [{
+                            label: 'Current Month Target',
+                            data: [95, 90, 100, 95], // Assuming 100% represents the target achievement
+                            backgroundColor: '#10b981', // emerald-500
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Current Actual',
+                            data: [92, 85, 100, 98], // Mock realistic data based on typical metrics
+                            backgroundColor: '#f59e0b', // amber-500
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Monthly Health Metrics (%)',
+                                font: { family: 'Outfit', size: 16 }
+                            },
+                            legend: { position: 'bottom' }
+                        },
+                        scales: {
+                            x: { max: 100 }
+                        }
+                    }
+                });
+            }
+        };
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
+
+
+
