@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endpoint Security: Mobile, IoT, OT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neutralBg: '#f5f5f4',
+                        neutralCard: '#ffffff',
+                        neutralText: '#292524',
+                        accentPrimary: '#0f766e', 
+                        accentSecondary: '#b45309',
+                        accentDanger: '#be123c',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="bg-neutralBg text-neutralText font-sans antialiased min-h-screen pb-16">
+
+    <!-- Chosen Palette: Warm Neutrals (Stone/Sand) with Teal, Amber, and Rose Accents for differentiation without overwhelming the user. -->
+    <!-- Application Structure Plan: The SPA is divided into 4 thematic sections reflecting the narrative arc of the lecture: 1. The Landscape (defining the 3 families and patch disparity), 2. The Threat (lateral movement and attack surface), 3. The Response (adapting NIST IR frameworks), and 4. The Arsenal (Tools & Standards). This dashboard approach guides the user from problem identification to tactical response, making the lecture material interactive and exploratory rather than linear slides. -->
+    <!-- Visualization & Content Choices: 1. Tabbed Interface for Device Families (Goal: Compare; Viz: Interactive Text/Grid; Justification: Cleanly separates distinct profiles). 2. Horizontal Bar Chart for Patch Cadence (Goal: Compare/Highlight Risk; Viz: Chart.js; Justification: Visually quantifies the massive disparity in vulnerability lifespans). 3. Step-by-Step Interactive Diagram (Goal: Inform/Demonstrate Process; Viz: HTML/CSS Flowchart; Justification: Illustrates the 'flat network' lateral movement concept dynamically without SVG). 4. Accordion/Toggle List for IR Playbook (Goal: Compare; Viz: HTML/JS Accordion; Justification: Directly contrasts 'Classic' vs 'Adapted' methodologies for easy reading). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <header class="bg-neutralText text-white py-12 px-6 shadow-md mb-8">
+        <div class="max-w-6xl mx-auto">
+            <p class="text-accentPrimary font-semibold tracking-wider text-sm uppercase mb-2">Cyber.SoHo Educational Hub &bull; Incident Handling &amp; Response</p>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Endpoint Security: The Edge</h1>
+            <p class="text-lg md:text-xl text-gray-300 max-w-3xl">
+                Walking from the data-center to the edge. Phones, cameras, and PLCs are all computers, but none behave like a standard laptop. Explore the unique security challenges, expanded attack surfaces, and adapted response procedures for Mobile, IoT, and OT/ICS environments.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 md:px-6 space-y-16">
+
+        <section id="landscape" class="scroll-mt-8">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold border-b-4 border-accentPrimary inline-block pb-2 mb-4">1. The Three Families of the Edge</h2>
+                <p class="text-lg text-gray-700 max-w-4xl">
+                    Mobile, IoT, and OT devices share the same network as traditional endpoints, but require completely different defense strategies. You cannot deploy an EDR agent on a PLC or remote into a smart bulb. Explore the profiles of each family below.
+                </p>
+            </div>
+
+            <div class="glass-panel rounded-xl overflow-hidden mb-12">
+                <div class="flex flex-col md:flex-row border-b border-gray-200" id="family-tabs">
+                    <button class="tab-btn flex-1 py-4 px-6 text-center font-semibold text-lg bg-white border-b-4 border-accentPrimary text-accentPrimary transition-colors" data-target="mobile-content">
+                        &#128241; Mobile
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-center font-semibold text-lg bg-gray-50 border-b-4 border-transparent text-gray-500 hover:bg-gray-100 transition-colors" data-target="iot-content">
+                        &#128268; IoT
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-center font-semibold text-lg bg-gray-50 border-b-4 border-transparent text-gray-500 hover:bg-gray-100 transition-colors" data-target="ot-content">
+                        &#9881; OT / ICS
+                    </button>
+                </div>
+
+                <div class="p-6 md:p-8 bg-white min-h-[300px]">
+                    <div id="mobile-content" class="tab-content fade-in">
+                        <h3 class="text-2xl font-bold text-accentPrimary mb-6">Human-Owned, Well-Patched</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentPrimary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Owner</p>
+                                <p class="text-lg font-medium">The human carrying the device</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentPrimary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Crown Jewels</p>
+                                <p class="text-lg font-medium">Corporate email, MFA push, camera, mic, GPS</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentPrimary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Primary Threats</p>
+                                <p class="text-lg font-medium">Smishing, sideloaded apps, theft, zero-click chains</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentPrimary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Defense Anchor</p>
+                                <p class="text-lg font-medium">Mobile Device Management (MDM) + Conditional Access</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="iot-content" class="tab-content hidden fade-in">
+                        <h3 class="text-2xl font-bold text-accentSecondary mb-6">Ambiguous Ownership, Network Risk</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentSecondary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Owner</p>
+                                <p class="text-lg font-medium">Ambiguous — Facilities, vendor, "nobody"</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentSecondary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Crown Jewels</p>
+                                <p class="text-lg font-medium">The device itself (recruited into botnets like Mirai)</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentSecondary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Primary Threats</p>
+                                <p class="text-lg font-medium">Default credentials, unauthenticated management UIs</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentSecondary">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Defense Anchor</p>
+                                <p class="text-lg font-medium">Network Segmentation & Discovery</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ot-content" class="tab-content hidden fade-in">
+                        <h3 class="text-2xl font-bold text-accentDanger mb-6">Controlling Physical Reality</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentDanger">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Owner</p>
+                                <p class="text-lg font-medium">Plant Engineering (Not IT)</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentDanger">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Crown Jewels</p>
+                                <p class="text-lg font-medium">Physics — Temperatures, speeds, chemistry</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentDanger">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Primary Threats</p>
+                                <p class="text-lg font-medium">Cleartext protocols, targeting safety systems (e.g., Triton)</p>
+                            </div>
+                            <div class="bg-neutralBg p-5 rounded-lg border-l-4 border-accentDanger">
+                                <p class="text-sm uppercase text-gray-500 font-bold mb-1">Defense Anchor</p>
+                                <p class="text-lg font-medium">Strict Zoning (IEC 62443), passive network monitoring</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 md:p-8 rounded-xl">
+                <h3 class="text-2xl font-bold mb-4 text-center">The Patch Cadence Reality Gap</h3>
+                <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Why the same software vulnerability lives 1000x longer in OT than on a mobile phone. This chart illustrates the typical window to fix a discovered vulnerability.
+                </p>
+                <div class="chart-container">
+                    <canvas id="patchChart"></canvas>
+                </div>
+                <p class="text-sm text-center text-gray-500 mt-4 italic">Visualization data represents relative time scales (Days vs Years) discussed in the lecture.</p>
+            </div>
+        </section>
+
+        <section id="attack-surface" class="scroll-mt-8 pt-8">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold border-b-4 border-accentSecondary inline-block pb-2 mb-4">2. The Flat Network Multiplier</h2>
+                <p class="text-lg text-gray-700 max-w-4xl">
+                    The attack surface has exploded from 1 device per employee to up to 20. When weak edge devices exist on unsegmented networks, they become the beachhead for devastating lateral movement.
+                </p>
+            </div>
+
+            <div class="glass-panel p-6 md:p-8 rounded-xl bg-gradient-to-br from-white to-orange-50">
+                <div class="flex flex-col lg:flex-row gap-8 items-center">
+                    <div class="lg:w-1/3">
+                        <h3 class="text-2xl font-bold text-accentSecondary mb-4">The Casino Fish-Tank (2017)</h3>
+                        <p class="text-gray-700 mb-4">
+                            A real-world incident demonstrating why the inventory problem must be reframed around <strong>blast radius</strong> rather than mere presence of weak devices.
+                        </p>
+                        <button id="step-btn" class="bg-accentSecondary hover:bg-amber-700 text-white font-bold py-3 px-6 rounded shadow transition-transform transform active:scale-95 w-full">
+                            Simulate Lateral Pivot &#9654;
+                        </button>
+                        <button id="reset-btn" class="mt-3 text-gray-500 hover:text-gray-800 text-sm w-full underline hidden">Reset Simulation</button>
+                    </div>
+                    
+                    <div class="lg:w-2/3 w-full bg-white p-6 rounded-lg shadow-inner border border-gray-200">
+                        <div class="flex flex-col space-y-4 relative">
+                            <div class="absolute left-8 top-10 bottom-10 w-1 bg-gray-200 z-0"></div>
+
+                            <div id="step-1" class="step-card flex items-center z-10 opacity-50 transition-opacity duration-300">
+                                <div class="w-16 h-16 rounded-full bg-gray-200 border-4 border-white shadow flex items-center justify-center text-2xl z-10 shrink-0">
+                                    &#128031;
+                                </div>
+                                <div class="ml-6 bg-gray-50 p-4 rounded border border-gray-100 flex-1">
+                                    <p class="font-bold text-gray-800">Internet-Connected Thermometer</p>
+                                    <p class="text-sm text-gray-600">Vendor placed it on corporate Wi-Fi. IT didn't know it existed. No agent, no patch.</p>
+                                </div>
+                            </div>
+
+                            <div id="step-2" class="step-card flex items-center z-10 opacity-0 transition-opacity duration-300">
+                                <div class="w-16 h-16 rounded-full bg-accentSecondary text-white border-4 border-white shadow flex items-center justify-center text-xl font-bold z-10 shrink-0">
+                                    &#8595;
+                                </div>
+                                <div class="ml-6 bg-orange-50 p-4 rounded border border-orange-100 flex-1">
+                                    <p class="font-bold text-accentSecondary">Lobby Wi-Fi &rarr; Sensor VLAN</p>
+                                    <p class="text-sm text-gray-700">Attacker compromises thermometer, finds routing available to internal sensor networks.</p>
+                                </div>
+                            </div>
+
+                            <div id="step-3" class="step-card flex items-center z-10 opacity-0 transition-opacity duration-300">
+                                <div class="w-16 h-16 rounded-full bg-accentDanger text-white border-4 border-white shadow flex items-center justify-center text-xl font-bold z-10 shrink-0">
+                                    &#8595;
+                                </div>
+                                <div class="ml-6 bg-rose-50 p-4 rounded border border-rose-100 flex-1">
+                                    <p class="font-bold text-accentDanger">Sensor VLAN &rarr; Database</p>
+                                    <p class="text-sm text-gray-700">Four hops across a flat network. No segmentation to stop the pivot.</p>
+                                </div>
+                            </div>
+
+                            <div id="step-4" class="step-card flex items-center z-10 opacity-0 transition-opacity duration-300">
+                                <div class="w-16 h-16 rounded-full bg-neutralText text-white border-4 border-white shadow flex items-center justify-center text-2xl z-10 shrink-0">
+                                    &#128181;
+                                </div>
+                                <div class="ml-6 bg-gray-800 text-white p-4 rounded border border-gray-900 flex-1">
+                                    <p class="font-bold">Objective Reached: High-Roller Database</p>
+                                    <p class="text-sm text-gray-300">~10 GB of sensitive records exfiltrated. The blind spot was the lesson.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 bg-white border-l-4 border-neutralText p-4 rounded-r">
+                    <p class="font-bold">Key Takeaway:</p>
+                    <p class="text-gray-700">Assume the weak endpoint exists. Engineer the <strong>segmentation</strong> that makes it irrelevant. Contain the blast radius.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="ir-playbook" class="scroll-mt-8 pt-8">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold border-b-4 border-accentPrimary inline-block pb-2 mb-4">3. Adapting NIST 800-61</h2>
+                <p class="text-lg text-gray-700 max-w-4xl">
+                    The Incident Response playbook is not thrown out for IoT and OT—it is translated. You cannot run `taskkill` on a PLC. Interaction below contrasts classic IT moves with edge-adapted moves.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                
+                <div class="glass-panel rounded-lg overflow-hidden border border-gray-200">
+                    <button class="accordion-btn w-full px-6 py-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 focus:outline-none">
+                        <span class="font-bold text-xl text-neutralText">1. Preparation &amp; Identification</span>
+                        <span class="text-2xl text-accentPrimary transition-transform transform rotate-0">&#9662;</span>
+                    </button>
+                    <div class="accordion-content hidden px-6 py-6 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-4 border border-gray-200 rounded">
+                                <h4 class="font-bold text-gray-500 uppercase text-xs mb-2">Classic IT Move</h4>
+                                <ul class="list-disc pl-5 text-gray-700 space-y-1">
+                                    <li>Push an EDR agent to the host.</li>
+                                    <li>Pull a process tree directly from the machine.</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 border border-accentPrimary bg-teal-50 rounded">
+                                <h4 class="font-bold text-accentPrimary uppercase text-xs mb-2">Adapted Edge Move</h4>
+                                <ul class="list-disc pl-5 text-gray-800 space-y-1">
+                                    <li>Position the <strong>network</strong> to see the device (Span ports, NetFlow).</li>
+                                    <li>Correlate ambient telemetry (vendor cloud console, engineering workstation logs). The PLC's neighbor tells the story.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-lg overflow-hidden border border-gray-200">
+                    <button class="accordion-btn w-full px-6 py-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 focus:outline-none">
+                        <span class="font-bold text-xl text-neutralText">2. Containment</span>
+                        <span class="text-2xl text-accentPrimary transition-transform transform rotate-0">&#9662;</span>
+                    </button>
+                    <div class="accordion-content hidden px-6 py-6 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-4 border border-gray-200 rounded">
+                                <h4 class="font-bold text-gray-500 uppercase text-xs mb-2">Classic IT Move</h4>
+                                <ul class="list-disc pl-5 text-gray-700 space-y-1">
+                                    <li>Isolate the host via EDR network quarantine.</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 border border-accentPrimary bg-teal-50 rounded">
+                                <h4 class="font-bold text-accentPrimary uppercase text-xs mb-2">Adapted Edge Move</h4>
+                                <ul class="list-disc pl-5 text-gray-800 space-y-1">
+                                    <li>Quarantine the <strong>path</strong>, not the device.</li>
+                                    <li>Change switch ACLs, micro-segment the conduit, drop the C2 channel at the firewall. Keep physical processes running if safe.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-lg overflow-hidden border border-gray-200">
+                    <button class="accordion-btn w-full px-6 py-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 focus:outline-none">
+                        <span class="font-bold text-xl text-neutralText">3. Eradication &amp; Recovery</span>
+                        <span class="text-2xl text-accentPrimary transition-transform transform rotate-0">&#9662;</span>
+                    </button>
+                    <div class="accordion-content hidden px-6 py-6 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-4 border border-gray-200 rounded">
+                                <h4 class="font-bold text-gray-500 uppercase text-xs mb-2">Classic IT Move</h4>
+                                <ul class="list-disc pl-5 text-gray-700 space-y-1">
+                                    <li>Kill malicious processes, delete registry keys.</li>
+                                    <li>Reboot and restore from backup immediately.</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 border border-accentPrimary bg-teal-50 rounded">
+                                <h4 class="font-bold text-accentPrimary uppercase text-xs mb-2">Adapted Edge Move</h4>
+                                <ul class="list-disc pl-5 text-gray-800 space-y-1">
+                                    <li>Reflash to a known-good vendor image (firmware is OS+App+Persistence in one blob).</li>
+                                    <li>Recovery window is governed by operations (plant turnaround schedule), not IT. Be ready when the window opens.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="mt-6 bg-gray-800 text-white p-6 rounded-xl flex items-center justify-between">
+                <div>
+                    <h4 class="text-xl font-bold text-accentSecondary mb-1">Lessons Learned: The Golden Rule</h4>
+                    <p>Fix the asset inventory first. You cannot defend what you never inventoried. The compromised device was likely not on your list.</p>
+                </div>
+                <div class="text-4xl hidden sm:block">&#128203;</div>
+            </div>
+        </section>
+
+        <section id="arsenal" class="scroll-mt-8 pt-8">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold border-b-4 border-neutralText inline-block pb-2 mb-4">4. Tools &amp; Standards</h2>
+                <p class="text-lg text-gray-700 max-w-4xl">
+                    Understanding the distinction between management and detection tools, and knowing which compliance standards to reference when architecting defenses.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                
+                <div class="glass-panel p-6 rounded-xl relative overflow-hidden">
+                    <h3 class="text-2xl font-bold mb-6 text-center">MDM vs. EDR Overlap</h3>
+                    <p class="text-gray-600 text-sm text-center mb-6">Buy each capability once. Be able to tell both stories about every device.</p>
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-stretch gap-2">
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg flex-1 text-sm">
+                            <h4 class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-1">MDM (Manage Posture)</h4>
+                            <ul class="space-y-2 text-blue-900">
+                                <li>&#8226; App-store policy</li>
+                                <li>&#8226; Encryption-at-rest</li>
+                                <li>&#8226; Remote wipe/geofence</li>
+                                <li>&#8226; VPN/Wi-Fi profiles</li>
+                                <li class="italic text-xs mt-2 text-blue-700">"The phone is encrypted."</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-gray-100 border border-gray-300 p-4 rounded-lg md:w-1/3 flex flex-col justify-center text-sm shadow-inner z-10 my-2 md:my-0 md:-mx-4">
+                            <h4 class="font-bold text-gray-700 mb-2 text-center border-b border-gray-300 pb-1">The Overlap</h4>
+                            <ul class="space-y-1 text-gray-800 text-xs text-center">
+                                <li>Asset inventory</li>
+                                <li>Compliance reports</li>
+                                <li>Log forwarding</li>
+                                <li>Role-based admin</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-50 border border-red-200 p-4 rounded-lg flex-1 text-sm">
+                            <h4 class="font-bold text-red-800 mb-2 border-b border-red-200 pb-1">EDR (Detect Behavior)</h4>
+                            <ul class="space-y-2 text-red-900">
+                                <li>&#8226; Process telemetry</li>
+                                <li>&#8226; Memory scanning</li>
+                                <li>&#8226; Network containment</li>
+                                <li>&#8226; Live response shell</li>
+                                <li class="italic text-xs mt-2 text-red-700">"Phone is calling C2 at 3am."</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-6">Standards as Engineering Plans</h3>
+                    <p class="text-gray-600 mb-6">Standards are not academic; they are checklists to engineer site policy into actual controls.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-neutralBg p-4 border-l-4 border-neutralText rounded shadow-sm hover:shadow transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-lg text-neutralText">IEC 62443</h4>
+                                    <p class="text-sm text-gray-600">Intl. standard for IACS Security</p>
+                                </div>
+                                <span class="bg-gray-200 text-xs font-bold px-2 py-1 rounded">Global/OT</span>
+                            </div>
+                            <p class="text-sm mt-2 text-gray-700">Crucial for IR: <strong>Part 3-3</strong> details 7 Foundational Requirements (Zones, Conduits, Security Levels).</p>
+                        </div>
+                        
+                        <div class="bg-neutralBg p-4 border-l-4 border-neutralText rounded shadow-sm hover:shadow transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-lg text-neutralText">NIST SP 800-82r3</h4>
+                                    <p class="text-sm text-gray-600">Guide to OT Security</p>
+                                </div>
+                                <span class="bg-gray-200 text-xs font-bold px-2 py-1 rounded">US Fed/OT</span>
+                            </div>
+                            <p class="text-sm mt-2 text-gray-700">A tailoring guide explaining how to apply standard NIST SP 800-53 controls specifically in an OT setting.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-neutralText text-gray-400 py-8 text-center text-sm border-t-4 border-accentPrimary">
+        <p>&copy; 2026 Cyber.SoHo Educational Hub. Lab use only.</p>
+        <p class="mt-2 text-xs max-w-2xl mx-auto">Material adapted from "Day 16 — Endpoint Security: Mobile, IoT, OT". Pragmatic, measured progress on the right axes is the goal. Done is better than perfect.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-target');
+                    
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    
+                    tabBtns.forEach(t => {
+                        t.classList.remove('bg-white', 'border-accentPrimary', 'text-accentPrimary');
+                        t.classList.add('bg-gray-50', 'border-transparent', 'text-gray-500');
+                    });
+                    
+                    document.getElementById(targetId).classList.remove('hidden');
+                    btn.classList.remove('bg-gray-50', 'border-transparent', 'text-gray-500');
+                    btn.classList.add('bg-white', 'border-accentPrimary', 'text-accentPrimary');
+                });
+            });
+
+            const ctx = document.getElementById('patchChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mobile (Monthly)', 'IoT (Lifetime / Never)', 'OT/ICS (Yearly / Never)'],
+                    datasets: [{
+                        label: 'Estimated Vulnerability Lifespan (Days)',
+                        data: [30, 1825, 3650], 
+                        backgroundColor: [
+                            'rgba(15, 118, 110, 0.7)', 
+                            'rgba(180, 83, 9, 0.7)',   
+                            'rgba(190, 18, 60, 0.7)'   
+                        ],
+                        borderColor: [
+                            'rgba(15, 118, 110, 1)',
+                            'rgba(180, 83, 9, 1)',
+                            'rgba(190, 18, 60, 1)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', 
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Days Unpatched (Log Scale)',
+                                font: { weight: 'bold' }
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if(value === 30) return '1 Month';
+                                    if(value === 365) return '1 Year';
+                                    if(value === 3650) return '10 Years';
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let val = context.raw;
+                                    if(val === 30) return "Avg. window: Days/Weeks (MDM managed)";
+                                    if(val === 1825) return "Avg. window: Years (Often 1 firmware update per life)";
+                                    if(val === 3650) return "Avg. window: Years or Never (Wait for turnaround)";
+                                    return val;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            let currentStep = 1;
+            const maxSteps = 4;
+            const stepBtn = document.getElementById('step-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            
+            stepBtn.addEventListener('click', () => {
+                if (currentStep < maxSteps) {
+                    if (currentStep === 1) {
+                        document.getElementById('step-1').classList.remove('opacity-50');
+                        document.getElementById('step-1').classList.add('opacity-100');
+                    }
+                    currentStep++;
+                    const nextEl = document.getElementById(`step-${currentStep}`);
+                    nextEl.classList.remove('opacity-0');
+                    nextEl.classList.add('opacity-100');
+                    
+                    if (currentStep === maxSteps) {
+                        stepBtn.disabled = true;
+                        stepBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        stepBtn.innerText = "Simulation Complete";
+                        resetBtn.classList.remove('hidden');
+                    } else {
+                        stepBtn.innerText = `Next Hop (${currentStep}/${maxSteps}) \u25B6`;
+                    }
+                }
+            });
+
+            resetBtn.addEventListener('click', () => {
+                currentStep = 1;
+                for(let i=2; i<=maxSteps; i++) {
+                    document.getElementById(`step-${i}`).classList.remove('opacity-100');
+                    document.getElementById(`step-${i}`).classList.add('opacity-0');
+                }
+                document.getElementById('step-1').classList.remove('opacity-100');
+                document.getElementById('step-1').classList.add('opacity-50');
+                
+                stepBtn.disabled = false;
+                stepBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                stepBtn.innerText = "Simulate Lateral Pivot \u25B6";
+                resetBtn.classList.add('hidden');
+            });
+
+            const accordions = document.querySelectorAll('.accordion-btn');
+            accordions.forEach(acc => {
+                acc.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('span:last-child');
+                    
+                    if (content.classList.contains('hidden')) {
+                        content.classList.remove('hidden');
+                        icon.classList.add('rotate-180');
+                    } else {
+                        content.classList.add('hidden');
+                        icon.classList.remove('rotate-180');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+

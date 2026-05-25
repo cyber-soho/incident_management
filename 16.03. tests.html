@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endpoint Security: Study Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandPrimary: '#0f766e',
+                        brandSecondary: '#b45309',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Flashcard Flip Animations */
+        .flip-card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: white;
+        }
+        .flip-card-front {
+            border-top: 5px solid #0f766e; /* brandPrimary */
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+            border-top: 5px solid #b45309; /* brandSecondary */
+            background-color: #f9fafb;
+        }
+        
+        /* Tab Transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased min-h-screen">
+
+    <header class="bg-white shadow-sm mb-8 pt-10 pb-6 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Endpoint Security: Study Guide</h1>
+            
+            <div class="flex justify-center space-x-2 md:space-x-4">
+                <button id="tab-btn-flashcards" class="px-6 py-3 rounded-t-lg font-semibold transition-colors duration-200 bg-brandPrimary text-white shadow-md" onclick="switchTab('flashcards')">
+                    Flashcards (25)
+                </button>
+                <button id="tab-btn-quiz" class="px-6 py-3 rounded-t-lg font-semibold transition-colors duration-200 bg-gray-200 text-gray-600 hover:bg-gray-300" onclick="switchTab('quiz')">
+                    Practice Quiz (10)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 pb-16">
+        
+        <section id="tab-flashcards" class="tab-content active">
+            <div class="mb-6 flex justify-between items-center text-sm text-gray-500 bg-white p-4 rounded shadow-sm">
+                <p>Click any card to flip it and reveal the answer.</p>
+                <button onclick="flipAll()" class="hover:text-brandPrimary underline">Toggle All Cards</button>
+            </div>
+            
+            <div id="flashcard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[250px]">
+                </div>
+        </section>
+
+        <section id="tab-quiz" class="tab-content">
+            <div class="mb-6 text-sm text-gray-500 bg-white p-4 rounded shadow-sm max-w-3xl mx-auto">
+                <p>Test your knowledge. Select an answer to see the rationale. Hints are available if you get stuck.</p>
+            </div>
+
+            <div id="quiz-container" class="space-y-8 max-w-3xl mx-auto">
+                </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+
+        const flashcardsData = [
+            { front: "Three endpoint families discussed at the edge", back: "Mobile, IoT, and OT/ICS." },
+            { front: "Initial beachhead in the 2017 casino data breach", back: "An internet-connected fish-tank thermometer placed on the corporate Wi-Fi." },
+            { front: "Network characteristic that allowed the casino thermometer breach to escalate", back: "A flat network lacking segmentation, allowing lateral movement." },
+            { front: "Crown jewels of the Mobile endpoint family", back: "Corporate email, MFA push, camera, mic, and GPS." },
+            { front: "Crown jewels of the IoT endpoint family", back: "The device itself (often recruited into botnets)." },
+            { front: "Crown jewels of the OT/ICS endpoint family", back: "Physics, such as temperatures, speeds, and chemistry." },
+            { front: "Typical patch cadence for Mobile endpoints", back: "Monthly (enforced via MDM)." },
+            { front: "Typical patch cadence for IoT endpoints", back: "One firmware update per device lifetime, if any." },
+            { front: "Typical patch cadence for OT/ICS endpoints", back: "Yearly during a plant turnaround schedule, or never." },
+            { front: "The 2016 IoT incident that took down Dyn DNS", back: "The Mirai botnet, which compromised cameras using default credentials." },
+            { front: "The 2017 OT/ICS incident targeting plant safety", back: "Triton (or TRISIS), which targeted the safety system itself." },
+            { front: "Right question to ask regarding the expanded attack surface", back: "\"Does our network contain the blast radius?\"" },
+            { front: "Adapted IR \"Preparation\" phase for edge devices", back: "Position the network (span ports, NetFlow) rather than pushing an EDR agent." },
+            { front: "Adapted IR \"Identification\" phase for edge devices", back: "Correlate ambient telemetry and logs from neighbouring devices (like engineering workstations)." },
+            { front: "Adapted IR \"Containment\" phase for edge devices", back: "Quarantine the network path (using switch ACLs or firewalls) while leaving the device running." },
+            { front: "Adapted IR \"Eradication\" phase for edge devices", back: "Reflash to a known-good vendor image or perform a factory reset." },
+            { front: "Crucial prerequisite for effective IR learned from past incidents", back: "Fix the asset inventory first; you cannot defend what you never inventoried." },
+            { front: "Primary purpose of Mobile Device Management (MDM)", back: "To manage device identity and posture (e.g., encryption, app-store policy)." },
+            { front: "Primary purpose of Endpoint Detection and Response (EDR)", back: "To detect and respond to device behaviour (e.g., process telemetry, calling a C2)." },
+            { front: "Capabilities that overlap between MDM and EDR", back: "Asset inventory, compliance reports, posture signals, log forwarding, and role-based admin." },
+            { front: "IEC 62443", back: "The international standard for Industrial Automation and Control Systems (IACS) Security." },
+            { front: "NIST SP 800-82r3", back: "The guide to Operational Technology Security, detailing how to apply NIST 800-53 controls in OT." },
+            { front: "IEC 62443-3-3", back: "The section detailing Seven Foundational Requirements (SRs) for system integrators, crucial for IR." },
+            { front: "ETSI EN 303 645", back: "The European baseline standard for consumer IoT, known for the \"no default passwords\" rule." },
+            { front: "Trend in the MDM landscape regarding naming conventions", back: "UEM (Unified Endpoint Management) has effectively absorbed the \"MDM\" label." }
+        ];
+
+        const quizData = [
+            {
+                q: "Which endpoint family considers physical processes, such as temperatures and speeds, as its primary 'crown jewels'?",
+                options: [
+                    { text: "Mobile", rationale: "These devices primarily hold personal and corporate data like emails and MFA tokens, not physical process controls.", correct: false },
+                    { text: "IoT", rationale: "The value of these devices to an attacker is typically the compute power of the device itself for use in botnets.", correct: false },
+                    { text: "OT/ICS", rationale: "These systems directly control and monitor physical realities in environments like manufacturing plants and utilities.", correct: true },
+                    { text: "Traditional IT", rationale: "Data centers and standard laptops are focused on data processing and storage, not industrial physics.", correct: false }
+                ],
+                hint: "Think about Programmable Logic Controllers (PLCs) and Supervisory Control and Data Acquisition (SCADA) systems."
+            },
+            {
+                q: "What critical network vulnerability allowed the 2017 casino fish-tank thermometer breach to escalate into a major data loss?",
+                options: [
+                    { text: "End-to-end encryption", rationale: "Encryption protects data in transit, but its presence or absence was not the architectural flaw that allowed the pivot.", correct: false },
+                    { text: "A flat network lacking segmentation", rationale: "Without internal boundaries, an attacker compromising a low-level device can easily pivot across different VLANs to reach sensitive databases.", correct: true },
+                    { text: "Strict conditional access policies", rationale: "These policies restrict access based on device posture and identity, which would actually help prevent such an escalation.", correct: false },
+                    { text: "Overly aggressive EDR containment", rationale: "The issue was a lack of visibility and control on the endpoint, not an overactive security agent.", correct: false }
+                ],
+                hint: "Consider what happens when a lobby Wi-Fi network can freely communicate with internal financial or sensor networks."
+            },
+            {
+                q: "During the Identification phase of an incident response involving an OT device, how should a handler gather telemetry if the device cannot run security agents?",
+                options: [
+                    { text: "Push a temporary, lightweight EDR agent to the host.", rationale: "These devices often lack the OS support or resources to run any form of agent, making this impossible.", correct: false },
+                    { text: "Pull a direct process tree via a live response shell.", rationale: "This requires a level of interactive access and OS familiarity that edge devices typically do not provide.", correct: false },
+                    { text: "Correlate ambient network telemetry and logs from adjacent engineering workstations.", rationale: "When the endpoint is a black box, defenders must rely on the network traffic flowing past it and the logs of standard IT machines that communicate with it.", correct: true },
+                    { text: "Perform a physical memory dump over SSH.", rationale: "Many embedded systems do not have SSH enabled, and pulling memory could disrupt critical physical operations.", correct: false }
+                ],
+                hint: "If the suspect won't speak, you have to interview their neighbors."
+            },
+            {
+                q: "What is the adapted strategy for the Containment phase when dealing with an infected edge device?",
+                options: [
+                    { text: "Power off the device immediately to halt the attack.", rationale: "Powering off an industrial or medical device can cause severe operational or safety consequences.", correct: false },
+                    { text: "Quarantine the network path rather than the device itself.", rationale: "Changing switch ACLs or firewall rules cuts off the attacker's command-and-control while allowing the physical process to keep running safely.", correct: true },
+                    { text: "Wait for the next scheduled plant turnaround to address the infection.", rationale: "While recovery might wait for a turnaround, containment must happen immediately to prevent further lateral movement.", correct: false },
+                    { text: "Log into the device's web UI and kill malicious processes.", rationale: "Embedded devices rarely expose standard OS-level task management features to administrators.", correct: false }
+                ],
+                hint: "Focus on the infrastructure surrounding the device, rather than the device itself."
+            },
+            {
+                q: "How is the Eradication phase typically executed on a compromised IoT or OT device?",
+                options: [
+                    { text: "Deleting specific malicious registry keys.", rationale: "These devices generally do not run Windows or have a standard registry.", correct: false },
+                    { text: "Reflashing the device to a known-good vendor image.", rationale: "Because the OS, application, and any persistence mechanisms are bundled into one firmware blob, replacing the entire image is the only reliable way to ensure eradication.", correct: true },
+                    { text: "Running automated malware removal scripts via MDM.", rationale: "MDM is used for posture management on mobile devices, not for malware eradication on IoT/OT.", correct: false },
+                    { text: "Restoring the host operating system from a cloud backup.", rationale: "Embedded devices do not use standard cloud backup systems for their core firmware.", correct: false }
+                ],
+                hint: "Consider how the software is packaged on an embedded device compared to a traditional laptop."
+            },
+            {
+                q: "According to the lecture, what foundational step is critical to ensure future incident response success across the expanded attack surface?",
+                options: [
+                    { text: "Deploying EDR agents to all subnets.", rationale: "Many edge devices cannot run these agents, making this an incomplete solution.", correct: false },
+                    { text: "Fixing the asset inventory first.", rationale: "Defenders cannot protect, monitor, or respond to alerts on devices they do not know exist on the network.", correct: true },
+                    { text: "Enforcing biometric authentication on all devices.", rationale: "This is impossible for headless devices like smart bulbs or PLCs.", correct: false },
+                    { text: "Reducing the network down to one device per employee.", rationale: "The proliferation of connected devices is a business reality that security must adapt to, not reverse.", correct: false }
+                ],
+                hint: "You cannot defend what you do not know you have."
+            },
+            {
+                q: "Which tool is primarily evaluated by its ability to enforce passcode requirements, check encryption-at-rest, and manage app-store policies?",
+                options: [
+                    { text: "Security Information and Event Management (SIEM)", rationale: "This tool aggregates logs for analysis, rather than actively managing device configuration.", correct: false },
+                    { text: "Endpoint Detection and Response (EDR)", rationale: "This tool focuses on behavioral telemetry and active threat containment, not baseline posture enforcement.", correct: false },
+                    { text: "Mobile Device Management (MDM)", rationale: "This tool is designed to manage the identity, posture, and enrollment state of a device.", correct: true },
+                    { text: "Intrusion Detection System (IDS)", rationale: "This monitors network traffic for suspicious activity but does not manage endpoint configurations.", correct: false }
+                ],
+                hint: "This tool focuses on the \"posture\" story rather than the \"behavior\" story."
+            },
+            {
+                q: "While MDM and EDR serve different primary functions, what is a key capability where they overlap?",
+                options: [
+                    { text: "Behavioral memory scanning", rationale: "This is strictly a detection capability found in EDR.", correct: false },
+                    { text: "Providing a live response shell", rationale: "This is an active response feature exclusive to EDR platforms.", correct: false },
+                    { text: "Remote wipe and geofencing", rationale: "These are administrative actions handled by posture management tools.", correct: false },
+                    { text: "Maintaining an asset inventory", rationale: "Both tools inherently collect hardware and software details, making this a core shared function.", correct: true }
+                ],
+                hint: "Consider the foundational prerequisite for any security tool to function—it must know what it is installed on."
+            },
+            {
+                q: "Which specific standard section provides the Seven Foundational Requirements (zones, conduits, security levels) that are crucial for system integrators and incident handlers?",
+                options: [
+                    { text: "IEC 62443-1-1", rationale: "This section covers general terminology and concepts, not the specific engineering requirements.", correct: false },
+                    { text: "IEC 62443-3-3", rationale: "This section maps system requirements into actionable controls like zones and conduits, forming the basis of an OT compliance scorecard.", correct: true },
+                    { text: "NIST SP 800-61r2", rationale: "This is the general computer security incident handling guide, not a specific standard for industrial automation.", correct: false },
+                    { text: "ETSI EN 303 645", rationale: "This is a European baseline standard aimed specifically at consumer IoT devices.", correct: false }
+                ],
+                hint: "This sub-standard translates high-level policy into the actual architecture of the plant floor."
+            },
+            {
+                q: "Which document is specifically designed as a tailoring guide to help organizations apply standard security controls within an Operational Technology setting?",
+                options: [
+                    { text: "IEC 62443-4-2", rationale: "This section focuses on what product vendors must bake into their devices to certify them.", correct: false },
+                    { text: "NIST SP 800-82", rationale: "This guide explains how to take broad federal controls (like those in 800-53) and adapt them for the unique constraints of OT and ICS.", correct: true },
+                    { text: "NIST SP 800-61r2", rationale: "This is the incident response playbook, not a control tailoring guide.", correct: false },
+                    { text: "RFC 3227", rationale: "This is a technical document detailing the order of volatility for evidence collection.", correct: false }
+                ],
+                hint: "This document is frequently used in US federal environments to bridge the gap between traditional IT compliance and the realities of the plant floor."
+            }
+        ];
+
+
+        // --- RENDER LOGIC ---
+
+        // Render Flashcards
+        const flashcardGrid = document.getElementById('flashcard-grid');
+        flashcardsData.forEach((card, index) => {
+            const cardHtml = `
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <h3 class="text-xl font-semibold text-brandPrimary px-4">${card.front}</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-lg text-gray-800 px-6">${card.back}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            flashcardGrid.insertAdjacentHTML('beforeend', cardHtml);
+        });
+
+        // Render Quiz
+        const quizContainer = document.getElementById('quiz-container');
+        quizData.forEach((q, qIndex) => {
+            
+            // Create options HTML
+            let optionsHtml = '';
+            q.options.forEach((opt, oIndex) => {
+                optionsHtml += `
+                    <button id="q${qIndex}-opt${oIndex}" class="quiz-option w-full text-left p-4 rounded border-2 border-gray-200 hover:border-brandPrimary hover:bg-teal-50 transition-colors mb-3 font-medium bg-white" 
+                            onclick="handleAnswer(${qIndex}, ${oIndex}, ${opt.correct}, '${opt.rationale.replace(/'/g, "\\'")}')">
+                        ${opt.text}
+                    </button>
+                `;
+            });
+
+            const questionHtml = `
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-900"><span class="text-brandPrimary mr-2">${qIndex + 1}.</span>${q.q}</h3>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button onclick="document.getElementById('hint-${qIndex}').classList.toggle('hidden')" class="text-sm text-brandSecondary hover:underline flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Show Hint
+                        </button>
+                        <p id="hint-${qIndex}" class="hidden mt-2 text-sm text-gray-600 bg-orange-50 p-3 rounded italic border-l-4 border-brandSecondary">
+                            ${q.hint}
+                        </p>
+                    </div>
+
+                    <div id="q${qIndex}-options" class="mt-4">
+                        ${optionsHtml}
+                    </div>
+
+                    <div id="q${qIndex}-rationale" class="hidden mt-4 p-4 rounded-lg">
+                        </div>
+                </div>
+            `;
+            quizContainer.insertAdjacentHTML('beforeend', questionHtml);
+        });
+
+
+        // --- INTERACTION LOGIC ---
+
+        function switchTab(tabId) {
+            // Update buttons
+            document.getElementById('tab-btn-flashcards').className = "px-6 py-3 rounded-t-lg font-semibold transition-colors duration-200 " + (tabId === 'flashcards' ? "bg-brandPrimary text-white shadow-md" : "bg-gray-200 text-gray-600 hover:bg-gray-300");
+            document.getElementById('tab-btn-quiz').className = "px-6 py-3 rounded-t-lg font-semibold transition-colors duration-200 " + (tabId === 'quiz' ? "bg-brandPrimary text-white shadow-md" : "bg-gray-200 text-gray-600 hover:bg-gray-300");
+            
+            // Update content views
+            document.getElementById('tab-flashcards').classList.remove('active');
+            document.getElementById('tab-quiz').classList.remove('active');
+            
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        function flipAll() {
+            const cards = document.querySelectorAll('.flip-card');
+            let anyFlipped = false;
+            cards.forEach(card => {
+                if(card.classList.contains('flipped')) anyFlipped = true;
+            });
+
+            cards.forEach(card => {
+                if(anyFlipped) {
+                    card.classList.remove('flipped');
+                } else {
+                    card.classList.add('flipped');
+                }
+            });
+        }
+
+        function handleAnswer(qIndex, optIndex, isCorrect, rationale) {
+            const container = document.getElementById(`q${qIndex}-options`);
+            const buttons = container.querySelectorAll('button');
+            const rationaleDiv = document.getElementById(`q${qIndex}-rationale`);
+            const selectedBtn = document.getElementById(`q${qIndex}-opt${optIndex}`);
+
+            // Disable all options
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-brandPrimary', 'hover:bg-teal-50');
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            });
+
+            // Style selected option
+            selectedBtn.classList.remove('opacity-60');
+            if (isCorrect) {
+                selectedBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                rationaleDiv.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-900');
+                rationaleDiv.innerHTML = `<p class="font-bold mb-1 flex items-center"><svg class="w-5 h-5 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> Correct!</p><p class="text-sm">${rationale}</p>`;
+            } else {
+                selectedBtn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                rationaleDiv.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-900');
+                rationaleDiv.innerHTML = `<p class="font-bold mb-1 flex items-center"><svg class="w-5 h-5 mr-1 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg> Incorrect</p><p class="text-sm">${rationale}</p>`;
+            }
+
+            // Show rationale
+            rationaleDiv.classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
+
+
+
